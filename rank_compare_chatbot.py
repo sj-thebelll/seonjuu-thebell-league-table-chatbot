@@ -87,10 +87,11 @@ def process_keywords(keywords, dfs):
         # 증권사 처리
         companies = []
         if company_kw:
-            for raw in re.split(r"[\/,"]", company_kw):
-                raw = raw.strip()
-                if raw:
-                    companies.append(company_aliases.get(raw, raw))
+         for raw in re.split(r"[\/,]", company_kw):  # ✅ 여기 수정
+        raw = raw.strip()
+        if raw:
+            companies.append(company_aliases.get(raw, raw))
+
 
         # ✅ 순위 입력 없을 경우 예외 처리
         if not re.search(r"\d+", rank_kw):
