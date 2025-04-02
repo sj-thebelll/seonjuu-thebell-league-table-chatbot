@@ -1,4 +1,4 @@
-import os
+import os 
 import streamlit as st
 import pandas as pd
 import openai
@@ -12,6 +12,14 @@ load_dotenv()
 # ✅ 데이터 로드
 data_dir = os.path.dirname(__file__)
 dfs = load_dataframes(data_dir)
+
+# ✅ 데이터 로딩 확인 로그
+st.markdown("### 📦 로딩된 데이터셋")
+if dfs:
+    for key in dfs:
+        st.markdown(f"- **{key}**: {dfs[key].shape[0]}개 행 로드됨")
+else:
+    st.markdown("❌ 데이터가 하나도 로드되지 않았습니다.")
 
 # ✅ OpenAI API 키
 openai.api_key = os.environ["OPENAI_API_KEY"]
@@ -91,7 +99,7 @@ def process_keywords(keywords, dfs):
 
         df = dfs.get(product)
         if df is None:
-            return f"❌ '{product}' 데이터가 없어요."
+            return f"❌ '{product}' 데이터가 없어요. (로딩된 키: {list(dfs.keys())})"
 
         df_year = df[df["연도"] == year]
         if df_year.empty:
@@ -102,7 +110,7 @@ def process_keywords(keywords, dfs):
             return f"❌ {year}년 {product} 대표주관사 순위에 {company}은(는) 포함되어 있지 않습니다."
 
         if column not in df.columns:
-            return f"❌ '{column}'이라는 항목은 없어요."
+            return f"❌ '{column}'이라는 항목은 없어요. (컬럼 목록: {list(df.columns)})"
 
         value = df_company[column].values[0]
         return f"📌 {year}년 {product} 대표주관사 순위에서 {company}은(는) **{value}위**입니다."
