@@ -140,3 +140,11 @@ if query:
                 st.markdown(response)
         else:
             st.markdown("❌ 잘못된 형식입니다. 예시처럼 쉼표로 구분된 5개 항목을 입력해주세요.")
+
+# ✅ ECM 컬럼 구조 디버깅용 (이거 추가!)
+st.markdown("## 🔍 ECM 데이터 점검")
+ecm_df = dfs.get("ECM")
+if ecm_df is not None:
+    st.write("✅ ECM 컬럼명:", ecm_df.columns.tolist())
+    st.write("✅ ECM 2020년 데이터 샘플:")
+    st.dataframe(ecm_df[ecm_df["연도"] == 2020].head(10))
