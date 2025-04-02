@@ -12,6 +12,18 @@ load_dotenv()
 # ✅ Streamlit Cloud에 등록된 Secrets에서 키 가져오기
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
+# ✅ 약칭 보정 사전 (필요 시 계속 확장 가능)
+company_aliases = {
+    "미래에셋": "미래에셋증권",
+    "삼성": "삼성증권",
+    "KB": "KB증권",
+    "NH": "NH투자증권",
+    "한투": "한국투자증권",
+    "한화": "한화투자증권",
+    "메리츠": "메리츠증권",
+    "신한": "신한투자증권",
+}
+
 # 챗봇 제목
 st.set_page_config(page_title="더벨 리그테이블 챗봇", page_icon="📊")
 st.title("📊 더벨 리그테이블 챗봇")
@@ -27,10 +39,10 @@ st.markdown("""
 st.markdown("""
 #### 💬 예시 질문
 - `2024, ABS, 대표주관, 미래에셋, 순위`  
-  → 2024년 미래에셋증권의 ABS 대표주관사 순위는 없습니다.
-- `2020, ECM, 대표주관, KB증권, 순위`  
+  → 2024년 ABS의 대표주관사 순위는 미래에셋증권입니다.
+- `2020, ECM, 대표주관, KB, 순위`  
   → 2020년 ECM의 대표주관사 순위는 KB증권입니다.
-- `2020, ABS, 대표주관, 삼성증권, 순위`  
+- `2020, ABS, 대표주관, 삼성, 순위`  
   → 2020년 ABS의 대표주관사 순위는 삼성증권입니다.
 """)
 
@@ -43,51 +55,51 @@ st.markdown("""
 예: `2020~2024 ECM과 ABS 모든 연도와 상품별로 증권사 순위 알려줘`
 """)
 
-# 데이터 로드
+# ✅ 데이터 로드
 data_dir = os.path.dirname(__file__)
 dfs = load_dataframes(data_dir)
 
-# 키워드 기반 처리 함수
+# ✅ 키워드 처리 함수
 def process_keywords(keywords, dfs):
-    year = int(keywords[0])  # 연도 추출
-    product = keywords[1]    # 데이터 종류 추출
-    column = keywords[2]     # 항목 추출
-    company = keywords[3]    # 증권사 추출
-    rank = keywords[4]       # 순위 요청
+    try:
+        year = int(keywords[0].strip())  # 연도
+        product = keywords[1].strip().upper()  # 데이터 종류 (대소문자 처리)
+        column = keywords[2].strip()  # 항목
+        company_input = keywords[3].strip()  # 입력된 증권사명
+        rank = keywords[4].strip()  # '순위'
 
-    # 데이터 로드
-    df = dfs.get(product)
-    if df is None:
-        return f"❌ '{product}' 데이터가 없어요."
+        # 약칭 보정 적용
+        company = company_aliases.get(company_input, company_input)
 
-    df_year = df[df["연도"] == year]  # 해당 연도의 데이터만 필터링
-    if df_year.empty:
-        return f"❌ {year}년 데이터가 없어요."
+        df = dfs.get(product)
+        if df is None:
+            return f"❌ '{product}' 데이터가 없어요."
 
-    # 해당 증권사의 데이터만 필터링
-    df_company = df_year[df_year["주관사"] == company]
-    if df_company.empty:
-        return f"❌ {company}의 데이터가 없어요."
-    
-    # 실제 컬럼명 확인
-    if column not in df.columns:
-        return f"❌ '{column}'이라는 항목은 없습니다. 데이터 컬럼을 확인해주세요."
+        df_year = df[df["연도"] == year]
+        if df_year.empty:
+            return f"❌ {year}년 데이터가 없어요."
 
-    # 원하는 항목의 순위 제공
-    result = df_company[column].values[0]
-    return f"📌 {year}년 {company}의 {column} 순위는 {result}입니다."
+        df_company = df_year[df_year["주관사"].str.contains(company)]
+        if df_company.empty:
+            return f"❌ '{company}'에 대한 데이터가 없어요."
 
-# 질의 입력
+        if column not in df.columns:
+            return f"❌ '{column}'이라는 항목은 없습니다. 데이터 컬럼명을 확인해주세요."
+
+        result = df_company[column].values[0]
+        return f"📌 {year}년 {company}의 {column} 순위는 {result}입니다."
+
+    except Exception as e:
+        return f"❌ 오류가 발생했어요: {str(e)}"
+
+# ✅ 입력창
 query = st.text_input("질문을 입력하세요:")
 
 if query:
     with st.spinner("답변을 생성 중입니다..."):
-        # 키워드 추출
-        keywords = query.split(",")  # 쉼표로 키워드를 구분
-        keywords = [kw.strip() for kw in keywords]  # 공백 제거
-
+        keywords = [kw.strip() for kw in query.split(",")]
         if len(keywords) == 5:
             response = process_keywords(keywords, dfs)
             st.markdown(response)
         else:
-            st.markdown("❌ 잘못된 형식입니다. 예시처럼 키워드를 쉼표로 구분하여 입력해주세요.")
+            st.markdown("❌ 잘못된 형식입니다. 예시처럼 쉼표로 구분된 5개 항목을 입력해주세요.")
