@@ -83,32 +83,20 @@ def process_keywords(keywords, dfs):
 
         companies = []
         if company_kw:
-            for raw in re.split(r"[\/,]", company_kw):
+            for raw in re.split(r"[\\/,]", company_kw):
                 raw = raw.strip()
                 if raw:
                     companies.append(company_aliases.get(raw, raw))
 
-        # ✅ 실제 정규표현식 고친 줄
-        # for raw in re.split(r"[\/,"]", company_kw): ❌
-        # 👉 고쳐야 할 줄:
-        # for raw in re.split(r"[\/,"]", company_kw):
-
-        # ✅ 고친 줄로 교체
-        companies = []
-        if company_kw:
-            for raw in re.split(r"[\\/,]", company_kw):  # ✅ 최종 정답
-                raw = raw.strip()
-                if raw:
-                    companies.append(company_aliases.get(raw, raw))
-
-        if not re.search(r"\d+", rank_kw):
-            return "❌ '순위' 범위를 입력해주세요 (예: 1~20위 또는 1위)."
-
-        if "~" in rank_kw:
-            rank_start, rank_end = map(int, re.findall(r"\d+", rank_kw))
-            rank_range = list(range(rank_start, rank_end + 1))
+        # ✅ 숫자가 없고 증권사명이 있는 경우: 전체에서 해당 증권사만 필터
+        if not re.search(r"\d+", rank_kw) and company_kw:
+            rank_range = None
         else:
-            rank_range = [int(r) for r in re.findall(r"\d+", rank_kw)]
+            if "~" in rank_kw:
+                rank_start, rank_end = map(int, re.findall(r"\d+", rank_kw))
+                rank_range = list(range(rank_start, rank_end + 1))
+            else:
+                rank_range = [int(r) for r in re.findall(r"\d+", rank_kw)]
 
         df = dfs.get(product)
         if df is None:
@@ -125,7 +113,10 @@ def process_keywords(keywords, dfs):
             if df_year.empty:
                 continue
 
-            df_filtered = df_year[df_year[column].isin(rank_range)]
+            if rank_range:
+                df_filtered = df_year[df_year[column].isin(rank_range)]
+            else:
+                df_filtered = df_year.copy()
 
             if companies:
                 company_patterns = [c.replace(" ", "").lower() for c in companies]
