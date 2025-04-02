@@ -1,3 +1,62 @@
+import streamlit as st
+
+# ✅ 반드시 첫 줄에 있어야 함
+st.set_page_config(page_title="더벨 리그테이블 챗봇", page_icon="📊")
+
+import os
+import pandas as pd
+import openai
+import re
+from utils import load_dataframes
+from dotenv import load_dotenv
+
+# ✅ 환경변수 로딩 (.env에서 OpenAI 키 가져오기)
+load_dotenv()
+openai.api_key = os.environ["OPENAI_API_KEY"]
+
+# ✅ 데이터 로드
+data_dir = os.path.dirname(__file__)
+dfs = load_dataframes(data_dir)
+
+# ✅ 증권사명 보정
+company_aliases = {
+    "미래에셋": "미래에셋증권", "삼성": "삼성증권", "KB": "KB증권", "NH": "NH투자증권",
+    "한투": "한국투자증권", "한국증권": "한국투자증권", "한화": "한화투자증권", "메리츠": "메리츠증권",
+    "신한": "신한투자증권", "하나": "하나증권", "키움": "키움증권", "이베스트": "이베스트투자증권",
+    "교보": "교보증권", "대신": "대신증권", "하이": "하이투자증권", "부국": "부국증권",
+    "DB": "DB금융투자", "유안타": "유안타증권", "유진": "유진투자증권", "케이프": "케이프투자증권",
+    "SK": "SK증권", "현대차": "현대차증권", "KTB": "KTB투자증권", "BNK": "BNK투자증권",
+    "IBK": "IBK투자증권", "토스": "토스증권", "다올": "다올투자증권", "산은": "한국산업은행",
+    "농협": "NH투자증권", "신금투": "신한투자증권",
+}
+
+# ✅ 설명 UI
+st.title("📊 더벨 리그테이블 챗봇")
+st.markdown("""
+이 챗봇은 더벨의 ECM, ABS, FB, 국내채권 대표주관 리그테이블 데이터를 기반으로  
+질문에 답하거나 연도별 비교를 도와줍니다.  
+키워드 기반 질문으로 연도, 데이터 종류, 항목, 증권사, 순위를 쉽게 확인할 수 있습니다.
+""")
+
+st.markdown("""
+#### 💬 예시 질문
+- `2024, ABS, 대표주관, 미래에셋, 순위`  
+- `2020, ECM, 대표주관, KB, 순위`  
+- `2020, ABS, 대표주관, 삼성, 순위`  
+- `2021~2023, ECM, 대표주관, 신한, 순위`  
+- `2020~2022, ECM, 대표주관, 삼성/KB/미래에셋, 순위`  
+- `2020~2024, ABS, 대표주관, , 1~5위`
+""")
+
+st.markdown("""
+#### ⚠️ 질문 팁
+- ⛔ 아래와 같은 질문은 실패할 수 있어요!
+  - 조건을 너무 복잡하게 넣거나 문장이 길면 안 돼요.
+- ✅ 예시처럼 쉼표로 정확히 **5개 항목**을 입력해주세요:
+  - `연도(또는 범위), 상품종류, 항목명, 증권사명(또는 여러개), 순위 또는 순위범위`
+""")
+
+# ✅ 질문 처리 함수
 def process_keywords(keywords, dfs):
     try:
         year_kw = keywords[0].strip()
@@ -21,12 +80,12 @@ def process_keywords(keywords, dfs):
                 if raw:
                     companies.append(company_aliases.get(raw, raw))
 
-        # 순위 범위 처리
+        # 순위 처리
         if "~" in rank_kw:
             rank_start, rank_end = map(int, re.findall(r"\d+", rank_kw))
             rank_range = list(range(rank_start, rank_end + 1))
         else:
-            rank_range = [int(s) for s in re.findall(r"\d+", rank_kw)]
+            rank_range = [int(r) for r in re.findall(r"\d+", rank_kw)]
 
         df = dfs.get(product)
         if df is None:
@@ -48,14 +107,13 @@ def process_keywords(keywords, dfs):
                 df_filtered = df_filtered[df_filtered["주관사"].isin(companies)]
 
             if not df_filtered.empty:
-                df_filtered = df_filtered[["연도", "주관사", column]]
-                df_filtered = df_filtered.rename(columns={column: "순위"})  # ✅ 컬럼명 변경
-                result_rows.append((year, product, df_filtered))
+                df_show = df_filtered[["연도", "주관사", column]].rename(columns={column: "순위"})
+                result_rows.append((year, product, df_show))
 
         if not result_rows:
             return "❌ 조건에 맞는 결과가 없습니다."
 
-        # 결과 출력: 연도 + 항목별 구분 출력
+        # 📌 출력: 연도 + 항목 기준 이중 분리
         for (year, product, group_df) in result_rows:
             st.markdown(f"### 📌 {year}년 {product} 리그테이블")
             st.dataframe(group_df.reset_index(drop=True))
@@ -64,3 +122,16 @@ def process_keywords(keywords, dfs):
 
     except Exception as e:
         return f"❌ 오류가 발생했어요: {str(e)}"
+
+# ✅ 질문 입력 처리
+query = st.text_input("질문을 입력하세요:")
+
+if query:
+    with st.spinner("답변을 생성 중입니다..."):
+        keywords = [kw.strip() for kw in query.split(",")]
+        if len(keywords) == 5:
+            response = process_keywords(keywords, dfs)
+            if response:
+                st.markdown(response)
+        else:
+            st.markdown("❌ 잘못된 형식입니다. 예시처럼 쉼표로 구분된 5개 항목을 입력해주세요.")
