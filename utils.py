@@ -7,11 +7,12 @@ def load_dataframes(data_dir):
     dfs = {}
 
     file_mapping = {
-        "국내채권": "더벨 DCM 리그테이블 국내채권 대표주관 순위.xlsx",
-        "ABS": "더벨 DCM 리그테이블 유동화증권(ABS) 대표주관 순위.xlsx",
-        "FB": "더벨 DCM 리그테이블 여신전문금융회사채권(FB) 대표주관 순위.xlsx",
-        "ECM": "더벨 ECM 리그테이블 대표주관 순위.xlsx"
-    }
+    "ECM": "ecm.xlsx",
+    "ABS": "abs.xlsx",
+    "FB": "fb.xlsx",
+    "국내채권": "domestic_bond.xlsx"
+}
+
 
     sheet_mapping = {
         "국내채권": "전체 국내채권 대표주관 순위",
