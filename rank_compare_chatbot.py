@@ -1,3 +1,6 @@
+import streamlit as st
+st.set_page_config(page_title="더벨 리그테이블 챗봇", page_icon="📊")
+
 import os 
 import streamlit as st
 import pandas as pd
