@@ -2,13 +2,14 @@ import os
 import streamlit as st
 import pandas as pd
 import openai
+import re
 from utils import load_dataframes
 from dotenv import load_dotenv
 
 # ✅ .env 로드
 load_dotenv()
 
-# ✅ 페이지 설정 (항상 최상단에 위치해야 함)
+# ✅ 페이지 설정 (항상 최상단!)
 st.set_page_config(page_title="더벨 리그테이블 챗봇", page_icon="📊")
 
 # ✅ 데이터 로드
@@ -52,8 +53,8 @@ company_aliases = {
     "신금투": "신한투자증권",
 }
 
+# ✅ 제목
 st.title("📊 더벨 리그테이블 챗봇")
-
 st.markdown("""
 이 챗봇은 더벨의 ECM, ABS, FB, 국내채권 대표주관 리그테이블 데이터를 기반으로
 질문에 답하거나 연도별 비교를 도와줍니다.
@@ -71,57 +72,63 @@ st.markdown("""
   → ✅ 2020년 ABS 대표주관사 순위에서 삼성증권은 **3위**입니다.
 - `2021~2023, ECM, 대표주관, 신한, 순위`  
   → ✅ 여러 연도에 걸친 ECM 대표주관사 순위를 확인할 수 있어요.
+- `2020~2022, ECM, 대표주관, 삼성/KB/미래에셋, 순위`  
+  → ✅ 여러 증권사를 동시에 비교할 수 있어요.
+- `2020~2024, ABS, 대표주관, , 1~5위`  
+  → ✅ 특정 순위 구간에 속한 증권사를 보여줄 수 있어요.
 """)
 
 st.markdown("""
 #### ⚠️ 질문 팁
 **⛔ 아래와 같은 질문은 실패할 수 있어요!**
-- 여러 조건을 한 문장에 다 넣으면 복잡해서 잘 안 돼요.  
+- 여러 조건을 한 문장에 다 넣으면 복잡해서 잘 안 돼요.
 예: `2020~2024 ECM과 ABS 상품별로 증권사 순위 알려줘`
 """)
-
-# ✅ 연도 파싱 함수
-def parse_year_range(year_str):
-    if "~" in year_str:
-        start, end = map(int, year_str.split("~"))
-        return list(range(start, end + 1))
-    else:
-        return [int(year_str)]
 
 # ✅ 키워드 처리 함수
 def process_keywords(keywords, dfs):
     try:
-        years = parse_year_range(keywords[0].strip())
+        year_part = keywords[0].strip()
         product = keywords[1].strip().upper()
         column = keywords[2].strip()
         company_input = keywords[3].strip()
-        rank = keywords[4].strip()
-
-        company = company_aliases.get(company_input, company_input)
+        rank_input = keywords[4].strip()
 
         df = dfs.get(product)
         if df is None:
             return f"❌ '{product}' 데이터가 없어요."
 
-        results = []
-        for year in years:
-            df_year = df[df["연도"] == year]
-            if df_year.empty:
-                results.append(f"❌ {year}년 데이터 없음")
-                continue
+        # ✅ 연도 범위 처리
+        if "~" in year_part:
+            start, end = map(int, year_part.split("~"))
+            years = list(range(start, end + 1))
+        else:
+            years = [int(year_part)]
 
-            df_company = df_year[df_year["주관사"].str.contains(company)]
-            if df_company.empty:
-                results.append(f"❌ {year}년 {product} 대표주관사 순위에 {company}은(는) 포함되어 있지 않습니다.")
-                continue
+        df_year = df[df["연도"].isin(years)]
+        if df_year.empty:
+            return f"❌ {year_part} 데이터가 없어요."
 
-            if column not in df.columns:
-                return f"❌ '{column}'이라는 항목은 없어요."
+        # ✅ 순위 범위 처리
+        if re.match(r"\d+~\d+위", rank_input):
+            r1, r2 = map(lambda x: int(x.replace("위", "")), rank_input.split("~"))
+            df_filtered = df_year[(df_year[column] >= r1) & (df_year[column] <= r2)]
+            if df_filtered.empty:
+                return f"❌ {year_part}년 {product} {r1}~{r2}위에 해당하는 데이터가 없어요."
+            grouped = df_filtered[["연도", "주관사", column]].sort_values(["연도", column])
+            return grouped.to_markdown(index=False)
 
-            value = df_company[column].values[0]
-            results.append(f"📌 {year}년 {product} 대표주관사 순위에서 {company}은(는) **{value}위**입니다.")
+        # ✅ 증권사 복수 처리
+        companies = [company_aliases.get(c.strip(), c.strip()) for c in company_input.split("/")]
+        df_companies = df_year[df_year["주관사"].isin(companies)]
+        if df_companies.empty:
+            return f"❌ {year_part}년 {product} 대표주관사 순위에 해당 증권사가 포함되어 있지 않습니다."
 
-        return "\n\n".join(results)
+        if column not in df.columns:
+            return f"❌ '{column}'이라는 항목은 없어요."
+
+        grouped = df_companies[["연도", "주관사", column]].sort_values(["연도"])
+        return grouped.to_markdown(index=False)
 
     except Exception as e:
         return f"❌ 오류가 발생했어요: {str(e)}"
@@ -132,10 +139,8 @@ query = st.text_input("질문을 입력하세요:")
 if query:
     with st.spinner("답변을 생성 중입니다..."):
         keywords = [kw.strip() for kw in query.split(",")]
-        if len(keywords) != 5:
-            st.markdown("❌ 잘못된 형식입니다. 예시처럼 쉼표로 구분된 5개 항목을 입력해주세요. 예: `2022, ECM, 대표주관, KB, 순위`")
-        elif keywords[3].strip().endswith("위"):
-            st.markdown("❌ 네 번째 항목은 '증권사명'이 와야 해요. 예: `KB`, `미래에셋`, `삼성` 등")
-        else:
+        if len(keywords) == 5:
             response = process_keywords(keywords, dfs)
             st.markdown(response)
+        else:
+            st.markdown("❌ 잘못된 형식입니다. 예시처럼 쉼표로 구분된 5개 항목을 입력해주세요.")
