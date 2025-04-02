@@ -1,9 +1,9 @@
 import streamlit as st
 
-# ❗️이건 꼭 가장 위에 있어야 해요!
+# ✅ 반드시 가장 위에 있어야 함!
 st.set_page_config(page_title="더벨 리그테이블 챗봇", page_icon="📊")
 
-# 나머지 import는 그 아래
+# ✅ 그다음 import
 import os
 import pandas as pd
 import openai
@@ -11,6 +11,7 @@ import re
 from utils import load_dataframes
 from dotenv import load_dotenv
 from tabulate import tabulate
+
 
 # ✅ .env 로드
 load_dotenv()
