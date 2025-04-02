@@ -65,7 +65,6 @@ def process_keywords(keywords, dfs):
         company_kw = keywords[3].strip()
         rank_kw = keywords[4].strip()
 
-        # ✅ 허용 컬럼 정의
         allowed_columns = {
             "ECM": ["대표주관", "금액(원)", "건수", "점유율(%)"],
             "ABS": ["대표주관", "금액(원)", "건수", "점유율(%)"],
@@ -73,32 +72,25 @@ def process_keywords(keywords, dfs):
             "국내채권": ["대표주관", "금액(원)", "건수", "점유율(%)"]
         }
 
-        # ✅ '순위' 또는 '랭킹' 입력 시 컬럼 자동 보정
         if column in ["순위", "랭킹"]:
             column = "대표주관"
 
-        # 연도 처리
         if "~" in year_kw:
             start, end = map(int, year_kw.split("~"))
             years = list(range(start, end + 1))
         else:
             years = [int(year_kw)]
 
-# 증권사 처리
-companies = []
-if company_kw:
-    for raw in re.split(r"[\/,]", company_kw):  # ✅ 정규식 수정 완료
-        raw = raw.strip()
-        if raw:
-            companies.append(company_aliases.get(raw, raw))
+        companies = []
+        if company_kw:
+            for raw in re.split(r"[\/,"]", company_kw):
+                raw = raw.strip()
+                if raw:
+                    companies.append(company_aliases.get(raw, raw))
 
-
-
-        # ✅ 순위 입력 없을 경우 예외 처리
         if not re.search(r"\d+", rank_kw):
             return "❌ '순위' 범위를 입력해주세요 (예: 1~20위 또는 1위)."
 
-        # 순위 처리
         if "~" in rank_kw:
             rank_start, rank_end = map(int, re.findall(r"\d+", rank_kw))
             rank_range = list(range(rank_start, rank_end + 1))
@@ -122,7 +114,6 @@ if company_kw:
 
             df_filtered = df_year[df_year[column].isin(rank_range)]
 
-            # 🔥 증권사 필터 강화
             if companies:
                 company_patterns = [c.replace(" ", "").lower() for c in companies]
                 df_filtered["주관사_정제"] = df_filtered["주관사"].astype(str).str.replace(" ", "").str.lower()
@@ -137,7 +128,6 @@ if company_kw:
         if not result_rows:
             return "❌ 조건에 맞는 결과가 없습니다."
 
-        # 📌 출력
         for (year, product, group_df) in result_rows:
             st.markdown(f"### 📌 {year}년 {product} 리그테이블")
             st.dataframe(group_df.reset_index(drop=True))
