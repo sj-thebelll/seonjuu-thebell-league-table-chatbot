@@ -1,8 +1,9 @@
 import streamlit as st
+
+# ✅ 페이지 설정 - 반드시 가장 첫 줄에 위치해야 함
 st.set_page_config(page_title="더벨 리그테이블 챗봇", page_icon="📊")
 
-import os 
-import streamlit as st
+import os
 import pandas as pd
 import openai
 import re
@@ -15,14 +16,6 @@ load_dotenv()
 # ✅ 데이터 로드
 data_dir = os.path.dirname(__file__)
 dfs = load_dataframes(data_dir)
-
-# ✅ 데이터 로딩 확인 로그
-st.markdown("### 📦 로딩된 데이터셋")
-if dfs:
-    for key in dfs:
-        st.markdown(f"- **{key}**: {dfs[key].shape[0]}개 행 로드됨")
-else:
-    st.markdown("❌ 데이터가 하나도 로드되지 않았습니다.")
 
 # ✅ OpenAI API 키
 openai.api_key = os.environ["OPENAI_API_KEY"]
@@ -61,8 +54,7 @@ company_aliases = {
     "신금투": "신한투자증권",
 }
 
-# ✅ 페이지 설정
-st.set_page_config(page_title="더벨 리그테이블 챗봇", page_icon="📊")
+# ✅ 제목 및 소개
 st.title("📊 더벨 리그테이블 챗봇")
 
 st.markdown("""
@@ -71,7 +63,6 @@ st.markdown("""
 키워드 기반 질문으로 연도, 데이터 종류, 항목, 증권사, 순위를 쉽게 확인할 수 있습니다.
 """)
 
-# ✅ 예시 질문
 st.markdown("""
 #### 💬 예시 질문
 - `2024, ABS, 대표주관, 미래에셋, 순위`  
@@ -102,7 +93,7 @@ def process_keywords(keywords, dfs):
 
         df = dfs.get(product)
         if df is None:
-            return f"❌ '{product}' 데이터가 없어요. (로딩된 키: {list(dfs.keys())})"
+            return f"❌ '{product}' 데이터가 없어요."
 
         df_year = df[df["연도"] == year]
         if df_year.empty:
@@ -113,7 +104,7 @@ def process_keywords(keywords, dfs):
             return f"❌ {year}년 {product} 대표주관사 순위에 {company}은(는) 포함되어 있지 않습니다."
 
         if column not in df.columns:
-            return f"❌ '{column}'이라는 항목은 없어요. (컬럼 목록: {list(df.columns)})"
+            return f"❌ '{column}'이라는 항목은 없어요."
 
         value = df_company[column].values[0]
         return f"📌 {year}년 {product} 대표주관사 순위에서 {company}은(는) **{value}위**입니다."
@@ -121,7 +112,7 @@ def process_keywords(keywords, dfs):
     except Exception as e:
         return f"❌ 오류가 발생했어요: {str(e)}"
 
-# ✅ 입력
+# ✅ 입력창
 query = st.text_input("질문을 입력하세요:")
 
 if query:
