@@ -27,7 +27,7 @@ company_aliases = {
     "DB": "DB금융투자", "유안타": "유안타증권", "유진": "유진투자증권", "케이프": "케이프투자증권",
     "SK": "SK증권", "현대차": "현대차증권", "KTB": "KTB투자증권", "BNK": "BNK투자증권",
     "IBK": "IBK투자증권", "토스": "토스증권", "다올": "다올투자증권", "산은": "한국산업은행",
-    "농협": "NH투자증권", "신금투": "신한투자증권",
+    "농협": "NH투자증권", "신금투": "신한투자증권"
 }
 
 # ✅ 설명 UI
@@ -65,6 +65,14 @@ def process_keywords(keywords, dfs):
         company_kw = keywords[3].strip()
         rank_kw = keywords[4].strip()
 
+        # ✅ 허용 컬럼 정의
+        allowed_columns = {
+            "ECM": ["대표주관", "금액(원)", "건수", "점유율(%)"],
+            "ABS": ["대표주관", "금액(원)", "건수", "점유율(%)"],
+            "FB": ["대표주관", "금액(원)", "건수", "점유율(%)"],
+            "국내채권": ["대표주관", "금액(원)", "건수", "점유율(%)"]
+        }
+
         # 연도 처리
         if "~" in year_kw:
             start, end = map(int, year_kw.split("~"))
@@ -75,7 +83,7 @@ def process_keywords(keywords, dfs):
         # 증권사 처리
         companies = []
         if company_kw:
-            for raw in re.split(r"[\/,]", company_kw):
+            for raw in re.split(r"[\/,"]", company_kw):
                 raw = raw.strip()
                 if raw:
                     companies.append(company_aliases.get(raw, raw))
@@ -91,15 +99,16 @@ def process_keywords(keywords, dfs):
         if df is None:
             return f"❌ '{product}' 데이터가 없어요."
 
+        if column not in allowed_columns.get(product, []):
+            return f"❌ '{product}'에서는 '{column}' 항목으로 필터할 수 없습니다.\n" \
+                   f"가능한 항목: {', '.join(allowed_columns.get(product, []))}"
+
         result_rows = []
 
         for year in years:
             df_year = df[df["연도"] == year]
             if df_year.empty:
                 continue
-
-            if column not in df.columns:
-                return f"❌ '{column}'이라는 항목은 없어요."
 
             df_filtered = df_year[df_year[column].isin(rank_range)]
 
@@ -118,7 +127,7 @@ def process_keywords(keywords, dfs):
         if not result_rows:
             return "❌ 조건에 맞는 결과가 없습니다."
 
-        # 📌 출력: 연도 + 항목 기준 이중 분리
+        # 📌 출력
         for (year, product, group_df) in result_rows:
             st.markdown(f"### 📌 {year}년 {product} 리그테이블")
             st.dataframe(group_df.reset_index(drop=True))
@@ -141,7 +150,7 @@ if query:
         else:
             st.markdown("❌ 잘못된 형식입니다. 예시처럼 쉼표로 구분된 5개 항목을 입력해주세요.")
 
-# ✅ ECM 컬럼 구조 디버깅용 (이거 추가!)
+# ✅ ECM 컬럼 구조 디버깅용
 st.markdown("## 🔍 ECM 데이터 점검")
 ecm_df = dfs.get("ECM")
 if ecm_df is not None:
