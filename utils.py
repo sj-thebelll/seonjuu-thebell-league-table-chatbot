@@ -2,6 +2,7 @@
 
 import os
 import pandas as pd
+import streamlit as st  # ✅ Streamlit 로그 표시를 위해 추가
 
 def load_dataframes(data_dir):
     dfs = {}
@@ -27,6 +28,10 @@ def load_dataframes(data_dir):
         sheet_name = sheet_mapping[product]
 
         try:
+            # ✅ 로드 로그 출력
+            print(f"🔍 [DEBUG] {product} 로딩 중... 파일: {filename}, 시트명: {sheet_name}")
+            st.text(f"🔍 {product} 로딩 중...")
+
             # ✅ 엑셀 시트 읽기
             df = pd.read_excel(file_path, sheet_name=sheet_name)
 
@@ -42,10 +47,17 @@ def load_dataframes(data_dir):
             # ✅ 로딩된 데이터 저장
             dfs[product] = df
 
-            # ✅ 로드 성공 확인용 로그
-            print(f"✅ {product} 데이터 로드 성공. shape: {df.shape}")
+            # ✅ 성공 로그
+            print(f"✅ [DEBUG] {product} 데이터 로드 성공. shape: {df.shape}")
+            st.text(f"✅ {product} 데이터 로드 완료 ({df.shape[0]} rows)")
 
         except Exception as e:
-            print(f"❌ {product} 데이터 로딩 실패:", e)
+            # ❌ 실패 로그
+            print(f"❌ [ERROR] {product} 데이터 로딩 실패:", e)
+            st.text(f"❌ {product} 데이터 로딩 실패: {e}")
+
+    # ✅ 로드된 데이터 키 확인
+    print("📂 [DEBUG] 최종 로드된 데이터 키:", dfs.keys())
+    st.text(f"📂 최종 로드된 데이터 키: {list(dfs.keys())}")
 
     return dfs
