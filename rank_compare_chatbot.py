@@ -40,8 +40,8 @@ st.markdown("""
 
 st.markdown("""
 #### 💬 예시 질문
-- `2024, ABS, 대표주관, 미래에셋, 순위`  
-- `2020, ECM, 대표주관, KB, 순위`  
+- `2024, ABS, 대표주관, KB증권, 순위`  
+- `2020, ECM, 대표주관, SK증권, 순위`  
 - `2020, ABS, 대표주관, 삼성, 순위`  
 - `2021~2023, ECM, 대표주관, 신한, 순위`  
 - `2020~2022, ECM, 대표주관, 삼성/KB/미래에셋, 순위`  
@@ -73,6 +73,10 @@ def process_keywords(keywords, dfs):
             "국내채권": ["대표주관", "금액(원)", "건수", "점유율(%)"]
         }
 
+        # ✅ '순위' 또는 '랭킹' 입력 시 컬럼 자동 보정
+        if column in ["순위", "랭킹"]:
+            column = "대표주관"
+
         # 연도 처리
         if "~" in year_kw:
             start, end = map(int, year_kw.split("~"))
@@ -83,10 +87,14 @@ def process_keywords(keywords, dfs):
         # 증권사 처리
         companies = []
         if company_kw:
-            for raw in re.split(r"[\/,]", company_kw):
+            for raw in re.split(r"[\/,"]", company_kw):
                 raw = raw.strip()
                 if raw:
                     companies.append(company_aliases.get(raw, raw))
+
+        # ✅ 순위 입력 없을 경우 예외 처리
+        if not re.search(r"\d+", rank_kw):
+            return "❌ '순위' 범위를 입력해주세요 (예: 1~20위 또는 1위)."
 
         # 순위 처리
         if "~" in rank_kw:
