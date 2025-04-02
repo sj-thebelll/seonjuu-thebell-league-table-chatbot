@@ -83,7 +83,7 @@ def process_keywords(keywords, dfs):
 
         companies = []
         if company_kw:
-            for raw in re.split(r"[\/,"]", company_kw):  # 🚫 오류 줄이므로 고쳐야 함
+            for raw in re.split(r"[\/,]", company_kw):
                 raw = raw.strip()
                 if raw:
                     companies.append(company_aliases.get(raw, raw))
