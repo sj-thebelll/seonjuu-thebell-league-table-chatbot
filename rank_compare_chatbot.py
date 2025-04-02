@@ -103,8 +103,13 @@ def process_keywords(keywords, dfs):
 
             df_filtered = df_year[df_year[column].isin(rank_range)]
 
+            # 🔥 증권사 필터 강화
             if companies:
-                df_filtered = df_filtered[df_filtered["주관사"].isin(companies)]
+                company_patterns = [c.replace(" ", "").lower() for c in companies]
+                df_filtered["주관사_정제"] = df_filtered["주관사"].astype(str).str.replace(" ", "").str.lower()
+                df_filtered = df_filtered[df_filtered["주관사_정제"].apply(
+                    lambda x: any(pattern in x for pattern in company_patterns)
+                )]
 
             if not df_filtered.empty:
                 df_show = df_filtered[["연도", "주관사", column]].rename(columns={column: "순위"})
