@@ -1,5 +1,3 @@
-# utils.py
-
 import os
 import pandas as pd
 import streamlit as st  # ✅ Streamlit 로그 표시를 위해 추가
@@ -35,14 +33,21 @@ def load_dataframes(data_dir):
             # ✅ 엑셀 시트 읽기
             df = pd.read_excel(file_path, sheet_name=sheet_name)
 
-            # ✅ 컬럼명 문자열 처리
-            df.columns = df.columns.astype(str)
+            # ✅ 컬럼명 전처리: 공백 제거
+            df.columns = df.columns.astype(str).str.strip()
 
             # ✅ '연도' 컬럼 전처리: "2023년" → 2023
-            df["연도"] = df["연도"].astype(str).str.replace("년", "").astype(int)
+            if "연도" in df.columns:
+                df["연도"] = df["연도"].astype(str).str.replace("년", "").astype(int)
 
-            # ✅ '주관사' 컬럼 전처리 (3번째 열이 주관사라고 가정)
-            df["주관사"] = df.iloc[:, 2].astype(str).str.strip()
+            # ✅ '주관사' 컬럼 전처리: 존재하지 않으면 3번째 열로 대체
+            if "주관사" not in df.columns and df.shape[1] >= 3:
+                df["주관사"] = df.iloc[:, 2].astype(str).str.strip()
+            else:
+                df["주관사"] = df["주관사"].astype(str).str.strip()
+
+            # ✅ 주관사명에서 공백 제거 (ex: "삼 성 증 권" → "삼성증권")
+            df["주관사"] = df["주관사"].str.replace(" ", "")
 
             # ✅ 로딩된 데이터 저장
             dfs[product] = df
