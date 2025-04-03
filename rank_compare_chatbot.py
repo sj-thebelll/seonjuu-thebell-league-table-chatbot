@@ -41,13 +41,10 @@ allowed_columns = {
 # ✅ UI 안내 텍스트
 st.title("🔔 더벨 리그테이블 챗봇")
 st.markdown("""
-이 챗봇은 더벨의 국내채권/ABS/FB/ECM 대표주관 리그테이블 데이터를 기반으로
+이 챗봇은 더벨의 국내채권/ABS/FB/ECM 대표주관 리그테이블 데이터를 기반으로  
 자연어로 질문하고, 표 형태로 응답을 받는 챗봇입니다.
 
 #### 💬 예시 질문
-
-아래와 같은 질문 스타일을 사용할 수 있어요:
-
 - `2024년 ECM 대표주관사 순위를 알려줘.`  
 - `2021년 ABS에서 KB증권 순위가 몇 위야?`  
 - `2023년 국내채권 리그테이블 1~5위 보여줘.`  
@@ -58,11 +55,10 @@ st.markdown("""
 - `ECM에서 2022년에 가장 많은 건수를 기록한 증권사는 어디야?`  
 """)
 
-# ✅ 자연어 질문 처리 함수
-
+# ✅ 자연어 질문 파싱 함수
 def parse_natural_query(query):
     try:
-        years = list(map(int, re.findall(r"\\d{4}", query)))
+        years = list(map(int, re.findall(r"\d{4}", query)))
         product = next((p for p in ["ECM", "ABS", "FB", "국내채권"] if p in query), None)
         is_compare = any(k in query for k in ["비교", "변화", "오른", "하락"])
         rank_range = list(range(1, 6)) if any(k in query for k in ["1~5위", "1-5위", "상위 5위"]) else None
@@ -76,8 +72,7 @@ def parse_natural_query(query):
     except:
         return None
 
-# ✅ 비교 함수
-
+# ✅ 비교용 순위 변화 계산 함수
 def compare_rank(data, year1, year2):
     try:
         df1 = data[data["연도"] == year1][["주관사", "대표주관"]].copy()
@@ -96,10 +91,11 @@ def compare_rank(data, year1, year2):
     except:
         return None, None
 
-# ✅ 질문 입력창
+# ✅ 질문 입력 및 버튼
 query = st.text_input("질문을 입력하세요:")
+submit = st.button("질문하기")
 
-if query:
+if submit and query:
     with st.spinner("답변을 생성 중입니다..."):
         parsed = parse_natural_query(query)
 
