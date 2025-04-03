@@ -1,7 +1,7 @@
 import streamlit as st
 
-# ✅ 마지막에 들어와야 함
-st.set_page_config(page_title="더벨 리그테이블 채드박스", page_icon="🔔")
+# ✅ 마지막에 먼저 시작된 줄이어야 합니다.
+st.set_page_config(page_title="더벨 리그테이블 체반", page_icon="🔔")
 
 import os
 import pandas as pd
@@ -10,66 +10,91 @@ import re
 from utils import load_dataframes
 from dotenv import load_dotenv
 
-# ✅ OpenAI 환경변수 로드
+# ✅ 환경변수 로드 (.env에서 OpenAI 키 가져오기)
 load_dotenv()
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
-# ✅ 데이터 로드하기
+# ✅ 데이터 로드
 data_dir = os.path.dirname(__file__)
 dfs = load_dataframes(data_dir)
 
-# ✅ 증권사 명 복정
+# ✅ 증권사명 보정
 company_aliases = {
-    "미래에셋": "미래에셋주관", "삼성": "삼성주관", "KB": "KB주관", "NH": "NH투자주관",
-    "한투": "한국투자주관", "한국주관": "한국투자주관", "한화": "한화투자주관", "메리츠": "메리츠주관",
-    "신한": "신한투자주관", "하나": "하나주관", "키울": "키울주관", "이베스트": "이베스트투자주관",
-    "교복": "교복주관", "대신": "대신주관", "하이": "하이투자주관", "부국": "부국주관",
-    "DB": "DB금융투자", "유안타": "유안타주관", "유진": "유진투자주관", "카이프": "카이프투자주관",
-    "SK": "SK주관", "현대차": "현대차주관", "KTB": "KTB투자주관", "BNK": "BNK투자주관",
-    "IBK": "IBK투자주관", "토스": "토스주관", "다옥": "다옥투자주관", "산은": "한국산업은회",
-    "논협": "NH투자주관", "신금투": "신한투자주관"
+    "미래에셋": "미래에셋증권", "삼성": "삼성증권", "KB": "KB증권", "NH": "NH투자증권",
+    "한투": "한국투자증권", "한국증권": "한국투자증권", "한화": "한화투자증권", "메리츠": "메리츠증권",
+    "신한": "신한투자증권", "하나": "하나증권", "키움": "키움증권", "이베스트": "이베스트투자증권",
+    "교보": "교보증권", "대신": "대신증권", "하이": "하이투자증권", "부국": "부국증권",
+    "DB": "DB금융투자", "유안타": "유안타증권", "유진": "유진투자증권", "케이프": "케이프투자증권",
+    "SK": "SK증권", "현대차": "현대차증권", "KTB": "KTB투자증권", "BNK": "BNK투자증권",
+    "IBK": "IBK투자증권", "토스": "토스증권", "다올": "다올투자증권", "산은": "한국산업은행",
+    "농협": "NH투자증권", "신금투": "신한투자증권"
 }
 
-# ✅ 항목명 복정 (괄호 없는 질문 → 실제 컬럼명)
-column_aliases = {
-    "금액": "금액(원)",
-    "점유율": "점유율(%)"
-}
-
-# ✅ UI 설명
-st.title("🔔 더벨 리그테이블 채드박스")
+# ✅ 설명 UI
+st.title("📊 더벨 리그테이블 챗봇")
 st.markdown("""
-**질문 형식 예시 (쉼표로 구분된 5개 항목)**
-- `2024, ABS 대표주관, 금액, KB증권, 순위`
-- `2020~2022, ECM 대표주관, 점유율, 삼성/KB, 1~3위`
-- `2023, 국내채권 대표주관, 건수, NH, 순위`
+이 챗봇은 더벨의 ECM, ABS, FB, 국내채권 대표주관 리그테이블 데이터를 기반으로  
+질문에 답하거나 연도별 비교를 도와줍니다.
 
-**항목은 반드시 아래 5개를 정확한 순서로 입력해주세요:**
-> `[연도], [데이터 종류], [항목명], [증권사명], [순위 또는 범위]`
+**질문은 반드시 아래 5개 항목을 정확한 순서로 쉼표(,)로 구분해서 입력해주세요.**
+
+> ✅ 질문 형식 (항목 순서)
+> ```
+> [1] 연도 또는 연도 범위  
+> [2] 데이터 종류 (ECM, ABS, FB, 국내채권 중 하나)  
+> [3] 항목명 (예: 대표주관, 금액, 건수, 점유율)  
+> [4] 증권사명 (예: KB, 삼성, 미래에셋 등 / 여러 개 가능)  
+> [5] 순위 또는 순위범위 (예: 순위, 1위, 1~5위)
+> ```
+
+> ⛔ 항목의 순서가 바뀌거나 빠지면 질문이 작동하지 않습니다.
 """)
 
-# ✅ 핵심 질문 처리 함수
+st.markdown("""
+#### 💬 예시 질문
+- `2024, ABS, 대표주관, KB증권, 순위`  
+- `2020, ECM, 대표주관, SK증권, 순위`  
+- `2020, ABS, 대표주관, 삼성, 순위`  
+- `2021~2023, ECM, 대표주관, 신한, 순위`  
+- `2020~2022, ECM, 대표주관, 삼성/KB/미래에셋, 순위`  
+- `2020~2024, ABS, 대표주관, , 1~5위`
+""")
+
+st.markdown("""
+#### ⚠️ 질문 팁
+- ⛔ 아래와 같은 질문은 실패할 수 있어요!
+  - 조건을 너무 복잡하게 넣거나 문장이 길면 안 돼요.
+- ✅ 예시처럼 쉼표로 정확히 **5개 항목**을 **정해진 순서대로** 입력해주세요:
+  - `연도(또는 범위), 상품종류, 항목명, 증권사명(또는 여러개), 순위 또는 순위범위`
+""")
+
+# ✅ 질문 처리 함수
 def process_keywords(keywords, dfs):
     try:
-        year_kw, product_kw, column_kw, company_kw, rank_kw = [kw.strip() for kw in keywords]
-        column = column_aliases.get(column_kw, column_kw)
+        year_kw = keywords[0].strip()
+        product_full = keywords[1].strip()
+        column_kw = keywords[2].strip()
+        company_kw = keywords[3].strip()
+        rank_kw = keywords[4].strip()
 
-        # 데이터 종류에서 product와 column 나누기
-        product = product_kw.replace(" 대표주관", "")
+        # "ABS 대표주관" 같은 값에서 "ABS"만 가져오기
+        product_parts = product_full.split()
+        product = product_parts[0].upper() if product_parts else ""
+        column_kw = column_aliases.get(column_kw, column_kw)
 
-        allowed_columns = ["금액(원)", "건수", "점유율(%)"]
+        allowed_columns = {
+            "ECM": ["금액(원)", "건수", "점유율(%)"],
+            "ABS": ["금액(원)", "건수", "점유율(%)"],
+            "FB": ["금액(원)", "건수", "점유율(%)"],
+            "국내체권": ["금액(원)", "건수", "점유율(%)"]
+        }
 
-        if column not in allowed_columns:
-            return f"❌ '{product_kw}'에서는 '{column_kw}' 항목으로 필터할 수 없습니다. 가능한 항목: 금액, 건수, 점유율"
-
-        # 연도 처리
         if "~" in year_kw:
             start, end = map(int, year_kw.split("~"))
             years = list(range(start, end + 1))
         else:
             years = [int(year_kw)]
 
-        # 증권사 처리
         companies = []
         if company_kw:
             for raw in re.split(r"[\\/,]", company_kw):
@@ -77,62 +102,69 @@ def process_keywords(keywords, dfs):
                 if raw:
                     companies.append(company_aliases.get(raw, raw))
 
-        # 순위 범위 처리
-        if not re.search(r"\\d+", rank_kw) and company_kw:
+        if not re.search(r"\d+", rank_kw) and company_kw:
             rank_range = None
         else:
             if "~" in rank_kw:
-                rank_start, rank_end = map(int, re.findall(r"\\d+", rank_kw))
+                rank_start, rank_end = map(int, re.findall(r"\d+", rank_kw))
                 rank_range = list(range(rank_start, rank_end + 1))
             else:
-                rank_range = [int(r) for r in re.findall(r"\\d+", rank_kw)]
+                rank_range = [int(r) for r in re.findall(r"\d+", rank_kw)]
 
         df = dfs.get(product)
         if df is None:
             return f"❌ '{product}' 데이터가 없어요."
 
+        if column_kw not in allowed_columns.get(product, []):
+            return f"❌ '{product}'에서는 '{column_kw}' 항목으로 필터할 수 없습니다.\n" \
+                   f"가능한 항목: {', '.join(allowed_columns.get(product, []))}"
+
         result_rows = []
 
         for year in years:
-            df_year = df[df["연도"] == year]
+            df_year = df[df["\uc5f0\ub3c4"] == year]
             if df_year.empty:
                 continue
 
+            df_year = df_year.copy()
+            df_year["순위"] = df_year["대표주관"]
+
             if rank_range:
-                df_filtered = df_year[df_year["대표주관"].isin(rank_range)]
-            else:
-                df_filtered = df_year.copy()
+                df_year = df_year[df_year["순위"].isin(rank_range)]
 
             if companies:
                 patterns = [c.replace(" ", "").lower() for c in companies]
-                df_filtered["주관사_정제"] = df_filtered["주관사"].astype(str).str.replace(" ", "").str.lower()
-                df_filtered = df_filtered[df_filtered["주관사_정제"].apply(lambda x: any(p in x for p in patterns))]
+                df_year["주관사_정제"] = df_year["주관사"].astype(str).str.replace(" ", "").str.lower()
+                df_year = df_year[df_year["주관사_정제"].apply(
+                    lambda x: any(p in x for p in patterns)
+                )]
 
-            if not df_filtered.empty:
-                df_show = df_filtered[["연도", "주관사", column, "대표주관"]]
-                df_show = df_show.rename(columns={column: column_kw, "대표주관": "순위"})
-                result_rows.append((year, product_kw, df_show))
+            if not df_year.empty:
+                show_df = df_year[["연도", "주관사", "순위", column_kw]]
+                result_rows.append((year, product_full, show_df))
 
         if not result_rows:
             return "❌ 조건에 맞는 결과가 없습니다."
 
-        for (year, product_kw, table) in result_rows:
-            st.markdown(f"### 📌 {year}년 {product_kw} 리그테이블")
-            st.dataframe(table.reset_index(drop=True))
+        for (year, product_full, df_out) in result_rows:
+            st.markdown(f"### 🔗 {year}년 {product_full} 리그테이블")
+            st.dataframe(df_out.reset_index(drop=True))
 
         return ""
 
     except Exception as e:
-        return f"❌ 오류 발생: {str(e)}"
+        return f"❌ 오류가 발생했어요: {str(e)}"
 
-# ✅ 질문 입력 UI
+# ✅ 질문 입력 처리
 query = st.text_input("질문을 입력하세요:")
+
 if query:
     with st.spinner("답변을 생성 중입니다..."):
-        keywords = query.split(",")
+        keywords = [kw.strip() for kw in query.split(",")]
         if len(keywords) == 5:
-            msg = process_keywords(keywords, dfs)
-            if msg:
-                st.markdown(msg)
+            response = process_keywords(keywords, dfs)
+            if response:
+                st.markdown(response)
         else:
-            st.markdown("❌ 잘못된 형식입니다. 쉼표로 구분된 5개 항목을 입력해주세요.")
+            st.markdown("❌ 잘못된 형식입니다. 예시처럼 쇸포로 구분된 5가지 항목을 입력해주세요.")
+
