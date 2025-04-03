@@ -41,7 +41,7 @@ allowed_columns = {
 # ✅ UI 안내 텍스트
 st.title("🔔 더벨 리그테이블 챗봇")
 st.markdown("""
-이 챗봇은 더벨의 국내채권/ABS/FB/ECM 대표주관 리그테이블 데이터를 기반으로  자연어로 질문하고, 표 형태로 응답을 받는 창번입니다.
+이 챗봇은 더벨의 국내채권/ABS/FB/ECM 대표주관 리그테이블 데이터를 기반으로  자연어로 질문하고, 표 형태로 응답을 받는 챗봇입니다.
 
 #### 💬 예시 질문
 - `2024년 ECM 대표주관사 순위를 알려줘.`  
@@ -58,13 +58,22 @@ st.markdown("""
 
 def parse_natural_query(query):
     try:
-        years = list(map(int, re.findall(r"\d{4}", query)))
+        if "부터" in query and "까지" in query:
+            start, end = map(int, re.findall(r"\\d{4}", query))
+            years = list(range(start, end + 1))
+        elif "~" in query:
+            start, end = map(int, re.findall(r"\\d{4}", query))
+            years = list(range(start, end + 1))
+        else:
+            years = list(map(int, re.findall(r"\\d{4}", query)))
+
         product = next((p for p in ["ECM", "ABS", "FB", "국내채권"] if p in query), None)
         company = next((company_aliases[k] for k in company_aliases if k in query), None)
         is_compare = any(k in query for k in ["비교", "변화", "오른", "하락"])
         rank_range = list(range(1, 6)) if any(k in query for k in ["1~5위", "1-5위", "상위 5위"]) else None
         is_trend = "추이" in query or "변화" in query or "3년간" in query or "최근" in query
         is_top = any(k in query for k in ["가장 높은", "최고", "1위"])
+        top_n = int(re.search(r"상위 (\\d+)개", query).group(1)) if re.search(r"상위 (\\d+)개", query) else None
 
         return {
             "years": years,
@@ -73,7 +82,8 @@ def parse_natural_query(query):
             "compare": is_compare,
             "rank_range": rank_range,
             "is_trend": is_trend,
-            "is_top": is_top
+            "is_top": is_top,
+            "top_n": top_n
         }
     except:
         return None
@@ -129,7 +139,9 @@ if submit and query:
                 else:
                     for y in parsed["years"]:
                         df_year = df[df["연도"] == y]
-                        if parsed["rank_range"]:
+                        if parsed["top_n"]:
+                            df_year = df_year.sort_values("금액(원)", ascending=False).head(parsed["top_n"])
+                        elif parsed["rank_range"]:
                             df_year = df_year[df_year["대표주관"].isin(parsed["rank_range"])]
                         st.subheader(f"📌 {y}년 {parsed['product']} 리그테이블")
-                        st.dataframe(df_year[["주관사", "대표주관"]].reset_index(drop=True))
+                        st.dataframe(df_year[["주관사", "금액(원)", "대표주관"]].reset_index(drop=True))
