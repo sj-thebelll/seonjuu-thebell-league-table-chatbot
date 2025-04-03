@@ -31,7 +31,7 @@ company_aliases = {
 }
 
 # ✅ 설명 UI
-st.title("📊 더벨 리그테이블 챗봇")
+st.title("🔔더벨 리그테이블 챗봇")
 st.markdown("""
 이 챗봇은 더벨의 ECM, ABS, FB, 국내채권 대표주관 리그테이블 데이터를 기반으로  
 질문에 답하거나 연도별 비교를 도와줍니다.
