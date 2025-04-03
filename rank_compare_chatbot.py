@@ -1,7 +1,7 @@
 import streamlit as st
 
 # ✅ 반드시 첫 줄에 있어야 함
-st.set_page_config(page_title="더벨 리그테이블 챗봇", page_icon="📊")
+st.set_page_config(page_title="더벨 리그테이블 챗봇", page_icon="🔔")
 
 import os
 import pandas as pd
