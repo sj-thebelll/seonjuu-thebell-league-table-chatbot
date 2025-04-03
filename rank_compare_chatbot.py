@@ -55,7 +55,6 @@ st.markdown("""
 """)
 
 # ✅ 자연어 질문 파싱
-
 def parse_natural_query(query):
     try:
         if "부터" in query and "까지" in query:
@@ -89,7 +88,6 @@ def parse_natural_query(query):
         return None
 
 # ✅ 비교 함수
-
 def compare_rank(data, year1, year2):
     df1 = data[data["연도"] == year1][["주관사", "대표주관"]].copy()
     df2 = data[data["연도"] == year2][["주관사", "대표주관"]].copy()
@@ -103,7 +101,19 @@ def compare_rank(data, year1, year2):
 
 # ✅ 질문 입력
 query = st.text_input("질문을 입력하세요:")
-submit = st.button("질문하기")
+st.markdown("""
+<style>
+.stButton > button {
+    background-color: #ff4b4b;
+    color: white;
+    border-radius: 10px;
+    padding: 0.5em 1.5em;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+</style>
+""", unsafe_allow_html=True)
+submit = st.button("🔍 질문하기")
 
 if submit and query:
     with st.spinner("답변을 생성 중입니다..."):
@@ -115,19 +125,29 @@ if submit and query:
             df = dfs.get(parsed["product"])
             if df is not None and not df.empty:
 
-                # 추이 분석 (특정 증권사의 연도별 순위)
+                # 추이 분석
                 if parsed["is_trend"] and parsed["company"]:
                     trend_df = df[df["주관사"] == parsed["company"]][["연도", "대표주관"]].sort_values("연도")
                     st.subheader(f"📈 {parsed['company']} 순위 추이")
                     st.dataframe(trend_df.rename(columns={"대표주관": "순위"}).reset_index(drop=True))
 
-                # 특정 항목 1위 기업 (예: 점유율 1위)
+                # 특정 항목 1위 기업
                 elif parsed["is_top"]:
                     top_result = df[df["대표주관"] == 1][["연도", "주관사"]].sort_values("연도")
                     st.subheader("🏆 연도별 1위 주관사")
                     st.dataframe(top_result.reset_index(drop=True))
 
-                # 비교 요청 (두 연도 간 상승/하락 비교)
+                # 특정 증권사 특정 연도 순위 조회
+                elif parsed["company"] and parsed["years"]:
+                    for y in parsed["years"]:
+                        company_df = df[(df["연도"] == y) & (df["주관사"] == parsed["company"])]
+                        if not company_df.empty:
+                            st.subheader(f"🏅 {y}년 {parsed['product']}에서 {parsed['company']} 순위")
+                            st.dataframe(company_df[["주관사", "대표주관"]].rename(columns={"대표주관": "순위"}).reset_index(drop=True))
+                        else:
+                            st.warning(f"{y}년 {parsed['product']} 데이터에서 {parsed['company']}를 찾을 수 없습니다.")
+
+                # 비교 요청
                 elif parsed["compare"] and len(parsed["years"]) == 2:
                     up, down = compare_rank(df, parsed["years"][0], parsed["years"][1])
                     st.subheader(f"📈 {parsed['years'][0]} → {parsed['years'][1]} 상승한 증권사")
