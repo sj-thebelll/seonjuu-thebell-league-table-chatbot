@@ -40,134 +40,49 @@ column_aliases = {
 st.title("🔔더벨 리그테이블 챗봇")
 st.markdown("""
 이 챗봇은 더벨의 국내채권/ABS/FB/ECM 대표주관 리그테이블 데이터를 기반으로  
-질문에 답변합니다.
+자연어로 질문하고, 표 형태로 응답을 받는 챗봇입니다.
 
-**질문은 반드시 아래 5개 항목을 정확한 순서로 쉼표(,)로 구분해서 입력해주세요.**
-
-> ✅ 질문 형식 (항목 순서)
-> ```
-> [1] 연도 또는 연도 범위(예: 2024, 2020~2024)  
-> [2] 데이터 종류 (ECM, ABS, FB, 국내채권 중 한가지 선택)  
-> [3] 순위 또는 순위범위 (예: 순위, 1위, 1~5위)  
-> [4] 증권사명 (예: KB, 삼성, 미래에셋 등 / 여러 개 가능)  
-> [5] 항목명 (예: 금액, 건수, 점유율)
-> ```
-
-> ⛔ 항목의 순서가 바뀌거나 빠지면 질문이 작동하지 않습니다.
+예: `2023년, 2024년 비교해서 국내채권 대표주관사 중 순위 오른 증권사 알려줘.`
 """)
 
-st.markdown("""
-#### 💬 예시 질문
-- `2020, ECM, 순위, SK증권, 금액`  
-- `2020, ABS, 순위, 미래에셋/KB, 건수`  
-- `2021~2023, ECM, 순위, 신한, 점유율`  
-- `2020~2022, ECM, 순위, 삼성/KB/미래에셋, 금액`  
-- `2020~2024, ABS, 1~5위, , 점유율`
-""")
+# ✅ 자연어 질문 처리 함수
 
-st.markdown("""
-#### ⚠️ 질문 팁
-- ⛔ 아래와 같은 질문은 실패할 수 있어요!
-  - 조건을 너무 복잡하게 넣거나 문장이 길면 안 돼요.
-- ✅ 예시처럼 쉼표로 정확히 **5개 항목**을 **정해진 순서대로** 입력해주세요:
-  - `연도(또는 범위), 상품종류, 순위 또는 순위범위, 증권사명(또는 여러개), 항목명`
-""")
+def compare_rank_change(df, year1, year2, product):
+    df1 = df[(df["연도"] == year1)].copy()
+    df2 = df[(df["연도"] == year2)].copy()
 
-# ✅ 질문 처리 함수
-def process_keywords(keywords, dfs):
-    try:
-        year_kw = keywords[0].strip()
-        product_full = keywords[1].strip()
-        rank_kw = keywords[2].strip()
-        company_kw = keywords[3].strip()
-        column_kw = keywords[4].strip()
+    df1["순위"] = df1["대표주관"]
+    df2["순위"] = df2["대표주관"]
 
-        product_parts = product_full.split()
-        product = product_parts[0].upper() if product_parts else ""
-        column_kw = column_aliases.get(column_kw, column_kw)
+    df1 = df1[["주관사", "순위"]].rename(columns={"순위": f"{year1} 순위"})
+    df2 = df2[["주관사", "순위"]].rename(columns={"순위": f"{year2} 순위"})
 
-        allowed_columns = {
-            "ECM": ["금액(원)", "건수", "점유율(%)"],
-            "ABS": ["금액(원)", "건수", "점유율(%)"],
-            "FB": ["금액(원)", "건수", "점유율(%)"],
-            "국내채권": ["금액(원)", "건수", "점유율(%)"]
-        }
+    merged = pd.merge(df1, df2, on="주관사")
+    merged["변화"] = merged[f"{year1} 순위"] - merged[f"{year2} 순위"]
+    merged = merged[merged["변화"] > 0]
+    merged = merged.sort_values("변화", ascending=False)
 
-        if "~" in year_kw:
-            start, end = map(int, year_kw.split("~"))
-            years = list(range(start, end + 1))
-        else:
-            years = [int(year_kw)]
+    if merged.empty:
+        st.markdown(f"📉 {year1}년 → {year2}년 동안 순위가 상승한 증권사가 없습니다.")
+    else:
+        st.markdown(f"### ✅ {year1}년 대비 {year2}년 순위가 상승한 증권사")
+        st.dataframe(merged.reset_index(drop=True))
 
-        companies = []
-        if company_kw:
-            for raw in re.split(r"[\\/,]", company_kw):
-                raw = raw.strip()
-                if raw:
-                    companies.append(company_aliases.get(raw, raw))
-
-        if not re.search(r"\d+", rank_kw) and company_kw:
-            rank_range = None
-        else:
-            if "~" in rank_kw:
-                rank_start, rank_end = map(int, re.findall(r"\d+", rank_kw))
-                rank_range = list(range(rank_start, rank_end + 1))
-            else:
-                rank_range = [int(r) for r in re.findall(r"\d+", rank_kw)]
-
-        df = dfs.get(product)
-        if df is None:
-            return f"❌ '{product}' 데이터가 없어요."
-
-        if column_kw not in allowed_columns.get(product, []):
-            return f"❌ '{product}'에서는 '{column_kw}' 항목으로 필터할 수 없습니다.\n" \
-                   f"가능한 항목: {', '.join(allowed_columns.get(product, []))}"
-
-        result_rows = []
-
-        for year in years:
-            df_year = df[df["연도"] == year]
-            if df_year.empty:
-                continue
-
-            df_year = df_year.copy()
-            df_year["순위"] = df_year["대표주관"]
-
-            if rank_range:
-                df_year = df_year[df_year["순위"].isin(rank_range)]
-
-            if companies:
-                patterns = [c.replace(" ", "").lower() for c in companies]
-                df_year["주관사_정제"] = df_year["주관사"].astype(str).str.replace(" ", "").str.lower()
-                df_year = df_year[df_year["주관사_정제"].apply(
-                    lambda x: any(p in x for p in patterns)
-                )]
-
-            if not df_year.empty:
-                show_df = df_year[["연도", "주관사", "순위", column_kw]]
-                result_rows.append((year, product_full, show_df))
-
-        if not result_rows:
-            return "❌ 조건에 맞는 결과가 없습니다."
-
-        for (year, product_full, df_out) in result_rows:
-            st.markdown(f"### 🔗 {year}년 {product_full} 리그테이블")
-            st.dataframe(df_out.reset_index(drop=True))
-
-        return ""
-
-    except Exception as e:
-        return f"❌ 오류가 발생했어요: {str(e)}"
-
-# ✅ 질문 입력 처리
+# ✅ 입력
 query = st.text_input("질문을 입력하세요:")
 
 if query:
-    with st.spinner("답변을 생성 중입니다..."):
-        keywords = [kw.strip() for kw in query.split(",")]
-        if len(keywords) == 5:
-            response = process_keywords(keywords, dfs)
-            if response:
-                st.markdown(response)
-        else:
-            st.markdown("❌ 잘못된 형식입니다. 예시처럼 쉼표로 구분된 5가지 항목을 입력해주세요.")
+    with st.spinner("답변을 분석 중입니다..."):
+        try:
+            pattern = re.search(r"(\d{4})년[과, ]*(\d{4})년.*(ECM|ABS|FB|국내채권).*순위.*오른", query)
+            if pattern:
+                y1, y2, product = int(pattern.group(1)), int(pattern.group(2)), pattern.group(3).upper()
+                df = dfs.get(product)
+                if df is not None:
+                    compare_rank_change(df, y1, y2, product)
+                else:
+                    st.markdown(f"❌ '{product}' 데이터가 없습니다.")
+            else:
+                st.markdown("❌ 아직 이 질문은 이해하지 못해요. 예: `2023년, 2024년 비교해서 국내채권 대표주관사 중 순위 오른 증권사 알려줘.`")
+        except Exception as e:
+            st.error(f"오류 발생: {e}")
