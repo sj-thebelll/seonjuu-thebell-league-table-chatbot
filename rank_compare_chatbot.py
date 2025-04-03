@@ -62,21 +62,10 @@ st.markdown("""
 
 def parse_natural_query(query):
     try:
-        # 연도 추출
         years = list(map(int, re.findall(r"\\d{4}", query)))
-        if not years:
-            return None
-
-        # 상품 종류
         product = next((p for p in ["ECM", "ABS", "FB", "국내채권"] if p in query), None)
-        if not product:
-            return None
-
-        # 비교 요청 여부
-        is_compare = "비교" in query or "변화" in query or "오른" in query or "하락" in query
-
-        # 순위 범위
-        rank_range = list(range(1, 6)) if "1~5위" in query or "1-5위" in query else None
+        is_compare = any(k in query for k in ["비교", "변화", "오른", "하락"])
+        rank_range = list(range(1, 6)) if any(k in query for k in ["1~5위", "1-5위", "상위 5위"]) else None
 
         return {
             "years": years,
@@ -118,7 +107,7 @@ if query:
             st.error("❌ 아직 이 질문은 이해하지 못해요. 예: `2023년, 2024년 비교해서 국내채권 대표주관사 중 순위 오른 증권사 알려줘.`")
         else:
             df = dfs.get(parsed["product"])
-            if not df.empty:
+            if df is not None and not df.empty:
                 if parsed["compare"] and len(parsed["years"]) == 2:
                     up, down = compare_rank(df, parsed["years"][0], parsed["years"][1])
                     st.subheader(f"📈 {parsed['years'][0]} → {parsed['years'][1]} 상승한 증권사")
