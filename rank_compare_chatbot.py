@@ -7,6 +7,7 @@ import os
 import re
 import pandas as pd
 import openai
+from datetime import datetime
 from dotenv import load_dotenv
 from utils import load_dataframes
 
@@ -41,7 +42,8 @@ allowed_columns = {
 # ✅ UI 안내 텍스트
 st.title("🔔 더벨 리그테이블 챗봇")
 st.markdown("""
-이 챗봇은 더벨의 국내채권/ABS/FB/ECM 대표주관 리그테이블 데이터를 기반으로  자연어로 질문하고, 표 형태로 응답을 받는 챗봇입니다.
+이 챗봇은 더벨의 국내채권/ABS/FB/ECM 대표주관 리그테이블 데이터를 기반으로  
+자연어로 질문하고, 표 형태로 응답을 받는 챗봇입니다.
 
 #### 💬 예시 질문
 - `2024년 ECM 대표주관사 순위를 알려줘.`  
@@ -54,25 +56,35 @@ st.markdown("""
 - `ECM에서 2022년에 가장 많은 건수를 기록한 주관사는?`
 """)
 
-# ✅ 자연어 질문 파싱
+# ✅ 자연어 질문 파싱 함수
 def parse_natural_query(query):
     try:
-        if "부터" in query and "까지" in query:
-            start, end = map(int, re.findall(r"\\d{4}", query))
+        current_year = datetime.now().year
+
+        if "최근 3년" in query or "최근 3년간" in query:
+            years = [current_year - 2, current_year - 1, current_year]
+        elif "부터" in query and "까지" in query:
+            start, end = map(int, re.findall(r"\d{4}", query))
             years = list(range(start, end + 1))
         elif "~" in query:
-            start, end = map(int, re.findall(r"\\d{4}", query))
+            start, end = map(int, re.findall(r"\d{4}", query))
             years = list(range(start, end + 1))
         else:
-            years = list(map(int, re.findall(r"\\d{4}", query)))
+            years = list(map(int, re.findall(r"\d{4}", query)))
 
         product = next((p for p in ["ECM", "ABS", "FB", "국내채권"] if p in query), None)
         company = next((company_aliases[k] for k in company_aliases if k in query), None)
+
         is_compare = any(k in query for k in ["비교", "변화", "오른", "하락"])
-        rank_range = list(range(1, 6)) if any(k in query for k in ["1~5위", "1-5위", "상위 5위"]) else None
-        is_trend = "추이" in query or "변화" in query or "3년간" in query or "최근" in query
+        is_trend = any(k in query for k in ["추이", "변화", "3년간", "최근"])
         is_top = any(k in query for k in ["가장 높은", "최고", "1위"])
-        top_n = int(re.search(r"상위 (\\d+)개", query).group(1)) if re.search(r"상위 (\\d+)개", query) else None
+
+        rank_range = None
+        if re.search(r"1[~\-]5위", query) or "상위 5위" in query:
+            rank_range = list(range(1, 6))
+
+        top_n_match = re.search(r"상위 (\d+)개", query)
+        top_n = int(top_n_match.group(1)) if top_n_match else None
 
         return {
             "years": years,
@@ -84,6 +96,7 @@ def parse_natural_query(query):
             "is_top": is_top,
             "top_n": top_n
         }
+
     except:
         return None
 
@@ -99,8 +112,9 @@ def compare_rank(data, year1, year2):
     하락 = merged[merged["순위변화"] < 0].sort_values("순위변화")
     return 상승, 하락
 
-# ✅ 질문 입력
+# ✅ 입력창 및 버튼
 query = st.text_input("질문을 입력하세요:")
+
 st.markdown("""
 <style>
 .stButton > button {
@@ -113,8 +127,10 @@ st.markdown("""
 }
 </style>
 """, unsafe_allow_html=True)
+
 submit = st.button("🔍 질문하기")
 
+# ✅ 질문 처리
 if submit and query:
     with st.spinner("답변을 생성 중입니다..."):
         parsed = parse_natural_query(query)
@@ -125,19 +141,19 @@ if submit and query:
             df = dfs.get(parsed["product"])
             if df is not None and not df.empty:
 
-                # 추이 분석
+                # 1. 특정 증권사 순위 추이
                 if parsed["is_trend"] and parsed["company"]:
                     trend_df = df[df["주관사"] == parsed["company"]][["연도", "대표주관"]].sort_values("연도")
                     st.subheader(f"📈 {parsed['company']} 순위 추이")
                     st.dataframe(trend_df.rename(columns={"대표주관": "순위"}).reset_index(drop=True))
 
-                # 특정 항목 1위 기업
+                # 2. 연도별 1위
                 elif parsed["is_top"]:
                     top_result = df[df["대표주관"] == 1][["연도", "주관사"]].sort_values("연도")
                     st.subheader("🏆 연도별 1위 주관사")
                     st.dataframe(top_result.reset_index(drop=True))
 
-                # 특정 증권사 특정 연도 순위 조회
+                # 3. 특정 증권사 특정 연도
                 elif parsed["company"] and parsed["years"]:
                     for y in parsed["years"]:
                         company_df = df[(df["연도"] == y) & (df["주관사"] == parsed["company"])]
@@ -147,7 +163,7 @@ if submit and query:
                         else:
                             st.warning(f"{y}년 {parsed['product']} 데이터에서 {parsed['company']}를 찾을 수 없습니다.")
 
-                # 비교 요청
+                # 4. 비교 질문
                 elif parsed["compare"] and len(parsed["years"]) == 2:
                     up, down = compare_rank(df, parsed["years"][0], parsed["years"][1])
                     st.subheader(f"📈 {parsed['years'][0]} → {parsed['years'][1]} 상승한 증권사")
@@ -155,7 +171,7 @@ if submit and query:
                     st.subheader(f"📉 {parsed['years'][0]} → {parsed['years'][1]} 하락한 증권사")
                     st.dataframe(down.reset_index(drop=True))
 
-                # 기본 출력 (연도 + 상위 순위)
+                # 5. 기본 출력
                 else:
                     for y in parsed["years"]:
                         df_year = df[df["연도"] == y]
