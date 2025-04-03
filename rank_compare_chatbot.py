@@ -1,6 +1,6 @@
 import streamlit as st
 
-# ✅ 마지막에 먼저 시작된 줄이어야 합니다.
+# ✅ 반드시 첫 줄에 있어야 함
 st.set_page_config(page_title="더벨 리그테이블 챗봇", page_icon="🔔")
 
 import os
@@ -10,7 +10,7 @@ import re
 from utils import load_dataframes
 from dotenv import load_dotenv
 
-# ✅ 환경변수 로드 (.env에서 OpenAI 키 가져오기)
+# ✅ 환경변수 로딩
 load_dotenv()
 openai.api_key = os.environ["OPENAI_API_KEY"]
 
@@ -27,7 +27,13 @@ company_aliases = {
     "DB": "DB금융투자", "유안타": "유안타증권", "유진": "유진투자증권", "케이프": "케이프투자증권",
     "SK": "SK증권", "현대차": "현대차증권", "KTB": "KTB투자증권", "BNK": "BNK투자증권",
     "IBK": "IBK투자증권", "토스": "토스증권", "다올": "다올투자증권", "산은": "한국산업은행",
-    "농협": "NH투자증권", "신금투": "신한투자증권"
+    "농협": "NH투자증권", "신한": "신한투자증권"
+}
+
+# ✅ 항목명 보정
+column_aliases = {
+    "금액": "금액(원)",
+    "점유율": "점유율(%)"
 }
 
 # ✅ 설명 UI
@@ -76,7 +82,6 @@ def process_keywords(keywords, dfs):
         company_kw = keywords[3].strip()
         rank_kw = keywords[4].strip()
 
-        # "ABS 대표주관" 같은 값에서 "ABS"만 가져오기
         product_parts = product_full.split()
         product = product_parts[0].upper() if product_parts else ""
         column_kw = column_aliases.get(column_kw, column_kw)
@@ -85,7 +90,7 @@ def process_keywords(keywords, dfs):
             "ECM": ["금액(원)", "건수", "점유율(%)"],
             "ABS": ["금액(원)", "건수", "점유율(%)"],
             "FB": ["금액(원)", "건수", "점유율(%)"],
-            "국내체권": ["금액(원)", "건수", "점유율(%)"]
+            "국내채권": ["금액(원)", "건수", "점유율(%)"]
         }
 
         if "~" in year_kw:
@@ -121,7 +126,7 @@ def process_keywords(keywords, dfs):
         result_rows = []
 
         for year in years:
-            df_year = df[df["\uc5f0\ub3c4"] == year]
+            df_year = df[df["연도"] == year]
             if df_year.empty:
                 continue
 
@@ -165,5 +170,4 @@ if query:
             if response:
                 st.markdown(response)
         else:
-            st.markdown("❌ 잘못된 형식입니다. 예시처럼 쇸포로 구분된 5가지 항목을 입력해주세요.")
-
+            st.markdown("❌ 잘못된 형식입니다. 예시처럼 쉼표로 구분된 5가지 항목을 입력해주세요.")
