@@ -145,7 +145,7 @@ def process_keywords(keywords, dfs):
                 )]
 
             if not df_filtered.empty:
-                df_show = df_filtered[["연도", "주관사", column]].rename(columns={column: "순위"})
+                df_show = df_filtered[["연도", "주관사", column]]  # ✅ 컬럼명 그대로 유지
                 result_rows.append((year, product, df_show))
 
         if not result_rows:
