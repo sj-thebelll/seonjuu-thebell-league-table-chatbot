@@ -65,11 +65,10 @@ def parse_natural_query(query):
     try:
         current_year = datetime.now().year
 
-        # ✅ 쿼리 정리
         query = query.strip()
         query_no_space = query.replace(" ", "")
 
-        # ✅ 연도 추출 (단일 연도와 범위 모두 지원)
+        # ✅ 연도 추출
         years = []
         range_match = re.search(r"(\d{4})\s*[~\-]\s*(\d{4})", query)
         if range_match:
@@ -80,7 +79,7 @@ def parse_natural_query(query):
             year_matches = re.findall(r"\d{4}", query)
             years = list(map(int, year_matches))
 
-        # ✅ product 추출
+        # ✅ 부문 추출
         product_keywords = {
             "ECM": ["ECM", "이씨엠"],
             "ABS": ["ABS", "에이비에스"],
@@ -97,39 +96,37 @@ def parse_natural_query(query):
         if not product:
             return None
 
-        # ✅ company 추출
+        # ✅ 증권사 추출
         company = next((company_aliases[k] for k in company_aliases if k in query), None)
 
-        # ✅ 조건들
+        # ✅ 조건 플래그
         is_compare = any(k in query for k in ["비교", "변화", "오른", "하락"])
         is_trend = any(k in query for k in ["추이", "변화", "3년간", "최근"])
         is_top = any(k in query for k in ["가장 많은", "가장 높은", "최고", "1위"])
 
-        # ✅ column
-        column = "금액(원)"
+        # ✅ 기준 항목 추출 (복수 가능)
+        columns = []
         for keyword, col in column_aliases.items():
             if keyword in query:
-                column = col
-                break
+                columns.append(col)
+        if not columns:
+            columns = ["금액(원)"]  # 기본값
 
         # ✅ 순위 범위 추출
         rank_range = None
         top_n = None
 
-        # '상위 3개', 'Top 5' 등
         top_n_match = re.search(r"(?:상위\s*|Top\s*)(\d+)(?:위|개)?", query, re.IGNORECASE)
         if top_n_match:
             top_n = int(top_n_match.group(1))
             rank_range = list(range(1, top_n + 1))
 
-        # '1~5위', '2 - 4위' 등 숫자 범위 인식
         range_match = re.search(r"(\d+)\s*[~\-]\s*(\d+)\s*위", query)
         if range_match:
             start = int(range_match.group(1))
             end = int(range_match.group(2))
             rank_range = list(range(start, end + 1))
 
-        # ✅ 결과 리턴
         return {
             "years": years,
             "product": product,
@@ -139,12 +136,13 @@ def parse_natural_query(query):
             "is_trend": is_trend,
             "is_top": is_top,
             "top_n": top_n,
-            "column": column
+            "columns": columns
         }
 
     except Exception as e:
         st.write("❗ 파싱 중 오류 발생:", e)
         return None
+
         
 
         # ✅ company 추출
@@ -243,14 +241,16 @@ if submit and query:
 
                 if parsed["compare"] and len(parsed["years"]) == 2:
                     year1, year2 = parsed["years"]
-                    df1 = df[df["연도"] == year1].copy()
-                    df2 = df[df["연도"] == year2].copy()
+                    for col in parsed["columns"]:
+                        df1 = df[df["연도"] == year1].copy()
+                        df2 = df[df["연도"] == year2].copy()
 
-                    if df1.empty or df2.empty:
-                        st.warning(f"⚠️ {year1}년 또는 {year2}년 {parsed['product']} 데이터가 없습니다.")
-                    else:
-                        df1["순위1"] = df1[parsed["column"]].rank(ascending=False, method="min")
-                        df2["순위2"] = df2[parsed["column"]].rank(ascending=False, method="min")
+                        if df1.empty or df2.empty:
+                            st.warning(f"⚠️ {year1}년 또는 {year2}년 {parsed['product']} 데이터가 없습니다.")
+                            continue
+
+                        df1["순위1"] = df1[col].rank(ascending=False, method="min")
+                        df2["순위2"] = df2[col].rank(ascending=False, method="min")
 
                         merged = pd.merge(df1[["주관사", "순위1"]], df2[["주관사", "순위2"]], on="주관사")
                         merged["순위변화"] = merged["순위1"] - merged["순위2"]
@@ -258,10 +258,10 @@ if submit and query:
                         상승 = merged[merged["순위변화"] > 0].sort_values("순위변화", ascending=False)
                         하락 = merged[merged["순위변화"] < 0].sort_values("순위변화")
 
-                        st.subheader(f"📈 {year1} → {year2} 순위 상승 주관사 ({parsed['column']} 기준)")
+                        st.subheader(f"📈 {year1} → {year2} 순위 상승 주관사 ({col} 기준)")
                         st.dataframe(상승.reset_index(drop=True))
 
-                        st.subheader(f"📉 {year1} → {year2} 순위 하락 주관사 ({parsed['column']} 기준)")
+                        st.subheader(f"📉 {year1} → {year2} 순위 하락 주관사 ({col} 기준)")
                         st.dataframe(하락.reset_index(drop=True))
 
                 else:
@@ -271,36 +271,37 @@ if submit and query:
                             st.warning(f"⚠️ {y}년 {parsed['product']} 데이터가 없습니다.")
                             continue
 
-                        df_year = df_year.copy()
-                        df_year["순위"] = df_year[parsed["column"]].rank(ascending=False, method="min")
+                        for col in parsed["columns"]:
+                            df_year = df_year.copy()
+                            df_year["순위"] = df_year[col].rank(ascending=False, method="min")
 
-                        if parsed["is_top"]:
-                            sorted_df = df_year.sort_values(parsed["column"], ascending=False).copy()
-                            result = sorted_df[sorted_df["순위"] == 1][["순위", "주관사", parsed["column"]]]
-                            st.subheader(f"🏆 {y}년 {parsed['product']} {parsed['column']} 1위 주관사")
-                            st.dataframe(result.reset_index(drop=True))
-
-                        elif parsed["top_n"]:
-                            sorted_df = df_year.sort_values(parsed["column"], ascending=False).copy()
-                            result = sorted_df.head(parsed["top_n"])[["순위", "주관사", parsed["column"]]]
-                            st.subheader(f"📌 {y}년 {parsed['product']} {parsed['column']} 상위 {parsed['top_n']}개 주관사")
-                            st.dataframe(result.reset_index(drop=True))
-
-                        elif parsed["rank_range"]:
-                            result = df_year[df_year["순위"].isin(parsed["rank_range"])]
-                            result = result[["순위", "주관사", parsed["column"]]]
-                            st.subheader(f"📌 {y}년 {parsed['product']} {parsed['column']} 기준 리그테이블")
-                            st.dataframe(result.reset_index(drop=True))
-
-                        elif parsed["company"]:
-                            result = df_year[df_year["주관사"] == parsed["company"]][["순위", "주관사", parsed["column"]]]
-                            if not result.empty:
-                                st.subheader(f"🏅 {y}년 {parsed['product']}에서 {parsed['company']} 순위")
+                            if parsed["is_top"]:
+                                sorted_df = df_year.sort_values(col, ascending=False).copy()
+                                result = sorted_df[sorted_df["순위"] == 1][["순위", "주관사", col]]
+                                st.subheader(f"🏆 {y}년 {parsed['product']} {col} 1위 주관사")
                                 st.dataframe(result.reset_index(drop=True))
-                            else:
-                                st.warning(f"{y}년 {parsed['product']} 데이터에서 {parsed['company']}를 찾을 수 없습니다.")
 
-                        else:
-                            result = df_year[["순위", "주관사", parsed["column"]]]
-                            st.subheader(f"📌 {y}년 {parsed['product']} {parsed['column']} 기준 리그테이블")
-                            st.dataframe(result.reset_index(drop=True))
+                            elif parsed["top_n"]:
+                                sorted_df = df_year.sort_values(col, ascending=False).copy()
+                                result = sorted_df.head(parsed["top_n"])[["순위", "주관사", col]]
+                                st.subheader(f"📌 {y}년 {parsed['product']} {col} 상위 {parsed['top_n']}개 주관사")
+                                st.dataframe(result.reset_index(drop=True))
+
+                            elif parsed["rank_range"]:
+                                result = df_year[df_year["순위"].isin(parsed["rank_range"])]
+                                result = result[["순위", "주관사", col]]
+                                st.subheader(f"📌 {y}년 {parsed['product']} {col} 기준 리그테이블")
+                                st.dataframe(result.reset_index(drop=True))
+
+                            elif parsed["company"]:
+                                result = df_year[df_year["주관사"] == parsed["company"]][["순위", "주관사", col]]
+                                if not result.empty:
+                                    st.subheader(f"🏅 {y}년 {parsed['product']}에서 {parsed['company']} {col} 순위")
+                                    st.dataframe(result.reset_index(drop=True))
+                                else:
+                                    st.warning(f"{y}년 {parsed['product']} 데이터에서 {parsed['company']}를 찾을 수 없습니다.")
+
+                            else:
+                                result = df_year[["순위", "주관사", col]]
+                                st.subheader(f"📌 {y}년 {parsed['product']} {col} 기준 리그테이블")
+                                st.dataframe(result.reset_index(drop=True))
