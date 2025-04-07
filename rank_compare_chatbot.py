@@ -137,7 +137,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-submit = st.button("🔍 질문하기")
+submit = st.button("🔍 질문하기")  # 이거 꼭 있어야 함!!
 
 # ✅ 질문 처리
 if submit and query:
