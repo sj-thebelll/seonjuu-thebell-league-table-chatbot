@@ -72,21 +72,22 @@ def parse_natural_query(query):
         else:
             years = list(map(int, re.findall(r"\d{4}", query)))
 
-        product = next((p for p in ["ECM", "ABS", "FB", "국내체권"] if p in query), None)
+        product = next((p for p in ["ECM", "ABS", "FB", "국내채권"] if p in query), None)
         company = next((company_aliases[k] for k in company_aliases if k in query), None)
 
-        is_compare = any(k in query for k in ["\ube44\uad50", "\ubcc0\ud654", "\uc62c\uc740", "\ud558\ub77d"])
-        is_trend = any(k in query for k in ["\ucd94\uc774", "\ubcc0\ud654", "3\ub144\uac04", "\ucd5c\uadfc"])
-        is_top = any(k in query for k in ["\uac00\uc7a5 \ub9ce\uc740", "\uac00\uc7a5 \ub192\uc740", "\ucd5c\uace0", "1\uc704"])
+        is_compare = any(k in query for k in ["비교", "변화", "오른", "하락"])
+        is_trend = any(k in query for k in ["추이", "변화", "3년간", "최근"])
+        is_top = any(k in query for k in ["가장 많은", "가장 높은", "최고", "1위"])
 
-        column = "\uae08\uc561(\uc6d0)"
+        column = "금액(원)"
         for keyword, col in column_aliases.items():
             if keyword in query:
                 column = col
                 break
 
         rank_range = None
-        rank_match = re.search(r"(\d+)[~\-](\d+)\uc704", query)
+        # ex: 1~5위 / 1-5위
+        rank_match = re.search(r"(\d+)[~\-](\d+)위", query)
         if rank_match:
             start_rank = int(rank_match.group(1))
             end_rank = int(rank_match.group(2))
