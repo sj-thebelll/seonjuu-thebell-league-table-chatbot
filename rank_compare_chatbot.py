@@ -199,10 +199,10 @@ if submit and query:
                         하락 = merged[merged["순위변화"] < 0].sort_values("순위변화")
 
                         st.subheader(f"📈 {year1} → {year2} 순위 상승 주관사 ({parsed['column']} 기준)")
-                        st.dataframe(상승.reset_index(drop=True))
+                        st.dataframe(상승.reset_index(drop=True))  # ✅ 인덱스 제거
 
                         st.subheader(f"📉 {year1} → {year2} 순위 하락 주관사 ({parsed['column']} 기준)")
-                        st.dataframe(하락.reset_index(drop=True))
+                        st.dataframe(하락.reset_index(drop=True))  # ✅ 인덱스 제거
 
                 else:
                     for y in parsed["years"]:
@@ -216,32 +216,31 @@ if submit and query:
                             sorted_df["순위"] = sorted_df[parsed["column"]].rank(ascending=False, method="min")
                             result = sorted_df[sorted_df["순위"] == 1][["주관사", parsed["column"], "순위"]]
                             st.subheader(f"🏆 {y}년 {parsed['product']} {parsed['column']} 1위 주관사")
-                            st.dataframe(result.reset_index(drop=True))
+                            st.dataframe(result.reset_index(drop=True))  # ✅ 인덱스 제거
 
                         elif parsed["top_n"]:
                             sorted_df = df_year.sort_values(parsed["column"], ascending=False).copy()
                             sorted_df["순위"] = sorted_df[parsed["column"]].rank(ascending=False, method="min")
                             result = sorted_df.head(parsed["top_n"])[["주관사", parsed["column"], "순위"]]
                             st.subheader(f"📌 {y}년 {parsed['product']} {parsed['column']} 상위 {parsed['top_n']}개 주관사")
-                            st.dataframe(result.reset_index(drop=True))
+                            st.dataframe(result.reset_index(drop=True))  # ✅ 인덱스 제거
 
                         elif parsed["rank_range"]:
                             df_year = df_year.copy()
                             df_year["순위"] = df_year[parsed["column"]].rank(ascending=False, method="min")
                             result = df_year[df_year["순위"].isin(parsed["rank_range"])]
                             st.subheader(f"📌 {y}년 {parsed['product']} {parsed['column']} 기준 리그테이블")
-                            st.dataframe(result[["주관사", parsed["column"], "순위"]].reset_index(drop=True))
+                            st.dataframe(result[["주관사", parsed["column"], "순위"]].reset_index(drop=True))  # ✅ 인덱스 제거
 
                         elif parsed["company"]:
                             result = df_year[df_year["주관사"] == parsed["company"]][["주관사", "대표주관"]]
                             if not result.empty:
                                 st.subheader(f"🏅 {y}년 {parsed['product']}에서 {parsed['company']} 순위")
-                                st.dataframe(result.rename(columns={"대표주관": "순위"}).reset_index(drop=True))
+                                st.dataframe(result.rename(columns={"대표주관": "순위"}).reset_index(drop=True))  # ✅ 인덱스 제거
                             else:
                                 st.warning(f"{y}년 {parsed['product']} 데이터에서 {parsed['company']}를 찾을 수 없습니다.")
 
                         else:
                             st.subheader(f"📌 {y}년 {parsed['product']} 리그테이블")
-                            st.dataframe(df_year[["주관사", parsed["column"], "대표주관"]].reset_index(drop=True))
-
+                            st.dataframe(df_year[["주관사", parsed["column"], "대표주관"]].reset_index(drop=True))  # ✅ 인덱스 제거
 
