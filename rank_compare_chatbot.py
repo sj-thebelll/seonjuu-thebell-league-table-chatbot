@@ -169,7 +169,7 @@ if submit and query:
                         st.dataframe(result.reset_index(drop=True))
 
                     elif parsed["rank_range"]:
-                        result = df_year[df_year["대표주관"].isin(parsed["rank_range"])][["주관사", "금액(원)", "대표주관"]]
+                        result = df_year[df_year["대표주관"].isin(parsed["rank_range"])][["주관사", parsed["column"], "대표주관"]]
                         st.subheader(f"📌 {y}년 {parsed['product']} 리그테이블")
                         st.dataframe(result.reset_index(drop=True))
 
@@ -182,5 +182,7 @@ if submit and query:
                             st.warning(f"{y}년 {parsed['product']} 데이터에서 {parsed['company']}를 찾을 수 없습니다.")
 
                     else:
+                        sorted_df = df_year.sort_values(parsed["column"], ascending=False).copy()
+                        sorted_df["순위"] = sorted_df[parsed["column"]].rank(ascending=False, method="min")
                         st.subheader(f"📌 {y}년 {parsed['product']} 리그테이블")
-                        st.dataframe(df_year[["주관사", "금액(원)", "대표주관"]].reset_index(drop=True))
+                        st.dataframe(sorted_df[["주관사", parsed["column"], "순위"]].reset_index(drop=True))
