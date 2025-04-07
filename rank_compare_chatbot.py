@@ -150,12 +150,15 @@ def compare_rank(data, year1, year2):
     하락 = merged[merged["순위변화"] < 0].sort_values("순위변화")
     return 상승, 하락
 
-# ✅ 입력창 및 버튼
-query = st.text_input("질문을 입력하세요:")
+# ✅ 입력창 + 버튼 → st.form으로 묶어서 Enter로 제출 가능하게
+with st.form(key="question_form"):
+    query = st.text_input("질문을 입력하세요:")
+    submit = st.form_submit_button("🔍 질문하기")  # 버튼 이름 유지
 
+# ✅ 버튼 스타일은 아래처럼 유지
 st.markdown("""
 <style>
-.stButton > button {
+button[kind="formSubmit"] {
     background-color: #ff4b4b;
     color: white;
     border-radius: 10px;
@@ -166,7 +169,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-submit = st.button("🔍 질문하기")
 
 # ✅ 질문 처리
 if submit and query:
