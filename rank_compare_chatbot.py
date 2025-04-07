@@ -99,6 +99,56 @@ def parse_natural_query(query):
         # ✅ 조건들
         is_compare = any(k in query for k in ["비교", "변화", "오른", "하락"])
         is_trend = any(k in query for k in ["추이", "변화", "3년간", "최근"])
+        is_top = any(k in query for k in ["가장 많은", "가장 높은", "최고", "1위"])
+
+        # ✅ column
+        column = "금액(원)"
+        for keyword, col in column_aliases.items():
+            if keyword in query:
+                column = col
+                break
+
+        # ✅ 순위 범위 추출
+        rank_range = None
+        top_n = None
+
+        # '상위 3개', 'Top 5' 등
+        top_n_match = re.search(r"(?:상위\s*|Top\s*)(\d+)(?:위|개)?", query, re.IGNORECASE)
+        if top_n_match:
+            top_n = int(top_n_match.group(1))
+            rank_range = list(range(1, top_n + 1))
+
+        # '1~5위', '2 - 4위' 등 숫자 범위 인식
+        range_match = re.search(r"(\d+)\s*[~\-]\s*(\d+)\s*위", query)
+        if range_match:
+            start = int(range_match.group(1))
+            end = int(range_match.group(2))
+            rank_range = list(range(start, end + 1))
+
+        # ✅ 결과 리턴
+        return {
+            "years": years,
+            "product": product,
+            "company": company,
+            "compare": is_compare,
+            "rank_range": rank_range,
+            "is_trend": is_trend,
+            "is_top": is_top,
+            "top_n": top_n,
+            "column": column
+        }
+
+    except Exception as e:
+        st.write("❗ 파싱 중 오류 발생:", e)
+        return None
+        
+
+        # ✅ company 추출
+        company = next((company_aliases[k] for k in company_aliases if k in query), None)
+
+        # ✅ 조건들
+        is_compare = any(k in query for k in ["비교", "변화", "오른", "하락"])
+        is_trend = any(k in query for k in ["추이", "변화", "3년간", "최근"])
         is_top = any(k in query for k in ["가장 많은",_
 
 
