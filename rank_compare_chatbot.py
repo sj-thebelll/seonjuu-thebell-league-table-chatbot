@@ -72,17 +72,20 @@ def parse_natural_query(query):
         else:
             years = list(map(int, re.findall(r"\d{4}", query)))
 
+        # 👉 query 공백 제거 버전 생성
+        query_no_space = query.replace(" ", "")
+
         # ✅ 다양한 product 표현 인식
         product_keywords = {
             "ECM": ["ECM"],
             "ABS": ["ABS"],
             "FB": ["FB", "회사채"],
-            "국내채권": ["국내채권", "국내 채권", "국채", "국채권", "국내채권 리그테이블"]
+            "국내채권": ["국내채권", "국내채권리그테이블", "국채", "국채권"]
         }
 
         product = None
         for key, aliases in product_keywords.items():
-            if any(alias in query for alias in aliases):
+            if any(alias in query or alias in query_no_space for alias in aliases):
                 product = key
                 break
 
@@ -119,6 +122,7 @@ def parse_natural_query(query):
 
     except:
         return None
+
 
 # ✅ 비교 함수
 def compare_rank(data, year1, year2):
