@@ -61,26 +61,22 @@ def parse_natural_query(query):
     try:
         current_year = datetime.now().year
 
-        if "최근 3년" in query or "최근 3년간" in query:
-            years = [current_year - 2, current_year - 1, current_year]
-        elif "부터" in query and "까지" in query:
-            start, end = map(int, re.findall(r"\d{4}", query))
-            years = list(range(start, end + 1))
-        elif "~" in query:
-            start, end = map(int, re.findall(r"\d{4}", query))
-            years = list(range(start, end + 1))
-        else:
-            years = list(map(int, re.findall(r"\d{4}", query)))
-
-        # 👉 query 공백 제거 버전 생성
+        # ✅ 쿼리 정리
+        query = query.strip()
         query_no_space = query.replace(" ", "")
 
-        # ✅ 다양한 product 표현 인식
+        # ✅ 연도 추출
+        year_matches = re.findall(r"\d{4}", query)
+        if not year_matches:
+            return None
+        years = list(map(int, year_matches))
+
+        # ✅ product 추출 (공백 제거한 버전까지 포함해서 탐색)
         product_keywords = {
-            "ECM": ["ECM"],
-            "ABS": ["ABS"],
-            "FB": ["FB", "회사채"],
-            "국내채권": ["국내채권", "국내채권리그테이블", "국채", "국채권"]
+            "ECM": ["ECM", "이씨엠"],
+            "ABS": ["ABS", "에이비에스"],
+            "FB": ["FB", "회사채", "에프비"],
+            "국내채권": ["국내채권", "국내 채권", "국채", "국내채권리그테이블", "국내채권 리그테이블"]
         }
 
         product = None
@@ -89,18 +85,25 @@ def parse_natural_query(query):
                 product = key
                 break
 
+        if not product:
+            return None  # product는 필수 조건
+
+        # ✅ company 추출
         company = next((company_aliases[k] for k in company_aliases if k in query), None)
 
+        # ✅ 플래그 및 조건들
         is_compare = any(k in query for k in ["비교", "변화", "오른", "하락"])
         is_trend = any(k in query for k in ["추이", "변화", "3년간", "최근"])
         is_top = any(k in query for k in ["가장 많은", "가장 높은", "최고", "1위"])
 
+        # ✅ column 추출
         column = "금액(원)"
         for keyword, col in column_aliases.items():
             if keyword in query:
                 column = col
                 break
 
+        # ✅ 순위 범위 추출
         rank_range = None
         if re.search(r"1[~\-]5위", query) or "상위 5위" in query or "Top 5" in query:
             rank_range = list(range(1, 6))
@@ -120,8 +123,10 @@ def parse_natural_query(query):
             "column": column
         }
 
-    except:
+    except Exception as e:
+        st.write("❗ 파싱 중 오류 발생:", e)
         return None
+
 
 
 # ✅ 비교 함수
