@@ -104,11 +104,12 @@ def parse_natural_query(query):
         is_trend = any(k in query for k in ["추이", "변화", "3년간", "최근"])
         is_top = any(k in query for k in ["가장 많은", "가장 높은", "최고", "1위"])
 
-        # ✅ 기준 항목 추출 (복수 가능)
+        # ✅ 복수 기준 추출
         columns = []
         for keyword, col in column_aliases.items():
             if keyword in query:
                 columns.append(col)
+
         if not columns:
             columns = ["금액(원)"]  # 기본값
 
@@ -142,7 +143,6 @@ def parse_natural_query(query):
     except Exception as e:
         st.write("❗ 파싱 중 오류 발생:", e)
         return None
-
         
 
         # ✅ company 추출
