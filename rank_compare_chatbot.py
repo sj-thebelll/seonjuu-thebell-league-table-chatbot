@@ -155,10 +155,12 @@ st.markdown("""
 submit = st.button("🔍 질문하기")
 
 # ✅ 질문 처리
+# ✅ 질문 처리
 if submit and query:
-    with st.spinner("답변을 생성 중입니다..."):
-        parsed = parse_natural_query(query)
+    parsed = parse_natural_query(query)
+    st.write("🔍 파싱 결과:", parsed)  # ← 이 줄은 if 안에 있어야 해요
 
+    with st.spinner("답변을 생성 중입니다..."):
         if not parsed or not parsed.get("product"):
             st.error("❌ 아직 이 질문은 이해하지 못해요. 예: 삼성증권이 점유율 1위인 해 알려줘.")
         else:
@@ -186,8 +188,10 @@ if submit and query:
                         st.dataframe(result.reset_index(drop=True))
 
                     elif parsed["rank_range"]:
-                        result = df_year[df_year["대표주관"].isin(parsed["rank_range"])][["주관사", "금액(원)", "대표주관"]]
-                        st.subheader(f"📌 {y}년 {parsed['product']} 리그테이블")
+                        df_year = df_year.copy()
+                        df_year["순위"] = df_year["금액(원)"].rank(ascending=False, method="min")
+                        result = df_year[df_year["순위"].isin(parsed["rank_range"])][["주관사", "금액(원)", "순위"]]
+                        st.subheader(f"📌 {y}년 {parsed['product']} 리그테이블 1~5위")
                         st.dataframe(result.reset_index(drop=True))
 
                     elif parsed["company"]:
@@ -201,3 +205,4 @@ if submit and query:
                     else:
                         st.subheader(f"📌 {y}년 {parsed['product']} 리그테이블")
                         st.dataframe(df_year[["주관사", "금액(원)", "대표주관"]].reset_index(drop=True))
+
