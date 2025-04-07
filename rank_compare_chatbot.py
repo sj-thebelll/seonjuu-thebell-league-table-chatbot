@@ -86,7 +86,12 @@ def parse_natural_query(query):
                 break
 
         rank_range = None
-        if re.search(r"1[~\-]5위", query) or "상위 5위" in query:
+        rank_match = re.search(r"(\d+)[~\-](\d+)위", query)
+        if rank_match:
+            start_rank = int(rank_match.group(1))
+            end_rank = int(rank_match.group(2))
+            rank_range = list(range(start_rank, end_rank + 1))
+        elif "상위 5위" in query:
             rank_range = list(range(1, 6))
 
         top_n_match = re.search(r"상위 (\d+)개", query)
