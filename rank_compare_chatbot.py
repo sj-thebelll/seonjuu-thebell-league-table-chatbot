@@ -304,10 +304,11 @@ if submit and query:
                                 st.warning(f"{y}년 {parsed['product']} 데이터에서 {parsed['company']}를 찾을 수 없습니다.")
 
                         else:
-                            df_year = df_year.copy()
-                            df_year["순위"] = df_year[parsed["column"]].rank(ascending=False, method="min")
-                            result = df_year[["순위", "주관사", parsed["column"], "대표주관"]]
-                            st.subheader(f"📌 {y}년 {parsed['product']} 리그테이블")
-                            st.dataframe(result.reset_index(drop=True))
+df_year = df_year.copy()
+df_year["순위"] = df_year[parsed["column"]].rank(ascending=False, method="min")
+result = df_year[["순위", "주관사", parsed["column"]]]
+st.subheader(f"📌 {y}년 {parsed['product']} {parsed['column']} 기준 리그테이블")
+st.dataframe(result.reset_index(drop=True))
+
 
 
