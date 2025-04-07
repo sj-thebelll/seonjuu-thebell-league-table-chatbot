@@ -61,7 +61,6 @@ def parse_natural_query(query):
     try:
         current_year = datetime.now().year
 
-        # 연도 추출
         if "최근 3년" in query or "최근 3년간" in query:
             years = [current_year - 2, current_year - 1, current_year]
         elif "부터" in query and "까지" in query:
@@ -73,37 +72,21 @@ def parse_natural_query(query):
         else:
             years = list(map(int, re.findall(r"\d{4}", query)))
 
-        # 제품명 매핑 (띄어쓰기/오타 대응 포함)
-        product_map = {
-            "ecm": "ECM", "이씨엠": "ECM",
-            "abs": "ABS", "에이비에스": "ABS",
-            "fb": "FB", "에프비": "FB",
-            "국내채권": "국내채권", "국채": "국내채권"
-        }
-        product = None
-        for k, v in product_map.items():
-            if k.lower() in query.lower():
-                product = v
-                break
-
-        # 증권사명 추출
+        product = next((p for p in ["ECM", "ABS", "FB", "국내채권"] if p in query), None)
         company = next((company_aliases[k] for k in company_aliases if k in query), None)
 
-        # 특성 추출
         is_compare = any(k in query for k in ["비교", "변화", "오른", "하락"])
         is_trend = any(k in query for k in ["추이", "변화", "3년간", "최근"])
         is_top = any(k in query for k in ["가장 많은", "가장 높은", "최고", "1위"])
 
-        # 항목 (column) 추출
         column = "금액(원)"
         for keyword, col in column_aliases.items():
             if keyword in query:
                 column = col
                 break
 
-        # 순위 범위 추출 (1~5위, 2~10위 등)
         rank_range = None
-        rank_match = re.search(r"(\d+)[~\-](\d+)위", query)
+        rank_match = re.search(r"(\d+)[~\-](\d+)\s*위", query)
         if rank_match:
             start_rank = int(rank_match.group(1))
             end_rank = int(rank_match.group(2))
@@ -111,7 +94,6 @@ def parse_natural_query(query):
         elif "상위 5위" in query:
             rank_range = list(range(1, 6))
 
-        # 상위 N개 추출
         top_n_match = re.search(r"상위 (\d+)개", query)
         top_n = int(top_n_match.group(1)) if top_n_match else None
 
@@ -127,8 +109,7 @@ def parse_natural_query(query):
             "column": column
         }
 
-    except Exception as e:
-        print("❌ parse_natural_query 오류:", e)
+    except:
         return None
 
 # ✅ 비교 함수
