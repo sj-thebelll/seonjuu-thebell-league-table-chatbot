@@ -31,7 +31,7 @@ company_aliases = {
     "신금투": "신한투자증권"
 }
 
-column_aliases = {"금액": "금액(원)", "점유율": "점유율(%)"}
+column_aliases = {"금액": "금액(원)", "점유율": "점유율(%)", "건수": "건수"}
 allowed_columns = {
     "ECM": ["금액(원)", "건수", "점유율(%)"],
     "ABS": ["금액(원)", "건수", "점유율(%)"],
@@ -86,6 +86,9 @@ def parse_natural_query(query):
         top_n_match = re.search(r"상위 (\d+)개", query)
         top_n = int(top_n_match.group(1)) if top_n_match else None
 
+        column_keywords = {"금액": "금액(원)", "건수": "건수", "점유율": "점유율(%)"}
+        column = next((column_keywords[k] for k in column_keywords if k in query), "금액(원)")
+
         return {
             "years": years,
             "product": product,
@@ -94,7 +97,8 @@ def parse_natural_query(query):
             "rank_range": rank_range,
             "is_trend": is_trend,
             "is_top": is_top,
-            "top_n": top_n
+            "top_n": top_n,
+            "column": column
         }
 
     except:
@@ -176,8 +180,8 @@ if submit and query:
                     for y in parsed["years"]:
                         df_year = df[df["연도"] == y]
                         if parsed["top_n"]:
-                            df_year = df_year.sort_values("금액(원)", ascending=False).head(parsed["top_n"])
+                            df_year = df_year.sort_values(parsed["column"], ascending=False).head(parsed["top_n"])
                         elif parsed["rank_range"]:
                             df_year = df_year[df_year["대표주관"].isin(parsed["rank_range"])]
                         st.subheader(f"📌 {y}년 {parsed['product']} 리그테이블")
-                        st.dataframe(df_year[["주관사", "금액(원)", "대표주관"]].reset_index(drop=True))
+                        st.dataframe(df_year[["주관사", parsed["column"], "대표주관"]].reset_index(drop=True))
