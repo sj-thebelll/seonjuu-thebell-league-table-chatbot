@@ -79,15 +79,18 @@ def parse_natural_query(query):
         is_trend = any(k in query for k in ["추이", "변화", "3년간", "최근"])
         is_top = any(k in query for k in ["가장 높은", "최고", "1위"])
 
+        column = "금액(원)"
+        for keyword, col in column_aliases.items():
+            if keyword in query:
+                column = col
+                break
+
         rank_range = None
         if re.search(r"1[~\-]5위", query) or "상위 5위" in query:
             rank_range = list(range(1, 6))
 
         top_n_match = re.search(r"상위 (\d+)개", query)
         top_n = int(top_n_match.group(1)) if top_n_match else None
-
-        column_keywords = {"금액": "금액(원)", "건수": "건수", "점유율": "점유율(%)"}
-        column = next((column_keywords[k] for k in column_keywords if k in query), "금액(원)")
 
         return {
             "years": years,
