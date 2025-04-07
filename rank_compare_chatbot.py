@@ -103,29 +103,35 @@ def parse_natural_query(query):
                 column = col
                 break
 
-        # ✅ 순위 범위 추출
-        rank_range = None
-        if re.search(r"1[~\-]5위", query) or "상위 5위" in query or "Top 5" in query:
-            rank_range = list(range(1, 6))
+# ✅ 순위 범위 추출
+rank_range = None
+top_n = None
 
-        top_n_match = re.search(r"상위 (\d+)개", query)
-        top_n = int(top_n_match.group(1)) if top_n_match else None
+# Top N 또는 상위 N개 (예: "Top 3", "상위 5위", "상위 10개")
+top_n_match = re.search(r"(?:상위\s?|Top\s?)(\d+)(?:위|개)?", query, re.IGNORECASE)
+if top_n_match:
+    top_n = int(top_n_match.group(1))
+    rank_range = list(range(1, top_n + 1))
 
-        return {
-            "years": years,
-            "product": product,
-            "company": company,
-            "compare": is_compare,
-            "rank_range": rank_range,
-            "is_trend": is_trend,
-            "is_top": is_top,
-            "top_n": top_n,
-            "column": column
-        }
+# 1~5위, 1~3위 등 범위 표현
+elif re.search(r"1[~\-]5위", query):
+    rank_range = list(range(1, 6))
+elif re.search(r"1[~\-]3위", query):
+    rank_range = list(range(1, 4))
+elif re.search(r"1[~\-]10위", query):
+    rank_range = list(range(1, 11))
 
-    except Exception as e:
-        st.write("❗ 파싱 중 오류 발생:", e)
-        return None
+return {
+    "years": years,
+    "product": product,
+    "company": company,
+    "compare": is_compare,
+    "rank_range": rank_range,
+    "is_trend": is_trend,
+    "is_top": is_top,
+    "top_n": top_n,
+    "column": column
+}
 
 
 
