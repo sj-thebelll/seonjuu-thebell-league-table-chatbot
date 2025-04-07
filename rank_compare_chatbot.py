@@ -57,60 +57,57 @@ st.markdown("""
 """)
 
 # ✅ 자연어 질문 파싱 함수
-def parse_natural_query(query):
-    try:
-        current_year = datetime.now().year
+# ✅ 질문 처리
+if submit and query:
+    with st.spinner("답변을 생성 중입니다..."):
+        parsed = parse_natural_query(query)
 
-        if "최근 3년" in query or "최근 3년간" in query:
-            years = [current_year - 2, current_year - 1, current_year]
-        elif "부터" in query and "까지" in query:
-            start, end = map(int, re.findall(r"\d{4}", query))
-            years = list(range(start, end + 1))
-        elif "~" in query:
-            start, end = map(int, re.findall(r"\d{4}", query))
-            years = list(range(start, end + 1))
+        if not parsed or not parsed.get("product") or not parsed.get("years"):
+            st.error("❌ 아직 이 질문은 이해하지 못해요. 예: 삼성증권이 점유율 1위인 해 알려줘.")
         else:
-            years = list(map(int, re.findall(r"\d{4}", query)))
+            df = dfs.get(parsed["product"])
+            if df is not None and not df.empty:
 
-        product = next((p for p in ["ECM", "ABS", "FB", "국내채권"] if p in query), None)
-        company = next((company_aliases[k] for k in company_aliases if k in query), None)
+                for y in parsed["years"]:
+                    df_year = df[df["연도"] == y]
+                    if df_year.empty:
+                        st.warning(f"⚠️ {y}년 {parsed['product']} 데이터가 없습니다.")
+                        continue
 
-        is_compare = any(k in query for k in ["비교", "변화", "오른", "하락"])
-        is_trend = any(k in query for k in ["추이", "변화", "3년간", "최근"])
-        is_top = any(k in query for k in ["가장 많은", "가장 높은", "최고", "1위"])
+                    if parsed["is_top"]:
+                        sorted_df = df_year.sort_values(parsed["column"], ascending=False).copy()
+                        sorted_df["순위"] = sorted_df[parsed["column"]].rank(ascending=False, method="min")
+                        result = sorted_df[sorted_df["순위"] == 1][["주관사", parsed["column"], "순위"]]
+                        st.subheader(f"🏆 {y}년 {parsed['product']} {parsed['column']} 1위 주관사")
+                        st.dataframe(result.reset_index(drop=True))
 
-        column = "금액(원)"
-        for keyword, col in column_aliases.items():
-            if keyword in query:
-                column = col
-                break
+                    elif parsed["top_n"]:
+                        sorted_df = df_year.sort_values(parsed["column"], ascending=False).copy()
+                        sorted_df["순위"] = sorted_df[parsed["column"]].rank(ascending=False, method="min")
+                        result = sorted_df.head(parsed["top_n"])[["주관사", parsed["column"], "순위"]]
+                        st.subheader(f"📌 {y}년 {parsed['product']} {parsed['column']} 상위 {parsed['top_n']}개 주관사")
+                        st.dataframe(result.reset_index(drop=True))
 
-        rank_range = None
-        rank_match = re.search(r"(\d+)[~\-](\d+)\s*위", query)
-        if rank_match:
-            start_rank = int(rank_match.group(1))
-            end_rank = int(rank_match.group(2))
-            rank_range = list(range(start_rank, end_rank + 1))
-        elif "상위 5위" in query:
-            rank_range = list(range(1, 6))
+                    elif parsed["rank_range"]:
+                        sorted_df = df_year.copy()
+                        sorted_df = sorted_df[sorted_df["대표주관"].isin(parsed["rank_range"])]
+                        st.subheader(f"📌 {y}년 {parsed['product']} 대표주관 {parsed['rank_range'][0]}~{parsed['rank_range'][-1]}위")
+                        st.dataframe(sorted_df[["주관사", parsed["column"], "대표주관"]].reset_index(drop=True))
 
-        top_n_match = re.search(r"상위 (\d+)개", query)
-        top_n = int(top_n_match.group(1)) if top_n_match else None
+                    elif parsed["company"]:
+                        result = df_year[df_year["주관사"] == parsed["company"]][["주관사", "대표주관"]]
+                        if not result.empty:
+                            st.subheader(f"🏅 {y}년 {parsed['product']}에서 {parsed['company']} 순위")
+                            st.dataframe(result.rename(columns={"대표주관": "순위"}).reset_index(drop=True))
+                        else:
+                            st.warning(f"{y}년 {parsed['product']} 데이터에서 {parsed['company']}를 찾을 수 없습니다.")
 
-        return {
-            "years": years,
-            "product": product,
-            "company": company,
-            "compare": is_compare,
-            "rank_range": rank_range,
-            "is_trend": is_trend,
-            "is_top": is_top,
-            "top_n": top_n,
-            "column": column
-        }
+                    else:
+                        sorted_df = df_year.sort_values(parsed["column"], ascending=False).copy()
+                        sorted_df["순위"] = sorted_df[parsed["column"]].rank(ascending=False, method="min")
+                        st.subheader(f"📌 {y}년 {parsed['product']} 리그테이블")
+                        st.dataframe(sorted_df[["주관사", parsed["column"], "순위"]].reset_index(drop=True))
 
-    except:
-        return None
 
 # ✅ 비교 함수
 def compare_rank(data, year1, year2):
