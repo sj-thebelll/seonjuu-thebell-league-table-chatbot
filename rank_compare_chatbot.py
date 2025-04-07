@@ -239,6 +239,7 @@ if submit and query:
             df = dfs.get(parsed["product"])
             if df is not None and not df.empty:
 
+                # 1️⃣ 연도 2개, 기준 1개 → 연도별 비교
                 if parsed["compare"] and len(parsed["years"]) == 2:
                     year1, year2 = parsed["years"]
 
@@ -265,12 +266,12 @@ if submit and query:
                         st.subheader(f"📉 {year1} → {year2} 순위 하락 주관사 ({col} 기준)")
                         st.dataframe(하락.reset_index(drop=True))
 
+                # 2️⃣ 같은 연도, 기준 2개 → 기준 간 순위 비교
                 elif len(parsed["columns"]) == 2 and len(parsed["years"]) == 1:
-                    # ✅ 같은 연도에서 두 기준 비교 + 차이 강조
                     y = parsed["years"][0]
                     col1, col2 = parsed["columns"]
-
                     df_year = df[df["연도"] == y].copy()
+
                     if df_year.empty:
                         st.warning(f"⚠️ {y}년 {parsed['product']} 데이터가 없습니다.")
                     else:
@@ -278,7 +279,7 @@ if submit and query:
                         df_year[f"{col2}_순위"] = df_year[col2].rank(ascending=False, method="min")
                         df_year["순위차이"] = (df_year[f"{col1}_순위"] - df_year[f"{col2}_순위"]).abs()
 
-                        # 차이 있는 행만 노란색 표시
+                        # ✅ 차이 있는 행만 노란색 표시
                         def highlight_diff(row):
                             if row["순위차이"] > 0:
                                 return ['background-color: yellow'] * len(row)
@@ -286,8 +287,9 @@ if submit and query:
 
                         styled_df = df_year[["주관사", f"{col1}_순위", f"{col2}_순위", "순위차이"]].sort_values(f"{col1}_순위")
                         st.subheader(f"📊 {y}년 {parsed['product']} - {col1} vs {col2} 순위 비교")
-                        st.dataframe(styled_df.style.apply(highlight_diff, axis=1))
+                        st.write(styled_df.style.apply(highlight_diff, axis=1))
 
+                # 3️⃣ 일반적인 단일 연도 / 기준별 리그테이블
                 else:
                     for y in parsed["years"]:
                         df_year = df[df["연도"] == y]
@@ -329,4 +331,3 @@ if submit and query:
                                 result = df_year[["순위", "주관사", col]]
                                 st.subheader(f"📌 {y}년 {parsed['product']} {col} 기준 리그테이블")
                                 st.dataframe(result.reset_index(drop=True))
-
