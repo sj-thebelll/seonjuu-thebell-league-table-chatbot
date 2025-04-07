@@ -71,7 +71,7 @@ def parse_natural_query(query):
             return None
         years = list(map(int, year_matches))
 
-        # ✅ product 추출 (공백 제거한 버전까지 포함해서 탐색)
+        # ✅ product 추출
         product_keywords = {
             "ECM": ["ECM", "이씨엠"],
             "ABS": ["ABS", "에이비에스"],
@@ -86,52 +86,55 @@ def parse_natural_query(query):
                 break
 
         if not product:
-            return None  # product는 필수 조건
+            return None
 
         # ✅ company 추출
         company = next((company_aliases[k] for k in company_aliases if k in query), None)
 
-        # ✅ 플래그 및 조건들
+        # ✅ 조건들
         is_compare = any(k in query for k in ["비교", "변화", "오른", "하락"])
         is_trend = any(k in query for k in ["추이", "변화", "3년간", "최근"])
         is_top = any(k in query for k in ["가장 많은", "가장 높은", "최고", "1위"])
 
-        # ✅ column 추출
+        # ✅ column
         column = "금액(원)"
         for keyword, col in column_aliases.items():
             if keyword in query:
                 column = col
                 break
 
-# ✅ 순위 범위 추출
-rank_range = None
-top_n = None
+        # ✅ 순위 범위 추출
+        rank_range = None
+        top_n = None
 
-# Top N 또는 상위 N개 (예: "Top 3", "상위 5위", "상위 10개")
-top_n_match = re.search(r"(?:상위\s?|Top\s?)(\d+)(?:위|개)?", query, re.IGNORECASE)
-if top_n_match:
-    top_n = int(top_n_match.group(1))
-    rank_range = list(range(1, top_n + 1))
+        top_n_match = re.search(r"(?:상위\s?|Top\s?)(\d+)(?:위|개)?", query, re.IGNORECASE)
+        if top_n_match:
+            top_n = int(top_n_match.group(1))
+            rank_range = list(range(1, top_n + 1))
+        elif re.search(r"1[~\-]5위", query):
+            rank_range = list(range(1, 6))
+        elif re.search(r"1[~\-]3위", query):
+            rank_range = list(range(1, 4))
+        elif re.search(r"1[~\-]10위", query):
+            rank_range = list(range(1, 11))
 
-# 1~5위, 1~3위 등 범위 표현
-elif re.search(r"1[~\-]5위", query):
-    rank_range = list(range(1, 6))
-elif re.search(r"1[~\-]3위", query):
-    rank_range = list(range(1, 4))
-elif re.search(r"1[~\-]10위", query):
-    rank_range = list(range(1, 11))
+        # ✅ 결과 리턴 (반드시 try 내부에 들여쓰기 돼야 함)
+        return {
+            "years": years,
+            "product": product,
+            "company": company,
+            "compare": is_compare,
+            "rank_range": rank_range,
+            "is_trend": is_trend,
+            "is_top": is_top,
+            "top_n": top_n,
+            "column": column
+        }
 
-return {
-    "years": years,
-    "product": product,
-    "company": company,
-    "compare": is_compare,
-    "rank_range": rank_range,
-    "is_trend": is_trend,
-    "is_top": is_top,
-    "top_n": top_n,
-    "column": column
-}
+    except Exception as e:
+        st.write("❗ 파싱 중 오류 발생:", e)
+        return None
+
 
 
 
