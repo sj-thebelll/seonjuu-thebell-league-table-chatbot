@@ -170,8 +170,7 @@ submit = st.button("🔍 질문하기")
 
 # ✅ 질문 처리
 if submit and query:
-    parsed = parse_natural_query(query)
-    st.write("🔍 파싱 결과:", parsed)
+parsed = parse_natural_query(query)
 
     with st.spinner("답변을 생성 중입니다..."):
         if not parsed or not parsed.get("product"):
