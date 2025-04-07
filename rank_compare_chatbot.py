@@ -72,7 +72,20 @@ def parse_natural_query(query):
         else:
             years = list(map(int, re.findall(r"\d{4}", query)))
 
-        product = next((p for p in ["ECM", "ABS", "FB", "국내채권"] if p in query), None)
+        # ✅ 다양한 product 표현 인식
+        product_keywords = {
+            "ECM": ["ECM"],
+            "ABS": ["ABS"],
+            "FB": ["FB", "회사채"],
+            "국내채권": ["국내채권", "국내 채권", "국채", "국채권", "국내채권 리그테이블"]
+        }
+
+        product = None
+        for key, aliases in product_keywords.items():
+            if any(alias in query for alias in aliases):
+                product = key
+                break
+
         company = next((company_aliases[k] for k in company_aliases if k in query), None)
 
         is_compare = any(k in query for k in ["비교", "변화", "오른", "하락"])
@@ -86,7 +99,7 @@ def parse_natural_query(query):
                 break
 
         rank_range = None
-        if re.search(r"1[~\-]5위", query) or "상위 5위" in query:
+        if re.search(r"1[~\-]5위", query) or "상위 5위" in query or "Top 5" in query:
             rank_range = list(range(1, 6))
 
         top_n_match = re.search(r"상위 (\d+)개", query)
