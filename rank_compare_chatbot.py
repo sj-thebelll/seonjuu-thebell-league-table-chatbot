@@ -170,11 +170,11 @@ submit = st.button("🔍 질문하기")
 
 # ✅ 질문 처리
 if submit and query:
-parsed = parse_natural_query(query)
+    parsed = parse_natural_query(query)
 
     with st.spinner("답변을 생성 중입니다..."):
         if not parsed or not parsed.get("product"):
-            st.error("❌ 아직 이 질문은 이해하지 못해요. 예: 삼성종국이 점유율 1위인 해 알려줘.")
+            st.error("❌ 아직 이 질문은 이해하지 못해요. 예: 삼성증권이 점유율 1위인 해 알려줘.")
         else:
             df = dfs.get(parsed["product"])
             if df is not None and not df.empty:
