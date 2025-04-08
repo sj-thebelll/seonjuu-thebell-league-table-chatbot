@@ -40,13 +40,16 @@ elif platform.system() == 'Darwin':
 else:
     nanum_path = '/usr/share/fonts/truetype/nanum/NanumGothic.ttf'
     if os.path.exists(nanum_path):
-        fontprop = fm.FontProperties(fname=nanum_path)
-        plt.rcParams['font.family'] = fontprop.get_name()
+        # ✅ 폰트를 수동 등록하여 matplotlib이 인식하도록 처리
+        fm.fontManager.addfont(nanum_path)
+        nanum_name = fm.FontProperties(fname=nanum_path).get_name()
+        plt.rcParams['font.family'] = nanum_name
     else:
         plt.rcParams['font.family'] = 'sans-serif'
         st.warning("⚠️ 시스템에 한글 폰트가 설치되어 있지 않아 글자가 깨질 수 있습니다.")
 
 plt.rcParams['axes.unicode_minus'] = False  # 마이너스 깨짐 방지
+
 
 # ✅ 바 차트 또는 선 차트 자동 선택 함수
 def plot_bar_chart(df, x_col, y_cols):
