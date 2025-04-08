@@ -107,7 +107,7 @@ st.markdown("""
 """)
 
 
-# ✅ 자연어 질문 파싱 함수 (rank_range + top_n 개선 포함)
+# ✅ 자연어 질문 파싱 함수 (rank_range + top_n 개선 + is_chart 포함)
 def parse_natural_query(query):
     try:
         current_year = datetime.now().year
@@ -150,8 +150,7 @@ def parse_natural_query(query):
         is_compare = any(k in query for k in ["비교", "변화", "오른", "하락"])
         is_trend = any(k in query for k in ["추이", "변화", "3년간", "최근"])
         is_top = any(k in query for k in ["가장 많은", "가장 높은", "최고", "1위"])
-        is_chart = any(k in query for k in ["그래프", "차트", "보여줘"])
-
+        is_chart = any(k in query for k in ["그래프", "차트"])
 
         # ✅ 복수 기준 추출
         columns = []
@@ -189,15 +188,13 @@ def parse_natural_query(query):
             "is_trend": is_trend,
             "is_top": is_top,
             "top_n": top_n,
-            "columns": columns
-            "is_chart": is_chart
+            "columns": columns,
+            "is_chart": is_chart  # ✅ 추가된 항목
         }
 
     except Exception as e:
         st.write("❗ 파싱 중 오류 발생:", e)
         return None
-
-
 
 # ✅ 비교 함수
 def compare_rank(data, year1, year2):
