@@ -230,9 +230,10 @@ button[kind="formSubmit"] {
 # ✅ 금액(원) → 금액(억원) 변환 함수
 def format_억단위(df, colname):
     df = df.copy()
-    df[colname] = (df[colname] / 1e8).round(1)
-    df.rename(columns={colname: "금액(억원)"}, inplace=True)
+    df["금액(억원)"] = (df[colname] / 1e8).round(1).map(lambda x: f"{x:,.1f}")
+    df.drop(columns=[colname], inplace=True)
     return df
+
 
 # ✅ 질문 처리
 if submit and query:
