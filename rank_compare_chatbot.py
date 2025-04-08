@@ -9,7 +9,7 @@ import pandas as pd
 import openai
 from datetime import datetime
 from dotenv import load_dotenv
-from utils import load_dataframes, set_korean_font  # ✅ 여기! set_korean_font 추가
+from utils import load_dataframes, plot_bar_chart_plotly
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import platform
@@ -25,27 +25,31 @@ def set_korean_font():
         st.warning("⚠️ 'NanumGothic.ttf' 폰트 파일이 없어 한글이 깨질 수 있습니다.")
     plt.rcParams['axes.unicode_minus'] = False
 
-# ✅ 한글 폰트 설정 실행
-set_korean_font()
 
+# ✅ Plotly 바 차트 또는 선 차트 함수 (한글 깨짐 방지)
+import plotly.graph_objects as go
 
-# ✅ 바 차트 또는 선 차트 자동 선택 함수
-def plot_bar_chart(df, x_col, y_cols):
-    set_korean_font()  # ✅ 여기 추가
-    plt.figure(figsize=(10, 5))
+def plot_bar_chart_plotly(df, x_col, y_cols):
+    fig = go.Figure()
+
     if len(y_cols) == 1:
-        for y in y_cols:
-            plt.bar(df[x_col], df[y], label=y)
+        y = y_cols[0]
+        fig.add_trace(go.Bar(x=df[x_col], y=df[y], name=y))
     else:
         for y in y_cols:
-            plt.plot(df[x_col], df[y], marker='o', label=y)
+            fig.add_trace(go.Scatter(x=df[x_col], y=df[y], mode='lines+markers', name=y))
 
-    plt.xlabel(x_col)
-    plt.ylabel("금액" if "금액" in y_cols[0] else "순위")
-    plt.title("📊 주관사별 비교")
-    plt.xticks(rotation=45)
-    plt.legend()
-    st.pyplot(plt)
+    fig.update_layout(
+        title="📊 주관사별 비교",
+        xaxis_title=x_col,
+        yaxis_title="금액" if "금액" in y_cols[0] else "순위",
+        xaxis_tickangle=-45,
+        legend_title="기준",
+        height=500,
+        margin=dict(l=40, r=40, t=60, b=40)
+    )
+
+    st.plotly_chart(fig)
 
 
 # ✅ 환경 변수 및 API 키
@@ -294,7 +298,7 @@ if submit and query:
                         st.dataframe(result.reset_index(drop=True))
 
                         st.subheader("📈 순위 비교 그래프")
-                        plot_bar_chart(result, "주관사", [f"{col1}_순위", f"{col2}_순위"])
+                        plot_bar_chart_plotly(result, "주관사", [f"{col1}_순위", f"{col2}_순위"])  # ✅ 수정됨
 
                 # 3️⃣ 단일 연도 기준별 리그테이블
                 else:
@@ -330,7 +334,7 @@ if submit and query:
                                 if parsed.get("is_chart"):
                                     result_for_chart = result.sort_values(col, ascending=False)
                                     st.subheader("📈 그래프")
-                                    plot_bar_chart(result_for_chart, "주관사", [col])
+                                    plot_bar_chart_plotly(result_for_chart, "주관사", [col])  # ✅ 수정됨
 
                             # 3-3️⃣ rank_range
                             elif parsed["rank_range"]:
@@ -342,7 +346,7 @@ if submit and query:
                                 if parsed.get("is_chart"):
                                     result_for_chart = result.sort_values(col, ascending=False)
                                     st.subheader("📈 그래프")
-                                    plot_bar_chart(result_for_chart, "주관사", [col])
+                                    plot_bar_chart_plotly(result_for_chart, "주관사", [col])  # ✅ 수정됨
 
                             # 3-4️⃣ 특정 주관사
                             elif parsed["company"]:
@@ -362,5 +366,4 @@ if submit and query:
                                 if parsed.get("is_chart"):
                                     result_for_chart = result.sort_values(col, ascending=False)
                                     st.subheader("📈 그래프")
-                                    plot_bar_chart(result_for_chart, "주관사", [col])
-
+                                    plot_bar_chart_plotly(result_for_chart, "주관사", [col])  # ✅ 수정됨
