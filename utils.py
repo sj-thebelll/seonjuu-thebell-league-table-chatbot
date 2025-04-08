@@ -62,3 +62,18 @@ def load_dataframes(data_dir):
     print("📂 [DEBUG] 최종 로드된 데이터 키:", dfs.keys())
 
     return dfs
+
+   # ✅ 그래프용 한글 폰트 설정 함수
+   def set_korean_font():
+       import matplotlib.pyplot as plt
+       import matplotlib.font_manager as fm
+       import os
+
+       nanum_font_path = os.path.abspath("NanumGothic.ttf")  # 프로젝트 루트에 위치한 폰트
+       if os.path.exists(nanum_font_path):
+           fm.fontManager.addfont(nanum_font_path)
+           font_name = fm.FontProperties(fname=nanum_font_path).get_name()
+           plt.rcParams['font.family'] = font_name
+       else:
+           plt.rcParams['font.family'] = 'sans-serif'
+
