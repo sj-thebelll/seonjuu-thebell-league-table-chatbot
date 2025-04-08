@@ -10,6 +10,19 @@ import openai
 from datetime import datetime
 from dotenv import load_dotenv
 from utils import load_dataframes
+import matplotlib.pyplot as plt  # ✅ 그래프용 라이브러리 추가
+
+# ✅ 바 차트 출력 함수
+def plot_bar_chart(df, x_col, y_cols):
+    plt.figure(figsize=(10, 5))
+    for y in y_cols:
+        plt.plot(df[x_col], df[y], marker='o', label=y)
+    plt.xlabel(x_col)
+    plt.ylabel("순위")
+    plt.title("주관사별 순위 비교")
+    plt.gca().invert_yaxis()  # 순위는 낮을수록 상위니까
+    plt.legend()
+    st.pyplot(plt)
 
 # ✅ 환경 변수 및 API 키
 load_dotenv()
@@ -60,7 +73,7 @@ st.markdown("""
 """)
 
 
-# ✅ 자연어 질문 파싱 함수
+# ✅ 자연어 질문 파싱 함수 (rank_range + top_n 개선 포함)
 def parse_natural_query(query):
     try:
         current_year = datetime.now().year
@@ -117,16 +130,19 @@ def parse_natural_query(query):
         rank_range = None
         top_n = None
 
+        # "상위 3위", "Top 3" → top_n
         top_n_match = re.search(r"(?:상위\s*|Top\s*)(\d+)(?:위|개)?", query, re.IGNORECASE)
         if top_n_match:
             top_n = int(top_n_match.group(1))
             rank_range = list(range(1, top_n + 1))
 
+        # "1~3위", "2-5위" → rank_range
         range_match = re.search(r"(\d+)\s*[~\-]\s*(\d+)\s*위", query)
         if range_match:
             start = int(range_match.group(1))
             end = int(range_match.group(2))
             rank_range = list(range(start, end + 1))
+            top_n = end  # top_n도 설정해둠 (선택사항)
 
         return {
             "years": years,
@@ -138,56 +154,6 @@ def parse_natural_query(query):
             "is_top": is_top,
             "top_n": top_n,
             "columns": columns
-        }
-
-    except Exception as e:
-        st.write("❗ 파싱 중 오류 발생:", e)
-        return None
-        
-
-        # ✅ company 추출
-        company = next((company_aliases[k] for k in company_aliases if k in query), None)
-
-               # ✅ 조건들
-        is_compare = any(k in query for k in ["비교", "변화", "오른", "하락"])
-        is_trend = any(k in query for k in ["추이", "변화", "3년간", "최근"])
-        is_top = any(k in query for k in ["가장 많은", "가장 높은", "최고", "1위"])
-
-        # ✅ column
-        column = "금액(원)"
-        for keyword, col in column_aliases.items():
-            if keyword in query:
-                column = col
-                break
-
-        # ✅ 순위 범위 추출
-        rank_range = None
-        top_n = None
-
-        # '상위 3개', 'Top 5' 등
-        top_n_match = re.search(r"(?:상위\s*|Top\s*)(\d+)(?:위|개)?", query, re.IGNORECASE)
-        if top_n_match:
-            top_n = int(top_n_match.group(1))
-            rank_range = list(range(1, top_n + 1))
-
-        # '1~5위', '2 - 4위' 등 숫자 범위 인식
-        range_match = re.search(r"(\d+)\s*[~\-]\s*(\d+)\s*위", query)
-        if range_match:
-            start = int(range_match.group(1))
-            end = int(range_match.group(2))
-            rank_range = list(range(start, end + 1))
-
-        # ✅ 결과 리턴
-        return {
-            "years": years,
-            "product": product,
-            "company": company,
-            "compare": is_compare,
-            "rank_range": rank_range,
-            "is_trend": is_trend,
-            "is_top": is_top,
-            "top_n": top_n,
-            "column": column
         }
 
     except Exception as e:
@@ -242,23 +208,27 @@ if submit and query:
 
     with st.spinner("답변을 생성 중입니다..."):
         if not parsed or not parsed.get("product"):
-            st.error("❌ 아직 이 질문은 이해하지 못해요. 예: 삼성증권이 점유율 1위인 해 알려줘.")
+            st.error("❌ 아직 이 질문은 이해하지 못해요. 예: KB증권이 대표주관 1위인 해 알려줘.")
         else:
             df = dfs.get(parsed["product"])
             if df is not None and not df.empty:
 
                 # 1️⃣ 연도 2개, 기준 1개 → 연도별 비교
-                if parsed["compare"] and len(parsed["years"]) == 2:
+                if parsed["compare"] and len(parsed["years"]) == 2 and len(parsed["columns"]) == 1:
                     year1, year2 = parsed["years"]
+                    col = parsed["columns"][0]
+                    
+                    df1 = df[df["연도"] == year1].copy()
+                    df2 = df[df["연도"] == year2].copy()
 
-                    for col in parsed["columns"]:
-                        df1 = df[df["연도"] == year1].copy()
-                        df2 = df[df["연도"] == year2].copy()
+                    if col == "금액(원)":
+                        df1 = format_억단위(df1, col)
+                        df2 = format_억단위(df2, col)
+                        col = "금액(억원)"
 
-                        if df1.empty or df2.empty:
-                            st.warning(f"⚠️ {year1}년 또는 {year2}년 {parsed['product']} 데이터가 없습니다.")
-                            continue
-
+                    if df1.empty or df2.empty:
+                        st.warning(f"⚠️ {year1}년 또는 {year2}년 {parsed['product']} 데이터가 없습니다.")
+                    else:
                         df1["순위1"] = df1[col].rank(ascending=False, method="min")
                         df2["순위2"] = df2[col].rank(ascending=False, method="min")
 
@@ -270,11 +240,10 @@ if submit and query:
 
                         st.subheader(f"📈 {year1} → {year2} 순위 상승 주관사 ({col} 기준)")
                         st.dataframe(상승.reset_index(drop=True))
-
                         st.subheader(f"📉 {year1} → {year2} 순위 하락 주관사 ({col} 기준)")
                         st.dataframe(하락.reset_index(drop=True))
 
-                # 2️⃣ 같은 연도, 기준 2개 → 기준 간 순위 비교 (차이 강조)
+                # 2️⃣ 같은 연도, 기준 2개 → 기준 간 순위 비교 + 차이 강조 + 그래프
                 elif len(parsed["columns"]) == 2 and len(parsed["years"]) == 1:
                     y = parsed["years"][0]
                     col1, col2 = parsed["columns"]
@@ -283,6 +252,14 @@ if submit and query:
                     if df_year.empty:
                         st.warning(f"⚠️ {y}년 {parsed['product']} 데이터가 없습니다.")
                     else:
+                        # 금액이면 억단위 변환
+                        if col1 == "금액(원)":
+                            df_year = format_억단위(df_year, col1)
+                            col1 = "금액(억원)"
+                        if col2 == "금액(원)":
+                            df_year = format_억단위(df_year, col2)
+                            col2 = "금액(억원)"
+
                         df_year[f"{col1}_순위"] = df_year[col1].rank(ascending=False, method="min")
                         df_year[f"{col2}_순위"] = df_year[col2].rank(ascending=False, method="min")
                         df_year["순위차이"] = (df_year[f"{col1}_순위"] - df_year[f"{col2}_순위"]).abs()
@@ -296,7 +273,11 @@ if submit and query:
                         st.subheader(f"📊 {y}년 {parsed['product']} - {col1} vs {col2} 순위 비교")
                         st.write(styled_df.style.apply(highlight_diff, axis=1))
 
-                # 3️⃣ 단일 연도 + 단일 기준 → 일반 리그테이블
+                        # 그래프 출력
+                        st.subheader("📈 순위 비교 그래프")
+                        plot_bar_chart(styled_df, "주관사", [f"{col1}_순위", f"{col2}_순위"])
+
+                # 3️⃣ 단일 연도 기준별 리그테이블
                 else:
                     for y in parsed["years"]:
                         df_year = df[df["연도"] == y]
@@ -306,12 +287,12 @@ if submit and query:
 
                         for col in parsed["columns"]:
                             df_year = df_year.copy()
-                            df_year["순위"] = df_year[col].rank(ascending=False, method="min")
 
-                            # ✅ 금액(원) → 금액(억원) 변환
                             if col == "금액(원)":
                                 df_year = format_억단위(df_year, col)
                                 col = "금액(억원)"
+
+                            df_year["순위"] = df_year[col].rank(ascending=False, method="min")
 
                             if parsed["is_top"]:
                                 sorted_df = df_year.sort_values(col, ascending=False).copy()
@@ -324,6 +305,9 @@ if submit and query:
                                 result = sorted_df.head(parsed["top_n"])[["순위", "주관사", col]]
                                 st.subheader(f"📌 {y}년 {parsed['product']} {col} 상위 {parsed['top_n']}개 주관사")
                                 st.dataframe(result.reset_index(drop=True))
+
+                                # 📊 그래프 추가
+                                plot_bar_chart(result, "주관사", [col])
 
                             elif parsed["rank_range"]:
                                 result = df_year[df_year["순위"].isin(parsed["rank_range"])]
@@ -343,3 +327,4 @@ if submit and query:
                                 result = df_year[["순위", "주관사", col]]
                                 st.subheader(f"📌 {y}년 {parsed['product']} {col} 기준 리그테이블")
                                 st.dataframe(result.reset_index(drop=True))
+
