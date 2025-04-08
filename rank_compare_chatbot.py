@@ -269,11 +269,12 @@ if submit and query:
 
                         result = df_year[["주관사", f"{col1}_순위", f"{col2}_순위", "순위차이"]].sort_values(f"{col1}_순위")
                         st.subheader(f"📊 {y}년 {parsed['product']} - {col1} vs {col2} 순위 비교")
-                        st.dataframe(result.reset_index(drop=True))
+                        st.dataframe(result.reset_index(drop=True))  # 👉 강조 없이 테이블 출력
 
-                        # 그래프
-                        st.subheader("📈 순위 비교 그래프")
-                        plot_bar_chart(result, "주관사", [f"{col1}_순위", f"{col2}_순위"])
+                 # 그래프
+                  st.subheader("📈 순위 비교 그래프")
+                  plot_bar_chart(result, "주관사", [f"{col1}_순위", f"{col2}_순위"])
+
 
                 # 3️⃣ 단일 연도 기준별 리그테이블
                 else:
