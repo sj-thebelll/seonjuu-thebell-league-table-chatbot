@@ -11,17 +11,24 @@ from datetime import datetime
 from dotenv import load_dotenv
 from utils import load_dataframes
 import matplotlib.pyplot as plt  # ✅ 그래프용 라이브러리 추가
-
-# ✅ 운영체제별 한글 폰트 설정 추가
+import matplotlib.font_manager as fm  # ✅ 한글 폰트 설정을 위한 추가 모듈
 import platform
+
+# ✅ 운영체제별 한글 폰트 설정
 if platform.system() == 'Windows':
     plt.rcParams['font.family'] = 'Malgun Gothic'
 elif platform.system() == 'Darwin':  # macOS
     plt.rcParams['font.family'] = 'AppleGothic'
 else:  # Linux (예: Streamlit Cloud 등)
-    plt.rcParams['font.family'] = 'NanumGothic'
+    nanum_path = '/usr/share/fonts/truetype/nanum/NanumGothic.ttf'
+    if os.path.exists(nanum_path):
+        fontprop = fm.FontProperties(fname=nanum_path)
+        plt.rcParams['font.family'] = fontprop.get_name()
+    else:
+        plt.rcParams['font.family'] = 'sans-serif'  # 폰트 없으면 기본 폰트
 
-plt.rcParams['axes.unicode_minus'] = False  # 마이너스 부호 깨짐 방지
+plt.rcParams['axes.unicode_minus'] = False  # 마이너스 깨짐 방지
+
 
 
 # ✅ 바 차트 출력 함수
@@ -214,125 +221,54 @@ def format_억단위(df, colname):
     return df
 
 
-# ✅ 질문 처리
-if submit and query:
-    parsed = parse_natural_query(query)
-    st.write("🔍 파싱 결과:", parsed) 
+# 3️⃣ 단일 연도 기준별 리그테이블
+else:
+    for y in parsed["years"]:
+        df_year = df[df["연도"] == y]
+        if df_year.empty:
+            st.warning(f"⚠️ {y}년 {parsed['product']} 데이터가 없습니다.")
+            continue
 
-    with st.spinner("답변을 생성 중입니다..."):
-        if not parsed or not parsed.get("product"):
-            st.error("❌ 아직 이 질문은 이해하지 못해요. 예: KB증권이 대표주관 1위인 해 알려줘.")
-        else:
-            df = dfs.get(parsed["product"])
-            if df is not None and not df.empty:
+        for col in parsed["columns"]:
+            df_year = df_year.copy()
 
-                # 1️⃣ 연도 2개, 기준 1개 → 연도별 비교
-                if parsed["compare"] and len(parsed["years"]) == 2 and len(parsed["columns"]) == 1:
-                    year1, year2 = parsed["years"]
-                    col = parsed["columns"][0]
-                    
-                    df1 = df[df["연도"] == year1].copy()
-                    df2 = df[df["연도"] == year2].copy()
+            if col == "금액(원)":
+                df_year = format_억단위(df_year, col)
+                col = "금액(억원)"
 
-                    if col == "금액(원)":
-                        df1 = format_억단위(df1, col)
-                        df2 = format_억단위(df2, col)
-                        col = "금액(억원)"
+            df_year["순위"] = df_year[col].rank(ascending=False, method="min")
 
-                    if df1.empty or df2.empty:
-                        st.warning(f"⚠️ {year1}년 또는 {year2}년 {parsed['product']} 데이터가 없습니다.")
-                    else:
-                        df1["순위1"] = df1[col].rank(ascending=False, method="min")
-                        df2["순위2"] = df2[col].rank(ascending=False, method="min")
+            if parsed["is_top"]:
+                sorted_df = df_year.sort_values(col, ascending=False).copy()
+                result = sorted_df[sorted_df["순위"] == 1][["순위", "주관사", col]]
+                st.subheader(f"🏆 {y}년 {parsed['product']} {col} 1위 주관사")
+                st.dataframe(result.reset_index(drop=True))
 
-                        merged = pd.merge(df1[["주관사", "순위1"]], df2[["주관사", "순위2"]], on="주관사")
-                        merged["순위변화"] = merged["순위1"] - merged["순위2"]
+            elif parsed["top_n"]:
+                sorted_df = df_year.sort_values(col, ascending=False).copy()
+                result = sorted_df.head(parsed["top_n"])[["순위", "주관사", col]]
+                st.subheader(f"📌 {y}년 {parsed['product']} {col} 상위 {parsed['top_n']}개 주관사")
+                st.dataframe(result.reset_index(drop=True))
 
-                        상승 = merged[merged["순위변화"] > 0].sort_values("순위변화", ascending=False)
-                        하락 = merged[merged["순위변화"] < 0].sort_values("순위변화")
+                if parsed.get("is_chart"):
+                    plot_bar_chart(result, "주관사", [col])
 
-                        st.subheader(f"📈 {year1} → {year2} 순위 상승 주관사 ({col} 기준)")
-                        st.dataframe(상승.reset_index(drop=True))
-                        st.subheader(f"📉 {year1} → {year2} 순위 하락 주관사 ({col} 기준)")
-                        st.dataframe(하락.reset_index(drop=True))
+            elif parsed["rank_range"]:
+                result = df_year[df_year["순위"].isin(parsed["rank_range"])]
+                result = result[["순위", "주관사", col]]
+                st.subheader(f"📌 {y}년 {parsed['product']} {col} 기준 리그테이블")
+                st.dataframe(result.reset_index(drop=True))
 
-                # 2️⃣ 같은 연도, 기준 2개 → 기준 간 순위 비교 + 그래프 (강조 제거됨)
-                elif len(parsed["columns"]) == 2 and len(parsed["years"]) == 1:
-                    y = parsed["years"][0]
-                    col1, col2 = parsed["columns"]
-                    df_year = df[df["연도"] == y].copy()
-
-                    if df_year.empty:
-                        st.warning(f"⚠️ {y}년 {parsed['product']} 데이터가 없습니다.")
-                    else:
-                        if col1 == "금액(원)":
-                            df_year = format_억단위(df_year, col1)
-                            col1 = "금액(억원)"
-                        if col2 == "금액(원)":
-                            df_year = format_억단위(df_year, col2)
-                            col2 = "금액(억원)"
-
-                        df_year[f"{col1}_순위"] = df_year[col1].rank(ascending=False, method="min").astype(int)
-                        df_year[f"{col2}_순위"] = df_year[col2].rank(ascending=False, method="min").astype(int)
-                        df_year["순위차이"] = (df_year[f"{col1}_순위"] - df_year[f"{col2}_순위"]).abs()
-
-                        if parsed["rank_range"]:
-                            df_year = df_year[df_year[f"{col1}_순위"].isin(parsed["rank_range"])]
-
-                        result = df_year[["주관사", f"{col1}_순위", f"{col2}_순위", "순위차이"]].sort_values(f"{col1}_순위")
-                        st.subheader(f"📊 {y}년 {parsed['product']} - {col1} vs {col2} 순위 비교")
-                        st.dataframe(result.reset_index(drop=True))  # 👉 강조 없이 테이블 출력
-
-                  # 그래프
-                        st.subheader("📈 순위 비교 그래프")
-                        plot_bar_chart(result, "주관사", [f"{col1}_순위", f"{col2}_순위"])
-
-
-                # 3️⃣ 단일 연도 기준별 리그테이블
+            elif parsed["company"]:
+                result = df_year[df_year["주관사"] == parsed["company"]][["순위", "주관사", col]]
+                if not result.empty:
+                    st.subheader(f"🏅 {y}년 {parsed['product']}에서 {parsed['company']} {col} 순위")
+                    st.dataframe(result.reset_index(drop=True))
                 else:
-                    for y in parsed["years"]:
-                        df_year = df[df["연도"] == y]
-                        if df_year.empty:
-                            st.warning(f"⚠️ {y}년 {parsed['product']} 데이터가 없습니다.")
-                            continue
+                    st.warning(f"{y}년 {parsed['product']} 데이터에서 {parsed['company']}를 찾을 수 없습니다.")
 
-                        for col in parsed["columns"]:
-                            df_year = df_year.copy()
+            else:
+                result = df_year[["순위", "주관사", col]]
+                st.subheader(f"📌 {y}년 {parsed['product']} {col} 기준 리그테이블")
+                st.dataframe(result.reset_index(drop=True))
 
-                            if col == "금액(원)":
-                                df_year = format_억단위(df_year, col)
-                                col = "금액(억원)"
-
-                            df_year["순위"] = df_year[col].rank(ascending=False, method="min")
-
-                            if parsed["is_top"]:
-                                sorted_df = df_year.sort_values(col, ascending=False).copy()
-                                result = sorted_df[sorted_df["순위"] == 1][["순위", "주관사", col]]
-                                st.subheader(f"🏆 {y}년 {parsed['product']} {col} 1위 주관사")
-                                st.dataframe(result.reset_index(drop=True))
-
-                            elif parsed["top_n"]:
-                                sorted_df = df_year.sort_values(col, ascending=False).copy()
-                                result = sorted_df.head(parsed["top_n"])[["순위", "주관사", col]]
-                                st.subheader(f"📌 {y}년 {parsed['product']} {col} 상위 {parsed['top_n']}개 주관사")
-                                st.dataframe(result.reset_index(drop=True))
-                                plot_bar_chart(result, "주관사", [col])
-
-                            elif parsed["rank_range"]:
-                                result = df_year[df_year["순위"].isin(parsed["rank_range"])]
-                                result = result[["순위", "주관사", col]]
-                                st.subheader(f"📌 {y}년 {parsed['product']} {col} 기준 리그테이블")
-                                st.dataframe(result.reset_index(drop=True))
-
-                            elif parsed["company"]:
-                                result = df_year[df_year["주관사"] == parsed["company"]][["순위", "주관사", col]]
-                                if not result.empty:
-                                    st.subheader(f"🏅 {y}년 {parsed['product']}에서 {parsed['company']} {col} 순위")
-                                    st.dataframe(result.reset_index(drop=True))
-                                else:
-                                    st.warning(f"{y}년 {parsed['product']} 데이터에서 {parsed['company']}를 찾을 수 없습니다.")
-
-                            else:
-                                result = df_year[["순위", "주관사", col]]
-                                st.subheader(f"📌 {y}년 {parsed['product']} {col} 기준 리그테이블")
-                                st.dataframe(result.reset_index(drop=True))
