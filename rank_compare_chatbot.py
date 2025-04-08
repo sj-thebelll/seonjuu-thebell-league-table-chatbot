@@ -196,7 +196,8 @@ button[kind="formSubmit"] {
 # ✅ 금액(원) → 금액(억원) 변환 함수
 def format_억단위(df, colname):
     df = df.copy()
-    df["금액(억원)"] = (df[colname] / 1e8).round(1).apply(lambda x: f"{x:,.1f}")
+    # 1억으로 나누고 소수 첫째자리까지 반올림 (숫자형 유지)
+    df["금액(억원)"] = (df[colname] / 1e8).round(1)
     df.drop(columns=[colname], inplace=True)
     return df
 
@@ -243,7 +244,7 @@ if submit and query:
                         st.subheader(f"📉 {year1} → {year2} 순위 하락 주관사 ({col} 기준)")
                         st.dataframe(하락.reset_index(drop=True))
 
-                # 2️⃣ 같은 연도, 기준 2개 → 기준 간 순위 비교 + 차이 강조 + 그래프
+                # 2️⃣ 같은 연도, 기준 2개 → 기준 간 순위 비교 + 그래프 (강조 제거됨)
                 elif len(parsed["columns"]) == 2 and len(parsed["years"]) == 1:
                     y = parsed["years"][0]
                     col1, col2 = parsed["columns"]
@@ -252,7 +253,6 @@ if submit and query:
                     if df_year.empty:
                         st.warning(f"⚠️ {y}년 {parsed['product']} 데이터가 없습니다.")
                     else:
-                        # 금액이면 억단위 변환
                         if col1 == "금액(원)":
                             df_year = format_억단위(df_year, col1)
                             col1 = "금액(억원)"
@@ -264,18 +264,16 @@ if submit and query:
                         df_year[f"{col2}_순위"] = df_year[col2].rank(ascending=False, method="min").astype(int)
                         df_year["순위차이"] = (df_year[f"{col1}_순위"] - df_year[f"{col2}_순위"]).abs()
 
-                        def highlight_diff(row):
-                            if row["순위차이"] > 0:
-                                return ['background-color: yellow'] * len(row)
-                            return [''] * len(row)
+                        if parsed["rank_range"]:
+                            df_year = df_year[df_year[f"{col1}_순위"].isin(parsed["rank_range"])]
 
-                        styled_df = df_year[["주관사", f"{col1}_순위", f"{col2}_순위", "순위차이"]].sort_values(f"{col1}_순위")
+                        result = df_year[["주관사", f"{col1}_순위", f"{col2}_순위", "순위차이"]].sort_values(f"{col1}_순위")
                         st.subheader(f"📊 {y}년 {parsed['product']} - {col1} vs {col2} 순위 비교")
-                        st.write(styled_df.style.apply(highlight_diff, axis=1))
+                        st.dataframe(result.reset_index(drop=True))
 
-                        # 그래프 출력
+                        # 그래프
                         st.subheader("📈 순위 비교 그래프")
-                        plot_bar_chart(styled_df, "주관사", [f"{col1}_순위", f"{col2}_순위"])
+                        plot_bar_chart(result, "주관사", [f"{col1}_순위", f"{col2}_순위"])
 
                 # 3️⃣ 단일 연도 기준별 리그테이블
                 else:
@@ -305,8 +303,6 @@ if submit and query:
                                 result = sorted_df.head(parsed["top_n"])[["순위", "주관사", col]]
                                 st.subheader(f"📌 {y}년 {parsed['product']} {col} 상위 {parsed['top_n']}개 주관사")
                                 st.dataframe(result.reset_index(drop=True))
-
-                                # 📊 그래프 추가
                                 plot_bar_chart(result, "주관사", [col])
 
                             elif parsed["rank_range"]:
@@ -327,4 +323,3 @@ if submit and query:
                                 result = df_year[["순위", "주관사", col]]
                                 st.subheader(f"📌 {y}년 {parsed['product']} {col} 기준 리그테이블")
                                 st.dataframe(result.reset_index(drop=True))
-
