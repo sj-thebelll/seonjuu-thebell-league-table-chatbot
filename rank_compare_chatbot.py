@@ -230,7 +230,7 @@ button[kind="formSubmit"] {
 # ✅ 금액(원) → 금액(억원) 변환 함수
 def format_억단위(df, colname):
     df = df.copy()
-    df["금액(억원)"] = (df[colname] / 1e8).round(1).map(lambda x: f"{x:,.1f}")
+    df["금액(억원)"] = (df[colname] / 1e8).round(1).apply(lambda x: f"{x:,.1f}")
     df.drop(columns=[colname], inplace=True)
     return df
 
@@ -238,6 +238,7 @@ def format_억단위(df, colname):
 # ✅ 질문 처리
 if submit and query:
     parsed = parse_natural_query(query)
+    st.write("🔍 파싱 결과:", parsed) 
 
     with st.spinner("답변을 생성 중입니다..."):
         if not parsed or not parsed.get("product"):
