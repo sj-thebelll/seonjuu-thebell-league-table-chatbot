@@ -43,17 +43,23 @@ def plot_bar_chart(df, x_col, y_cols):
     import os
 
     # ✅ 한글 폰트 설정 다시 적용 (함수 내에서)
+    font_set = False
     if platform.system() == 'Windows':
         plt.rcParams['font.family'] = 'Malgun Gothic'
+        font_set = True
     elif platform.system() == 'Darwin':
         plt.rcParams['font.family'] = 'AppleGothic'
+        font_set = True
     else:
         nanum_path = '/usr/share/fonts/truetype/nanum/NanumGothic.ttf'
         if os.path.exists(nanum_path):
             fontprop = fm.FontProperties(fname=nanum_path)
             plt.rcParams['font.family'] = fontprop.get_name()
+            font_set = True
         else:
             plt.rcParams['font.family'] = 'sans-serif'
+            st.warning("⚠️ 시스템에 한글 폰트가 설치되어 있지 않아 글자가 깨질 수 있습니다.")
+
     plt.rcParams['axes.unicode_minus'] = False
 
     # ✅ 그래프 그리기
@@ -71,6 +77,7 @@ def plot_bar_chart(df, x_col, y_cols):
     plt.xticks(rotation=45)
     plt.legend()
     st.pyplot(plt)
+
 
 
 
