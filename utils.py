@@ -72,8 +72,8 @@ def plot_bar_chart_plotly(df, x_col, y_cols, title="📊 주관사별 비교"):
         fig = px.bar(df, x=x_col, y=y_col, text=y_col, title=title)
         fig.update_traces(texttemplate='%{text:.2s}', textposition='outside')
         fig.update_layout(
-            title_font=dict(family="Nanum Gothic", size=20),  # ✅ 제목도 한글 폰트
-            font=dict(family="Nanum Gothic", size=12),        # ✅ 전체 텍스트 한글 적용
+            title_font=dict(family="Nanum Gothic", size=20),  # ✅ 제목 한글 폰트 지정
+            font=dict(family="Nanum Gothic", size=12),        # ✅ 전체 텍스트 한글 폰트 지정
             uniformtext_minsize=8,
             uniformtext_mode='hide',
             xaxis_tickangle=-45
