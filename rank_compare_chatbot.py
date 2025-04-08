@@ -13,46 +13,25 @@ from utils import load_dataframes
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import platform
-import subprocess  # ✅ 추가
 
-# ✅ 한글 폰트 설치 함수 (Linux 환경 한정)
-def install_font_linux():
-    if platform.system() == "Linux":
-        font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
-        if not os.path.exists(font_path):
-            st.warning("📦 한글 폰트를 설치 중입니다. 잠시만 기다려주세요...")
-            try:
-                subprocess.run(["apt-get", "update"], check=True)
-                subprocess.run(["apt-get", "install", "-y", "fonts-nanum"], check=True)
-                subprocess.run(["fc-cache", "-fv"], check=True)
-                st.success("✅ 한글 폰트 설치가 완료되었습니다. 새로고침 후 이용해주세요.")
-            except Exception as e:
-                st.error(f"❌ 폰트 설치 중 오류 발생: {e}")
-
-# ✅ 한글 폰트 설치 먼저 시도
-install_font_linux()
-
-# ✅ 운영체제별 한글 폰트 설정
-if platform.system() == 'Windows':
-    plt.rcParams['font.family'] = 'Malgun Gothic'
-elif platform.system() == 'Darwin':
-    plt.rcParams['font.family'] = 'AppleGothic'
-else:
-    nanum_path = '/usr/share/fonts/truetype/nanum/NanumGothic.ttf'
-    if os.path.exists(nanum_path):
-        # ✅ 폰트를 수동 등록하여 matplotlib이 인식하도록 처리
-        fm.fontManager.addfont(nanum_path)
-        nanum_name = fm.FontProperties(fname=nanum_path).get_name()
-        plt.rcParams['font.family'] = nanum_name
+# ✅ 한글 폰트 수동 설정 함수 (업로드한 NanumGothic.ttf 사용)
+def set_korean_font():
+    font_path = "NanumGothic.ttf"  # ✅ 루트 디렉토리에 업로드한 경로
+    if os.path.exists(font_path):
+        fontprop = fm.FontProperties(fname=font_path)
+        plt.rcParams['font.family'] = fontprop.get_name()
     else:
         plt.rcParams['font.family'] = 'sans-serif'
-        st.warning("⚠️ 시스템에 한글 폰트가 설치되어 있지 않아 글자가 깨질 수 있습니다.")
+        st.warning("⚠️ 'NanumGothic.ttf' 폰트 파일이 없어 한글이 깨질 수 있습니다.")
+    plt.rcParams['axes.unicode_minus'] = False
 
-plt.rcParams['axes.unicode_minus'] = False  # 마이너스 깨짐 방지
+# ✅ 한글 폰트 설정 실행
+set_korean_font()
 
 
 # ✅ 바 차트 또는 선 차트 자동 선택 함수
 def plot_bar_chart(df, x_col, y_cols):
+    set_korean_font()  # ✅ 여기 추가
     plt.figure(figsize=(10, 5))
     if len(y_cols) == 1:
         for y in y_cols:
