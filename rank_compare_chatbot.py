@@ -12,6 +12,18 @@ from dotenv import load_dotenv
 from utils import load_dataframes
 import matplotlib.pyplot as plt  # ✅ 그래프용 라이브러리 추가
 
+# ✅ 운영체제별 한글 폰트 설정 추가
+import platform
+if platform.system() == 'Windows':
+    plt.rcParams['font.family'] = 'Malgun Gothic'
+elif platform.system() == 'Darwin':  # macOS
+    plt.rcParams['font.family'] = 'AppleGothic'
+else:  # Linux (예: Streamlit Cloud 등)
+    plt.rcParams['font.family'] = 'NanumGothic'
+
+plt.rcParams['axes.unicode_minus'] = False  # 마이너스 부호 깨짐 방지
+
+
 # ✅ 바 차트 출력 함수
 def plot_bar_chart(df, x_col, y_cols):
     plt.figure(figsize=(10, 5))
