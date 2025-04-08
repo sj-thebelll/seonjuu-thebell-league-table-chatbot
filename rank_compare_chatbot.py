@@ -10,59 +10,46 @@ import openai
 from datetime import datetime
 from dotenv import load_dotenv
 from utils import load_dataframes
-import matplotlib.pyplot as plt  # ✅ 그래프용 라이브러리 추가
-import matplotlib.font_manager as fm  # ✅ 한글 폰트 설정을 위한 추가 모듈
-import platform
-
-# ✅ 운영체제별 한글 폰트 설정 (코드 최상단에 위치해야 함)
-import platform
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
-import os
+import platform
+import subprocess  # ✅ 추가
 
+# ✅ 한글 폰트 설치 함수 (Linux 환경 한정)
+def install_font_linux():
+    if platform.system() == "Linux":
+        font_path = "/usr/share/fonts/truetype/nanum/NanumGothic.ttf"
+        if not os.path.exists(font_path):
+            st.warning("📦 한글 폰트를 설치 중입니다. 잠시만 기다려주세요...")
+            try:
+                subprocess.run(["apt-get", "update"], check=True)
+                subprocess.run(["apt-get", "install", "-y", "fonts-nanum"], check=True)
+                subprocess.run(["fc-cache", "-fv"], check=True)
+                st.success("✅ 한글 폰트 설치가 완료되었습니다. 새로고침 후 이용해주세요.")
+            except Exception as e:
+                st.error(f"❌ 폰트 설치 중 오류 발생: {e}")
+
+# ✅ 한글 폰트 설치 먼저 시도
+install_font_linux()
+
+# ✅ 운영체제별 한글 폰트 설정
 if platform.system() == 'Windows':
     plt.rcParams['font.family'] = 'Malgun Gothic'
-elif platform.system() == 'Darwin':  # macOS
+elif platform.system() == 'Darwin':
     plt.rcParams['font.family'] = 'AppleGothic'
-else:  # Linux (예: Streamlit Cloud 등)
+else:
     nanum_path = '/usr/share/fonts/truetype/nanum/NanumGothic.ttf'
     if os.path.exists(nanum_path):
         fontprop = fm.FontProperties(fname=nanum_path)
         plt.rcParams['font.family'] = fontprop.get_name()
     else:
-        plt.rcParams['font.family'] = 'sans-serif'  # fallback
+        plt.rcParams['font.family'] = 'sans-serif'
+        st.warning("⚠️ 시스템에 한글 폰트가 설치되어 있지 않아 글자가 깨질 수 있습니다.")
 
 plt.rcParams['axes.unicode_minus'] = False  # 마이너스 깨짐 방지
 
-
 # ✅ 바 차트 또는 선 차트 자동 선택 함수
 def plot_bar_chart(df, x_col, y_cols):
-    import matplotlib.pyplot as plt
-    import matplotlib.font_manager as fm
-    import platform
-    import os
-
-    # ✅ 한글 폰트 설정 다시 적용 (함수 내에서)
-    font_set = False
-    if platform.system() == 'Windows':
-        plt.rcParams['font.family'] = 'Malgun Gothic'
-        font_set = True
-    elif platform.system() == 'Darwin':
-        plt.rcParams['font.family'] = 'AppleGothic'
-        font_set = True
-    else:
-        nanum_path = '/usr/share/fonts/truetype/nanum/NanumGothic.ttf'
-        if os.path.exists(nanum_path):
-            fontprop = fm.FontProperties(fname=nanum_path)
-            plt.rcParams['font.family'] = fontprop.get_name()
-            font_set = True
-        else:
-            plt.rcParams['font.family'] = 'sans-serif'
-            st.warning("⚠️ 시스템에 한글 폰트가 설치되어 있지 않아 글자가 깨질 수 있습니다.")
-
-    plt.rcParams['axes.unicode_minus'] = False
-
-    # ✅ 그래프 그리기
     plt.figure(figsize=(10, 5))
     if len(y_cols) == 1:
         for y in y_cols:
@@ -77,8 +64,6 @@ def plot_bar_chart(df, x_col, y_cols):
     plt.xticks(rotation=45)
     plt.legend()
     st.pyplot(plt)
-
-
 
 
 # ✅ 환경 변수 및 API 키
