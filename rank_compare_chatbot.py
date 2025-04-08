@@ -14,7 +14,12 @@ import matplotlib.pyplot as plt  # ✅ 그래프용 라이브러리 추가
 import matplotlib.font_manager as fm  # ✅ 한글 폰트 설정을 위한 추가 모듈
 import platform
 
-# ✅ 운영체제별 한글 폰트 설정
+# ✅ 운영체제별 한글 폰트 설정 (코드 최상단에 위치해야 함)
+import platform
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+import os
+
 if platform.system() == 'Windows':
     plt.rcParams['font.family'] = 'Malgun Gothic'
 elif platform.system() == 'Darwin':  # macOS
@@ -25,23 +30,33 @@ else:  # Linux (예: Streamlit Cloud 등)
         fontprop = fm.FontProperties(fname=nanum_path)
         plt.rcParams['font.family'] = fontprop.get_name()
     else:
-        plt.rcParams['font.family'] = 'sans-serif'  # 폰트 없으면 기본 폰트
+        plt.rcParams['font.family'] = 'sans-serif'  # fallback
 
 plt.rcParams['axes.unicode_minus'] = False  # 마이너스 깨짐 방지
 
 
-
-# ✅ 바 차트 출력 함수
+# ✅ 바 차트 또는 선 차트 자동 선택 함수
 def plot_bar_chart(df, x_col, y_cols):
+    import matplotlib.pyplot as plt
+
     plt.figure(figsize=(10, 5))
-    for y in y_cols:
-        plt.plot(df[x_col], df[y], marker='o', label=y)
+
+    if len(y_cols) == 1:
+        # y축 하나면 막대그래프
+        for y in y_cols:
+            plt.bar(df[x_col], df[y], label=y)
+    else:
+        # y축 두 개 이상이면 선그래프
+        for y in y_cols:
+            plt.plot(df[x_col], df[y], marker='o', label=y)
+
     plt.xlabel(x_col)
     plt.ylabel("순위")
     plt.title("주관사별 순위 비교")
     plt.gca().invert_yaxis()  # 순위는 낮을수록 상위니까
     plt.legend()
     st.pyplot(plt)
+
 
 # ✅ 환경 변수 및 API 키
 load_dotenv()
