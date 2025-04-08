@@ -238,7 +238,7 @@ def format_억단위(df, colname):
 # ✅ 질문 처리
 if submit and query:
     parsed = parse_natural_query(query)
-    st.write("🔍 파싱 결과:", parsed) 
+    st.write("🔍 파싱 결과:", parsed)
 
     with st.spinner("답변을 생성 중입니다..."):
         if not parsed or not parsed.get("product"):
@@ -251,7 +251,7 @@ if submit and query:
                 if parsed["compare"] and len(parsed["years"]) == 2 and len(parsed["columns"]) == 1:
                     year1, year2 = parsed["years"]
                     col = parsed["columns"][0]
-                    
+
                     df1 = df[df["연도"] == year1].copy()
                     df2 = df[df["연도"] == year2].copy()
 
@@ -325,12 +325,14 @@ if submit and query:
 
                             df_year["순위"] = df_year[col].rank(ascending=False, method="min")
 
+                            # 3-1️⃣ 1위
                             if parsed["is_top"]:
                                 sorted_df = df_year.sort_values(col, ascending=False).copy()
                                 result = sorted_df[sorted_df["순위"] == 1][["순위", "주관사", col]]
                                 st.subheader(f"🏆 {y}년 {parsed['product']} {col} 1위 주관사")
                                 st.dataframe(result.reset_index(drop=True))
 
+                            # 3-2️⃣ top_n
                             elif parsed["top_n"]:
                                 sorted_df = df_year.sort_values(col, ascending=False).copy()
                                 result = sorted_df.head(parsed["top_n"])[["순위", "주관사", col]]
@@ -338,16 +340,23 @@ if submit and query:
                                 st.dataframe(result.reset_index(drop=True))
 
                                 if parsed.get("is_chart"):
-                                    # ✅ 그래프용으로 금액 기준 정렬
                                     result_for_chart = result.sort_values(col, ascending=False)
+                                    st.subheader("📈 그래프")
                                     plot_bar_chart(result_for_chart, "주관사", [col])
 
+                            # 3-3️⃣ rank_range
                             elif parsed["rank_range"]:
                                 result = df_year[df_year["순위"].isin(parsed["rank_range"])]
                                 result = result[["순위", "주관사", col]]
                                 st.subheader(f"📌 {y}년 {parsed['product']} {col} 기준 리그테이블")
                                 st.dataframe(result.reset_index(drop=True))
 
+                                if parsed.get("is_chart"):
+                                    result_for_chart = result.sort_values(col, ascending=False)
+                                    st.subheader("📈 그래프")
+                                    plot_bar_chart(result_for_chart, "주관사", [col])
+
+                            # 3-4️⃣ 특정 주관사
                             elif parsed["company"]:
                                 result = df_year[df_year["주관사"] == parsed["company"]][["순위", "주관사", col]]
                                 if not result.empty:
@@ -356,7 +365,13 @@ if submit and query:
                                 else:
                                     st.warning(f"{y}년 {parsed['product']} 데이터에서 {parsed['company']}를 찾을 수 없습니다.")
 
+                            # 3-5️⃣ 기타 전체 테이블
                             else:
                                 result = df_year[["순위", "주관사", col]]
                                 st.subheader(f"📌 {y}년 {parsed['product']} {col} 기준 리그테이블")
                                 st.dataframe(result.reset_index(drop=True))
+
+                                if parsed.get("is_chart"):
+                                    result_for_chart = result.sort_values(col, ascending=False)
+                                    st.subheader("📈 그래프")
+                                    plot_bar_chart(result_for_chart, "주관사", [col])
