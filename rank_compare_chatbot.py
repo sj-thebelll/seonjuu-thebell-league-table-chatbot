@@ -260,8 +260,8 @@ if submit and query:
                             df_year = format_억단위(df_year, col2)
                             col2 = "금액(억원)"
 
-                        df_year[f"{col1}_순위"] = df_year[col1].rank(ascending=False, method="min")
-                        df_year[f"{col2}_순위"] = df_year[col2].rank(ascending=False, method="min")
+                        df_year[f"{col1}_순위"] = df_year[col1].rank(ascending=False, method="min").astype(int)
+                        df_year[f"{col2}_순위"] = df_year[col2].rank(ascending=False, method="min").astype(int)
                         df_year["순위차이"] = (df_year[f"{col1}_순위"] - df_year[f"{col2}_순위"]).abs()
 
                         def highlight_diff(row):
