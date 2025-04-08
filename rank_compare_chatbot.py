@@ -150,6 +150,8 @@ def parse_natural_query(query):
         is_compare = any(k in query for k in ["비교", "변화", "오른", "하락"])
         is_trend = any(k in query for k in ["추이", "변화", "3년간", "최근"])
         is_top = any(k in query for k in ["가장 많은", "가장 높은", "최고", "1위"])
+        is_chart = any(k in query for k in ["그래프", "차트", "보여줘"])
+
 
         # ✅ 복수 기준 추출
         columns = []
@@ -188,6 +190,7 @@ def parse_natural_query(query):
             "is_top": is_top,
             "top_n": top_n,
             "columns": columns
+            "is_chart": is_chart
         }
 
     except Exception as e:
@@ -277,7 +280,7 @@ if submit and query:
                         st.subheader(f"📉 {year1} → {year2} 순위 하락 주관사 ({col} 기준)")
                         st.dataframe(하락.reset_index(drop=True))
 
-                # 2️⃣ 같은 연도, 기준 2개 → 기준 간 순위 비교 + 그래프 (강조 제거됨)
+                # 2️⃣ 같은 연도, 기준 2개 → 기준 간 순위 비교 + 그래프
                 elif len(parsed["columns"]) == 2 and len(parsed["years"]) == 1:
                     y = parsed["years"][0]
                     col1, col2 = parsed["columns"]
@@ -302,7 +305,7 @@ if submit and query:
 
                         result = df_year[["주관사", f"{col1}_순위", f"{col2}_순위", "순위차이"]].sort_values(f"{col1}_순위")
                         st.subheader(f"📊 {y}년 {parsed['product']} - {col1} vs {col2} 순위 비교")
-                        st.dataframe(result.reset_index(drop=True))  # 👉 강조 없이 테이블 출력
+                        st.dataframe(result.reset_index(drop=True))
 
                         # 그래프
                         st.subheader("📈 순위 비교 그래프")
@@ -338,7 +341,9 @@ if submit and query:
                                 st.dataframe(result.reset_index(drop=True))
 
                                 if parsed.get("is_chart"):
-                                    plot_bar_chart(result, "주관사", [col])
+                                    # ✅ 그래프용으로 금액 기준 정렬
+                                    result_for_chart = result.sort_values(col, ascending=False)
+                                    plot_bar_chart(result_for_chart, "주관사", [col])
 
                             elif parsed["rank_range"]:
                                 result = df_year[df_year["순위"].isin(parsed["rank_range"])]
