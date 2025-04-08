@@ -38,24 +38,40 @@ plt.rcParams['axes.unicode_minus'] = False  # 마이너스 깨짐 방지
 # ✅ 바 차트 또는 선 차트 자동 선택 함수
 def plot_bar_chart(df, x_col, y_cols):
     import matplotlib.pyplot as plt
+    import matplotlib.font_manager as fm
+    import platform
+    import os
 
+    # ✅ 한글 폰트 설정 다시 적용 (함수 내에서)
+    if platform.system() == 'Windows':
+        plt.rcParams['font.family'] = 'Malgun Gothic'
+    elif platform.system() == 'Darwin':
+        plt.rcParams['font.family'] = 'AppleGothic'
+    else:
+        nanum_path = '/usr/share/fonts/truetype/nanum/NanumGothic.ttf'
+        if os.path.exists(nanum_path):
+            fontprop = fm.FontProperties(fname=nanum_path)
+            plt.rcParams['font.family'] = fontprop.get_name()
+        else:
+            plt.rcParams['font.family'] = 'sans-serif'
+    plt.rcParams['axes.unicode_minus'] = False
+
+    # ✅ 그래프 그리기
     plt.figure(figsize=(10, 5))
-
     if len(y_cols) == 1:
-        # y축 하나면 막대그래프
         for y in y_cols:
             plt.bar(df[x_col], df[y], label=y)
     else:
-        # y축 두 개 이상이면 선그래프
         for y in y_cols:
             plt.plot(df[x_col], df[y], marker='o', label=y)
 
     plt.xlabel(x_col)
-    plt.ylabel("순위")
-    plt.title("주관사별 순위 비교")
-    plt.gca().invert_yaxis()  # 순위는 낮을수록 상위니까
+    plt.ylabel("금액" if "금액" in y_cols[0] else "순위")
+    plt.title("📊 주관사별 비교")
+    plt.xticks(rotation=45)
     plt.legend()
     st.pyplot(plt)
+
 
 
 # ✅ 환경 변수 및 API 키
@@ -230,9 +246,8 @@ button[kind="formSubmit"] {
 # ✅ 금액(원) → 금액(억원) 변환 함수
 def format_억단위(df, colname):
     df = df.copy()
-    # 1억으로 나누고 소수 첫째자리까지 반올림 (숫자형 유지)
-    df["금액(억원)"] = (df[colname] / 1e8).round(1)
-    df.drop(columns=[colname], inplace=True)
+    df["금액(억원)"] = df[colname] / 1e8  
+    df.drop(columns=[colname], inplace=True) 
     return df
 
 # ✅ 질문 처리
