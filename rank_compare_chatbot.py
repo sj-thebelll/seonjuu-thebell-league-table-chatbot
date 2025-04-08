@@ -222,10 +222,10 @@ def format_억단위(df, colname):
 
 
 # 3️⃣ 단일 연도 기준별 리그테이블
-else:
-    for y in parsed["years"]:
-        df_year = df[df["연도"] == y]
-        if df_year.empty:
+    else:
+        for y in parsed["years"]:
+          df_year = df[df["연도"] == y]
+           if df_year.empty:
             st.warning(f"⚠️ {y}년 {parsed['product']} 데이터가 없습니다.")
             continue
 
