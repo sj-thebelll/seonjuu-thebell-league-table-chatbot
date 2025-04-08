@@ -61,6 +61,7 @@ def set_korean_font():
         plt.rcParams['font.family'] = font_name
     else:
         plt.rcParams['font.family'] = 'sans-serif'
+    plt.rcParams['axes.unicode_minus'] = False  # ✅ 마이너스 깨짐 방지
 
 
 # ✅ plotly 기반 바 차트 함수 (한글 깨짐 방지)
@@ -70,5 +71,11 @@ def plot_bar_chart_plotly(df, x_col, y_cols, title="📊 주관사별 비교"):
     for y_col in y_cols:
         fig = px.bar(df, x=x_col, y=y_col, text=y_col, title=title)
         fig.update_traces(texttemplate='%{text:.2s}', textposition='outside')
-        fig.update_layout(uniformtext_minsize=8, uniformtext_mode='hide', xaxis_tickangle=-45)
+        fig.update_layout(
+            title_font=dict(family="Nanum Gothic", size=20),  # ✅ 제목도 한글 폰트
+            font=dict(family="Nanum Gothic", size=12),        # ✅ 전체 텍스트 한글 적용
+            uniformtext_minsize=8,
+            uniformtext_mode='hide',
+            xaxis_tickangle=-45
+        )
         st.plotly_chart(fig, use_container_width=True)
