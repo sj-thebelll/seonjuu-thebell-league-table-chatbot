@@ -9,7 +9,7 @@ import pandas as pd
 import openai
 from datetime import datetime
 from dotenv import load_dotenv
-from utils import load_dataframes
+from utils import load_dataframes, set_korean_font  # ✅ 여기! set_korean_font 추가
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import platform
