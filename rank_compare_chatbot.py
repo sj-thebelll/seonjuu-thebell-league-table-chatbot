@@ -6,11 +6,11 @@ import re
 from datetime import datetime
 from dotenv import load_dotenv
 from utils import load_dataframes, plot_bar_chart_plotly
-from openai import OpenAI
+import openai
 
 # ✅ 환경 변수 로드 및 API 키 설정
 load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # ✅ 데이터 로드
 data_dir = os.path.dirname(__file__)
@@ -43,14 +43,14 @@ def parse_natural_query_with_gpt(query):
     }
     '''
     try:
-        response = client.chat.completions.create(
+        response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "너는 금융 리그테이블 질문을 분석하는 파서야."},
                 {"role": "user", "content": gpt_prompt}
             ]
         )
-        result_text = response.choices[0].message.content.strip()
+        result_text = response.choices[0].message["content"].strip()
         if not result_text:
             st.error("GPT 응답이 비어있습니다.")
             return None
