@@ -38,15 +38,14 @@ def parse_natural_query_with_gpt(query):
                 {"role": "user", "content": gpt_prompt}
             ]
         )
-                result_text = response.choices[0].message.content.strip()
+        result_text = response.choices[0].message.content.strip()
         if not result_text:
             st.error("GPT 응답이 비어있습니다.")
             return None
         try:
             return json.loads(result_text)
         except json.decoder.JSONDecodeError:
-            st.error(f"GPT 응답을 JSON으로 파싱할 수 없습니다:
-{result_text}")
+            st.error(f"GPT 응답을 JSON으로 파싱할 수 없습니다:\n{result_text}")
             return None
     except Exception as e:
         st.error(f"GPT 파싱 실패: {e}")
@@ -129,19 +128,20 @@ if submit and query:
                         st.warning(f"⚠️ '{col}' 컬럼을 찾을 수 없습니다.")
                         continue
 
-                    expected_cols = ["순위", "주관사", actual_col]
+                    rank_col = "순위" if "순위" in df_year.columns else "대표주관"
+                    expected_cols = [rank_col, "주관사", actual_col]
                     missing_cols = [c for c in expected_cols if c not in df_year.columns]
                     if missing_cols:
                         st.warning(f"⚠️ 다음 컬럼을 찾을 수 없습니다: {', '.join(missing_cols)}")
                         continue
 
-                    result = df_year[expected_cols].sort_values("순위")
+                    result = df_year[expected_cols].sort_values(rank_col)
 
                     # ✅ Top N 필터링 적용
                     if top_n:
                         result = result.head(top_n)
                     elif parsed.get("rank_range"):
-                        result = result[df_year["순위"].isin(parsed["rank_range"])]
+                        result = result[df_year[rank_col].isin(parsed["rank_range"])]
                     st.subheader(f"📊 {year}년 {product} - {col} 기준")
                     st.dataframe(result.reset_index(drop=True))
 
