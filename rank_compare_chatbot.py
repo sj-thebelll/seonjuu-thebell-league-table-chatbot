@@ -38,7 +38,16 @@ def parse_natural_query_with_gpt(query):
                 {"role": "user", "content": gpt_prompt}
             ]
         )
-        return json.loads(response.choices[0].message.content.strip())
+                result_text = response.choices[0].message.content.strip()
+        if not result_text:
+            st.error("GPT 응답이 비어있습니다.")
+            return None
+        try:
+            return json.loads(result_text)
+        except json.decoder.JSONDecodeError:
+            st.error(f"GPT 응답을 JSON으로 파싱할 수 없습니다:
+{result_text}")
+            return None
     except Exception as e:
         st.error(f"GPT 파싱 실패: {e}")
         return None
