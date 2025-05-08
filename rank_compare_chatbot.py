@@ -1,22 +1,22 @@
 import streamlit as st
 import pandas as pd
-import openai
 import os
 import json
 import re
 from datetime import datetime
 from dotenv import load_dotenv
 from utils import load_dataframes, plot_bar_chart_plotly
+from openai import OpenAI
 
 # ✅ 환경 변수 로드 및 API 키 설정
 load_dotenv()
-openai.api_key = os.environ.get("OPENAI_API_KEY")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # ✅ 데이터 로드 (실제 데이터 사용)
 data_dir = os.path.dirname(__file__)
 dfs = load_dataframes(data_dir)
 
-# ✅ GPT 기반 질문 파싱 함수
+# ✅ GPT 기반 질문 파싱 함수 (OpenAI v1 호환)
 def parse_natural_query_with_gpt(query):
     gpt_prompt = f'''
     다음 질문을 JSON 형식으로 구조화해줘.
@@ -30,16 +30,15 @@ def parse_natural_query_with_gpt(query):
     질문: {query}
     JSON만 줘. 설명은 하지 마.
     '''
-
     try:
-        completion = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4-turbo",
             messages=[
                 {"role": "system", "content": "너는 금융 리그테이블 질문을 분석하는 파서야."},
                 {"role": "user", "content": gpt_prompt}
             ]
         )
-        return json.loads(completion.choices[0].message.content.strip())
+        return json.loads(response.choices[0].message.content.strip())
     except Exception as e:
         st.error(f"GPT 파싱 실패: {e}")
         return None
@@ -70,8 +69,8 @@ def parse_natural_query_backup(query):
     }
 
 # ✅ Streamlit UI
-st.set_page_config(page_title="더벨 리그테이블 GPT 챗봇", page_icon="🔔")
-st.title("🔔 GPT + Pandas 기반 리그테이블 챗봇")
+st.set_page_config(page_title="더벨 리그테이블 챗봇", page_icon="🔔")
+st.title("🔔 더벨 리그테이블 챗봇")
 st.markdown("""
 자연어 질문을 입력하면 OpenAI가 질문을 해석하고,
 Pandas가 데이터를 분석해 표로 결과를 보여줍니다.
@@ -79,6 +78,13 @@ Pandas가 데이터를 분석해 표로 결과를 보여줍니다.
 
 query = st.text_input("질문을 입력하세요:", placeholder="예: 2024년 ECM에서 대신증권 순위 알려줘")
 submit = st.button("질문하기")
+
+# ✅ 컬럼명 매핑 딕셔너리
+column_map = {
+    "금액": "금액(원)",
+    "건수": "건수",
+    "점유율": "점유율(%)"
+}
 
 if submit and query:
     parsed = parse_natural_query_with_gpt(query) or parse_natural_query_backup(query)
@@ -107,12 +113,12 @@ if submit and query:
                     continue
 
                 for col in columns:
-                    show_col = col if col in df_year.columns else None
-                    if not show_col:
+                    actual_col = column_map.get(col, col)
+                    if actual_col not in df_year.columns:
                         st.warning(f"⚠️ '{col}' 컬럼을 찾을 수 없습니다.")
                         continue
 
-                    result = df_year[["순위", "주관사", show_col]]
+                    result = df_year[["순위", "주관사", actual_col]]
                     st.subheader(f"📊 {year}년 {product} - {col} 기준")
                     st.dataframe(result.reset_index(drop=True))
     else:
