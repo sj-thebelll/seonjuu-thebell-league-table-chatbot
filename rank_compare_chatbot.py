@@ -32,7 +32,7 @@ def parse_natural_query_with_gpt(query):
     '''
     try:
         response = client.chat.completions.create(
-            model="gpt-4-turbo",
+            model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "너는 금융 리그테이블 질문을 분석하는 파서야."},
                 {"role": "user", "content": gpt_prompt}
@@ -69,8 +69,8 @@ def parse_natural_query_backup(query):
     }
 
 # ✅ Streamlit UI
-st.set_page_config(page_title="더벨 리그테이블 챗봇", page_icon="🔔")
-st.title("🔔 더벨 리그테이블 챗봇")
+st.set_page_config(page_title="더벨 리그테이블 GPT 챗봇", page_icon="🔔")
+st.title("🔔 GPT + Pandas 기반 리그테이블 챗봇")
 st.markdown("""
 자연어 질문을 입력하면 OpenAI가 질문을 해석하고,
 Pandas가 데이터를 분석해 표로 결과를 보여줍니다.
@@ -97,6 +97,8 @@ if submit and query:
         product = parsed.get("product")
         company = parsed.get("company")
         columns = parsed.get("columns", ["금액"])
+        top_n = parsed.get("top_n")
+        is_top = parsed.get("is_top")
 
         df = dfs.get(product)
         if df is None or df.empty:
@@ -118,8 +120,25 @@ if submit and query:
                         st.warning(f"⚠️ '{col}' 컬럼을 찾을 수 없습니다.")
                         continue
 
-                    result = df_year[["순위", "주관사", actual_col]]
+                    expected_cols = ["순위", "주관사", actual_col]
+                    missing_cols = [c for c in expected_cols if c not in df_year.columns]
+                    if missing_cols:
+                        st.warning(f"⚠️ 다음 컬럼을 찾을 수 없습니다: {', '.join(missing_cols)}")
+                        continue
+
+                    result = df_year[expected_cols].sort_values("순위")
+
+                    # ✅ Top N 필터링 적용
+                    if top_n:
+                        result = result.head(top_n)
+                    elif parsed.get("rank_range"):
+                        result = result[df_year["순위"].isin(parsed["rank_range"])]
                     st.subheader(f"📊 {year}년 {product} - {col} 기준")
                     st.dataframe(result.reset_index(drop=True))
+
+                    # ✅ 차트 출력 요청 시 시각화
+                    if parsed.get("is_chart"):
+                        st.subheader("📈 그래프")
+                        plot_bar_chart_plotly(result.sort_values(actual_col, ascending=False), "주관사", [actual_col])
     else:
         st.warning("질문을 해석하지 못했습니다. 다시 시도해 주세요.")
