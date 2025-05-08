@@ -92,7 +92,7 @@ def parse_natural_query_backup(query):
 
 # ✅ UI
 st.set_page_config(page_title="더벨 리그테이블 GPT 챗봇", page_icon="🔔")
-st.title("🔔 GPT + Pandas 기반 리그테이블 챗봇")
+st.title("🔔리그테이블 챗봇")
 st.markdown("질문 예: 2024년 ECM에서 대신증권 순위 알려줘, 2023년 ABS 상위 5개사")
 
 query = st.text_input("질문을 입력하세요:")
