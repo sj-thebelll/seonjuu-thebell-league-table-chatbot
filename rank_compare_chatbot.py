@@ -54,7 +54,12 @@ def parse_natural_query_with_gpt(query):
         if not result_text:
             st.error("GPT 응답이 비어있습니다.")
             return None
+        st.text("📤 GPT 응답:")
+        st.code(result_text)
         try:
+            json_start = result_text.find('{')
+            json_end = result_text.rfind('}') + 1
+            result_text = result_text[json_start:json_end]
             return json.loads(result_text)
         except json.decoder.JSONDecodeError:
             st.error(f"GPT 응답을 JSON으로 파싱할 수 없습니다:\n{result_text}")
@@ -132,7 +137,12 @@ if submit and query:
 
         years = parsed.get("years", [])
         product = parsed.get("product")
-        company = parsed.get("company")
+        company = parsed.get("company", "").strip()
+        if not company:
+            for keyword in company_aliases.keys():
+                if keyword in query:
+                    company = company_aliases[keyword]
+                    break
         columns = parsed.get("columns", ["금액(원)"])
         columns = [column_aliases.get(c, c) for c in columns]
         top_n = parsed.get("top_n")
