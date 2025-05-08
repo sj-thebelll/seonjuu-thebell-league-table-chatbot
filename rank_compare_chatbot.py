@@ -184,7 +184,7 @@ if submit and query:
                                 r1, r2 = map(int, rank_range.split("~"))
                                 result = result[(df_year[rank_col] >= r1) & (df_year[rank_col] <= r2)]
                             except Exception as e:
-                                st.warning(f"⚠️ rank_range 해석 실패: {rank_range} → {e}")pass
+                                st.warning(f"⚠️ rank_range 해석 실패: {rank_range} → {e}")
                     elif top_n:
                         result = result.head(top_n)
                     elif is_top:
