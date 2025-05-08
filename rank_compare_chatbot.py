@@ -141,9 +141,9 @@ if submit and query:
                     if top_n:
                         result = result.head(top_n)
                     elif parsed.get("rank_range"):
-                        result = result[df_year[rank_col].isin(parsed["rank_range"])]
-                    st.subheader(f"📊 {year}년 {product} - {col} 기준")
-                    st.dataframe(result.reset_index(drop=True))
+                        r_start, r_end = parsed["rank_range"]
+                        result = result[(df_year[rank_col] >= r_start) & (df_year[rank_col] <= r_end)]
+
 
                     # ✅ 차트 출력 요청 시 시각화
                     if parsed.get("is_chart"):
