@@ -5,16 +5,13 @@ import streamlit as st
 st.set_page_config(page_title="더벨 리그테이블 챗봇", page_icon="🔔")
 
 import os
-import re
 import pandas as pd
-import openai
-from datetime import datetime
+from openai import OpenAI
 from dotenv import load_dotenv
 from utils import load_dataframes, plot_bar_chart_plotly
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import platform
-import json
 
 # ✅ 한글 폰트 수동 설정 함수 (업로드한 NanumGothic.ttf 사용)
 def set_korean_font():
@@ -29,7 +26,7 @@ def set_korean_font():
 
 # ✅ 환경 변수 및 API 키
 load_dotenv()
-openai.api_key = os.environ["OPENAI_API_KEY"]
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # ✅ 데이터 로드
 data_dir = os.path.dirname(__file__)
@@ -38,16 +35,26 @@ dfs = load_dataframes(data_dir)
 # ✅ GPT 기반 자연어 파싱
 def parse_natural_query_with_gpt(query):
     try:
-        response = openai.ChatCompletion.create(
+        system_prompt = (
+            "사용자의 질문을 다음 항목으로 분석해서 JSON 형태로 정리해줘:\n"
+            "- years: [연도]\n- product: ECM, ABS, FB, 국내채권 중 택1\n"
+            "- company: 특정 증권사 있을 경우\n"
+            "- columns: 금액, 건수, 점유율 중 하나 이상\n"
+            "- top_n: 상위 몇 위인지 (선택적)\n"
+            "- rank_range: [시작위~끝위] (선택적)\n"
+            "- is_chart: 그래프 포함 여부 (boolean)\n"
+            "- is_compare: 연도 간 비교인지 여부 (boolean)"
+        )
+        response = client.chat.completions.create(
             model="gpt-4",
             messages=[
-                {"role": "system", "content": "사용자의 질문을 다음 항목으로 분석해서 JSON 형태로 정리해줘:\n\n- years: [연도]\n- product: ECM, ABS, FB, 국내채권 중 택1\n- company: 특정 증권사 있을 경우\n- columns: 금액, 건수, 점유율 중 하나 이상\n- top_n: 상위 몇 위인지 (선택적)\n- rank_range: [시작위~끝위] (선택적)\n- is_chart: 그래프 포함 여부 (boolean)\n- is_compare: 연도 간 비교인지 여부 (boolean)"},
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": query}
             ],
             temperature=0.2
         )
-        content = response["choices"][0]["message"]["content"]
-        return eval(content)  # 실제 서비스에서는 json.loads를 사용하는 것이 더 안전
+        content = response.choices[0].message.content
+        return eval(content)
     except Exception as e:
         st.error(f"❌ GPT 파서 오류: {e}")
         return None
