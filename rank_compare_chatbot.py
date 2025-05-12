@@ -65,6 +65,9 @@ def parse_natural_query_with_gpt(query):
             st.error(f"GPT 응답을 JSON으로 파싱할 수 없습니다:\n{result_text}")
             return None
     except Exception as e:
+        st.error(f"GPT 호출 실패: {e}")
+        import traceback
+        st.text(traceback.format_exc())
         st.error(f"GPT 파싱 실패: {e}")
         import traceback
         st.text(traceback.format_exc())
@@ -124,15 +127,22 @@ allowed_columns = {
 }
 
 if submit and query:
-    parsed = parse_natural_query_with_gpt(query) or parse_natural_query_backup(query)
+    try:
+        parsed = parse_natural_query_with_gpt(query) or parse_natural_query_backup(query)
+    except Exception as e:
+        st.error(f"❌ 파싱 중 예외 발생: {e}")
+        import traceback
+        st.text(traceback.format_exc())
+        parsed = None
     if parsed:
         st.subheader("🧠 파싱 결과")
         if isinstance(parsed.get("rank_range"), str) and "~" in parsed["rank_range"]:
-            try:
-                r1, r2 = map(int, parsed["rank_range"].split("~"))
-                parsed["rank_range"] = [r1, r2]
-            except:
-                parsed["rank_range"] = None
+        try:
+            r1, r2 = map(int, parsed["rank_range"].split("~"))
+            parsed["rank_range"] = [r1, r2]
+        except Exception as e:
+            st.warning(f"⚠️ rank_range 파싱 실패: {parsed['rank_range']} → {e}")
+            parsed["rank_range"] = None
         st.json(parsed)
 
         years = parsed.get("years", [])
@@ -186,7 +196,7 @@ if submit and query:
                     result = df_year[expected_cols].sort_values(rank_col)
 
                     if rank_range:
-                        if isinstance(rank_range, list) and len(rank_range) == 2:
+                        if isinstance(rank_range, list) and len(rank_range) == 2 and all(isinstance(i, int) for i in rank_range):
                             r1, r2 = rank_range
                             result = result[(df_year[rank_col] >= r1) & (df_year[rank_col] <= r2)]
                         elif isinstance(rank_range, str) and "~" in rank_range:
