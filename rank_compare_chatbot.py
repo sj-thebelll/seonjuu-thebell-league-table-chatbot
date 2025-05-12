@@ -138,8 +138,8 @@ if submit and query:
         st.subheader("🧠 파싱 결과")
         if isinstance(parsed.get("rank_range"), str) and "~" in parsed["rank_range"]:
             try:
-            r1, r2 = map(int, parsed["rank_range"].split("~"))
-            parsed["rank_range"] = [r1, r2]
+                r1, r2 = map(int, parsed["rank_range"].split("~"))
+                parsed["rank_range"] = [r1, r2]
         except Exception as e:
             st.warning(f"⚠️ rank_range 파싱 실패: {parsed['rank_range']} → {e}")
             parsed["rank_range"] = None
