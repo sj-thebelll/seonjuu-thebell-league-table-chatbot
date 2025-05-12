@@ -30,7 +30,7 @@ def parse_natural_query_with_gpt(query):
     질문: {query}
     결과는 JSON만 줘.
     예시:
-    {
+    {{
       "years": [2023, 2024],
       "product": "ECM",
       "company": "미래에셋증권",
@@ -40,7 +40,7 @@ def parse_natural_query_with_gpt(query):
       "is_chart": true,
       "is_compare": false,
       "is_top": false
-    }
+    }}
     '''
     try:
         response = openai.ChatCompletion.create(
@@ -66,9 +66,6 @@ def parse_natural_query_with_gpt(query):
             return None
     except Exception as e:
         st.error(f"GPT 호출 실패: {e}")
-        import traceback
-        st.text(traceback.format_exc())
-        st.error(f"GPT 파싱 실패: {e}")
         import traceback
         st.text(traceback.format_exc())
         return None
@@ -136,15 +133,13 @@ if submit and query:
         parsed = None
     if parsed:
         st.subheader("🧠 파싱 결과")
-        if isinstance(parsed.get("rank_range"), str) and "~" in parsed["rank_range"]:
-    if isinstance(parsed.get("rank_range"), str) and "~" in parsed["rank_range"]:
         try:
-            r1, r2 = map(int, parsed["rank_range"].split("~"))
-           parsed["rank_range"] = [r1, r2]
+            if isinstance(parsed.get("rank_range"), str) and "~" in parsed["rank_range"]:
+                r1, r2 = map(int, parsed["rank_range"].split("~"))
+                parsed["rank_range"] = [r1, r2]
         except Exception as e:
             st.warning(f"⚠️ rank_range 파싱 실패: {parsed['rank_range']} → {e}")
             parsed["rank_range"] = None
-
         st.json(parsed)
 
         years = parsed.get("years", [])
