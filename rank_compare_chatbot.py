@@ -87,7 +87,6 @@ st.markdown("""
 이 챗봇은 더벨의 ECM / ABS / FB / 국내채권 부문 대표주관 리그테이블 데이터를 기반으로  
 자연어로 질문하고, 표 형태로 응답을 받는 챗봇입니다.
 
-✅ **모든 순위 기준은 엑셀에 있는 '순위' 열을 그대로 따릅니다.**
 
 #### 💬 예시 질문
 - 2024년 ECM 대표주관 순위 1~10위 알려줘.
@@ -111,14 +110,18 @@ if submit and query:
     elif parsed.get("company") and not parsed.get("product"):
         company = parsed["company"]
         years = parsed.get("years", [])
+        found = False
         for product, df in dfs.items():
             df.columns = df.columns.str.strip()
             for y in years:
                 df_year = df[df["연도"] == y]
                 row = df_year[df_year["주관사"] == company]
                 if not row.empty:
+                    found = True
                     st.subheader(f"🏅 {y}년 {product} {company} 순위 및 실적")
                     st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
+        if not found:
+            st.warning("⚠️ 전체 부문 데이터가 없습니다.")
 
     else:
         df = dfs.get(parsed["product"])
