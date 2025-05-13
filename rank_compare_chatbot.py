@@ -39,7 +39,7 @@ def parse_natural_query_with_gpt(query):
             '- years: [2023, 2024] 같은 리스트 형태\n'
             '- product: ECM, ABS, FB, 국내채권 중 하나 또는 여러 개 (문맥 유추 가능)\n'
             '- columns: 금액, 건수, 점유율 중 하나 이상\n'
-            '- company: 증권사명 (선택적)\n'
+            '- company: 증권사명 (한 개 또는 여러 개 리스트 가능)\n'
             '- top_n: 숫자 (선택적)\n'
             '- rank_range: [시작위, 끝위] (선택적)\n'
             '- is_chart: true/false\n'
@@ -87,12 +87,12 @@ st.markdown("""
 이 챗봇은 더벨의 ECM / ABS / FB / 국내채권 부문 대표주관 리그테이블 데이터를 기반으로  
 자연어로 질문하고, 표 형태로 응답을 받는 챗봇입니다.
 
-
 #### 💬 예시 질문
 - 2024년 ECM 대표주관 순위 1~10위 알려줘.
 - 2020~2024년 ABS 대표주관 상위 3개사 보여줘.
 - 2022년에 비해 2023년 국내채권 주관 점유율이 오른 증권사는?
 - 2023년 현대차증권이 랭크된 순위 전부 알려줘.
+- NH투자증권과 KB증권의 2023년 ECM 순위 비교해줘.
 """)
 
 with st.form(key="question_form"):
@@ -106,19 +106,20 @@ if submit and query:
     if not parsed:
         st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
 
-    # ✅ 특정 증권사의 전 product 순위 전부 요청한 경우
     elif parsed.get("company") and not parsed.get("product"):
-        company = parsed["company"]
+        companies = parsed["company"]
+        if isinstance(companies, str):
+            companies = [companies]
         years = parsed.get("years", [])
         found = False
         for product, df in dfs.items():
             df.columns = df.columns.str.strip()
             for y in years:
                 df_year = df[df["연도"] == y]
-                row = df_year[df_year["주관사"] == company]
+                row = df_year[df_year["주관사"].isin(companies)]
                 if not row.empty:
                     found = True
-                    st.subheader(f"🏅 {y}년 {product} {company} 순위 및 실적")
+                    st.subheader(f"🏅 {y}년 {product} 순위 및 실적")
                     st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
         if not found:
             st.warning("⚠️ 전체 부문 데이터가 없습니다.")
@@ -160,13 +161,16 @@ if submit and query:
                         st.warning(f"⚠️ {y}년 데이터가 없습니다.")
                         continue
 
-                    if parsed.get("company"):
-                        row = df_year[df_year["주관사"] == parsed["company"]]
+                    companies = parsed.get("company")
+                    if companies:
+                        if isinstance(companies, str):
+                            companies = [companies]
+                        row = df_year[df_year["주관사"].isin(companies)]
                         if not row.empty:
-                            st.subheader(f"🏅 {y}년 {product} {parsed['company']} 순위 및 실적")
+                            st.subheader(f"🏅 {y}년 {product} 순위 및 실적")
                             st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
                         else:
-                            st.warning(f"{y}년 데이터에서 {parsed['company']} 찾을 수 없습니다.")
+                            st.warning(f"{y}년 데이터에서 {', '.join(companies)} 찾을 수 없습니다.")
                         continue
 
                     start, end = 1, 9999
