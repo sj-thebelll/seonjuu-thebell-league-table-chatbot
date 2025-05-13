@@ -43,7 +43,8 @@ def parse_natural_query_with_gpt(query):
             '- top_n: 숫자 (선택적)\n'
             '- rank_range: [시작위, 끝위] (선택적)\n'
             '- is_chart: true/false\n'
-            '- is_compare: true/false'
+            '- is_compare: true/false\n'
+            '- 만약 질문에 특정 부문(product)이 명시되지 않고, 특정 증권사(company)만 있다면 모든 product에서 해당 회사의 순위를 보여줘야 함\n'
         )
         response = client.chat.completions.create(
             model="gpt-4",
@@ -85,6 +86,8 @@ st.title("🔔 더벨 리그테이블 챗봇")
 st.markdown("""
 이 챗봇은 더벨의 ECM / ABS / FB / 국내채권 부문 대표주관 리그테이블 데이터를 기반으로  
 자연어로 질문하고, 표 형태로 응답을 받는 챗봇입니다.
+
+✅ **모든 순위 기준은 엑셀에 있는 '순위' 열을 그대로 따릅니다.**
 
 #### 💬 예시 질문
 - 2024년 ECM 대표주관 순위 1~10위 알려줘.
