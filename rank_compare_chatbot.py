@@ -11,7 +11,7 @@ import json
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 
-# 한글 폰트 설정
+# 한국 폰트 설정
 def set_korean_font():
     font_path = "NanumGothic.ttf"
     if os.path.exists(font_path):
@@ -86,7 +86,6 @@ st.markdown("""
 이 챗봇은 더벨의 ECM / ABS / FB / 국내채권 부문 대표주관 리그테이블 데이터를 기반으로  
 자연어로 질문하고, 표 형태로 응답을 받는 챗봇입니다.
 
-✅ **모든 순위 기준은 엑셀에 있는 '순위' 열을 그대로 따릅니다.**
 
 #### 💬 예시 질문
 - 2024년 ECM 대표주관 순위 1~10위 알려줘.
@@ -103,8 +102,22 @@ if submit and query:
     with st.spinner("GPT가 질문을 해석 중입니다..."):
         parsed = parse_natural_query_with_gpt(query)
 
-    if not parsed or not parsed.get("product"):
+    if not parsed:
         st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
+
+    # ✅ 특정 증권사의 전 product 순위 전부 요청한 경우
+    elif parsed.get("company") and not parsed.get("product"):
+        company = parsed["company"]
+        years = parsed.get("years", [])
+        for product, df in dfs.items():
+            df.columns = df.columns.str.strip()
+            for y in years:
+                df_year = df[df["연도"] == y]
+                row = df_year[df_year["주관사"] == company]
+                if not row.empty:
+                    st.subheader(f"🏅 {y}년 {product} {company} 순위 및 실적")
+                    st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
+
     else:
         df = dfs.get(parsed["product"])
         if df is None or df.empty:
@@ -113,7 +126,6 @@ if submit and query:
             df.columns = df.columns.str.strip()
             col_map = {"금액": "금액(원)", "건수": "건수", "점유율": "점유율(%)"}
 
-            # 점유율 비교 질문 처리
             if parsed.get("is_compare") and len(parsed["years"]) == 2 and any("점유율" in col for col in parsed.get("columns", [])):
                 y1, y2 = parsed["years"]
                 상승, 하락 = compare_share(df, y1, y2)
@@ -122,7 +134,6 @@ if submit and query:
                 st.subheader(f"📉 {y1} → {y2} 점유율 하락")
                 st.dataframe(하락.reset_index(drop=True))
 
-            # 순위 비교 질문 처리
             elif parsed.get("is_compare") and len(parsed["years"]) == 2:
                 y1, y2 = parsed["years"]
                 상승, 하락 = compare_rank(df, y1, y2)
@@ -131,7 +142,6 @@ if submit and query:
                 st.subheader(f"📉 {y1} → {y2} 순위 하락")
                 st.dataframe(하락.reset_index(drop=True))
 
-            # 일반 질문 처리
             else:
                 for y in parsed["years"]:
                     df_year = df[df["연도"] == y].copy()
