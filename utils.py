@@ -69,7 +69,7 @@ def plot_bar_chart_plotly(df, x_col, y_cols, title="📊 주관사별 비교"):
     import plotly.express as px
 
     for y_col in y_cols:
-        fig = px.bar(df, x=x_col, y=y_col, text=y_col, title=title)
+        fig = px.bar(df, x_col, y_col, text=y_col, title=title)  # ✅ 위치 인자로 전달
         fig.update_traces(texttemplate='%{text:.2s}', textposition='outside')
         fig.update_layout(
             title_font=dict(family="Nanum Gothic", size=20),  # ✅ 제목 한글 폰트 지정
