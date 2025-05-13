@@ -56,6 +56,18 @@ def parse_natural_query_with_gpt(query):
         st.error(f"❌ GPT 파서 오류: {e}")
         return None
 
+# ✅ 순위 비교 함수
+def compare_rank(df, year1, year2):
+    df1 = df[df["연도"] == year1].copy()
+    df2 = df[df["연도"] == year2].copy()
+    df1["순위1"] = df1["순위"]
+    df2["순위2"] = df2["순위"]
+    merged = pd.merge(df1[["주관사", "순위1"]], df2[["주관사", "순위2"]], on="주관사")
+    merged["순위변화"] = merged["순위1"] - merged["순위2"]
+    상승 = merged[merged["순위변화"] > 0].sort_values("순위변화", ascending=False)
+    하락 = merged[merged["순위변화"] < 0].sort_values("순위변화")
+    return 상승, 하락
+
 # ✅ UI
 st.title("🔔 더벨 리그테이블 챗봇")
 st.markdown("""
@@ -87,58 +99,43 @@ if submit and query:
         if df is None or df.empty:
             st.warning(f"⚠️ {parsed['product']} 데이터가 없습니다.")
         else:
+            col_map = {
+                "금액": "금액(원)", "건수": "건수", "점유율": "점유율(%)"
+            }
+
             for y in parsed["years"]:
                 df_year = df[df["연도"] == y].copy()
+                df_year.columns = df_year.columns.str.strip()
+
                 if df_year.empty:
                     st.warning(f"⚠️ {y}년 데이터가 없습니다.")
                     continue
 
-                # ✅ 컬럼명 공백 제거
-                df_year.columns = df_year.columns.str.strip()
-                st.write("📋 불러온 컬럼:", df_year.columns.tolist())
-
-                col_map = {
-                    "금액": "금액(원)", "건수": "건수", "점유율": "점유율(%)"
-                }
-
-                for col in parsed.get("columns", ["금액"]):
-                    colname = col_map.get(col, col)
-
-                    필수컬럼 = ["순위", "주관사", colname]
-                    누락 = [c for c in 필수컬럼 if c not in df_year.columns]
-
-                    if 누락:
-                        st.error(f"❌ 데이터에 다음 컬럼이 없습니다: {누락}")
-                        continue
-
-                    if parsed.get("top_n"):
-                        result = df_year[df_year["순위"] <= parsed["top_n"]][필수컬럼]
-                        st.subheader(f"📌 {y}년 {parsed['product']} 순위 상위 {parsed['top_n']}개사 (엑셀 순위 기준)")
-                        st.dataframe(result.sort_values("순위").reset_index(drop=True))
-                        if parsed.get("is_chart"):
-                            plot_bar_chart_plotly(result.sort_values("순위"), "주관사", [colname])
-
-                    elif parsed.get("rank_range"):
-                        start, end = parsed["rank_range"]
-                        result = df_year[
-                            (df_year["순위"] >= start) & (df_year["순위"] <= end)
-                        ][필수컬럼]
-                        st.subheader(f"📌 {y}년 {parsed['product']} 기준 [{start}, {end}]위 범위 (엑셀 순위 기준)")
-                        st.dataframe(result.sort_values("순위").reset_index(drop=True))
-                        if parsed.get("is_chart"):
-                            plot_bar_chart_plotly(result.sort_values("순위"), "주관사", [colname])
-
-                    elif parsed.get("company"):
-                        result = df_year[df_year["주관사"] == parsed["company"]][필수컬럼]
-                        if not result.empty:
-                            st.subheader(f"🏅 {y}년 {parsed['product']}에서 {parsed['company']} 순위")
-                            st.dataframe(result.reset_index(drop=True))
-                        else:
-                            st.warning(f"{y}년 데이터에서 {parsed['company']} 찾을 수 없음.")
-
+                if parsed.get("company"):
+                    row = df_year[df_year["주관사"] == parsed["company"]]
+                    if not row.empty:
+                        st.subheader(f"🏅 {y}년 {parsed['product']} {parsed['company']} 순위 및 실적")
+                        st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
                     else:
-                        result = df_year[필수컬럼]
-                        st.subheader(f"📌 {y}년 {parsed['product']} 전체 순위표 (엑셀 지정 순위 기준)")
-                        st.dataframe(result.sort_values("순위").reset_index(drop=True))
-                        if parsed.get("is_chart"):
-                            plot_bar_chart_plotly(result.sort_values("순위"), "주관사", [colname])
+                        st.warning(f"{y}년 데이터에서 {parsed['company']} 찾을 수 없습니다.")
+                    continue
+
+                start, end = 1, 10
+                if parsed.get("rank_range"):
+                    start, end = parsed["rank_range"]
+                elif parsed.get("top_n"):
+                    end = parsed["top_n"]
+
+                cols = ["순위", "주관사", "금액(원)", "건수", "점유율(%)"]
+                result = df_year[df_year["순위"].between(start, end)][cols]
+                st.subheader(f"📌 {y}년 {parsed['product']} 기준 [{start}, {end}]위 범위 (엑셀 순위 기준)")
+                st.dataframe(result.sort_values("순위").reset_index(drop=True))
+
+            # ✅ 연도 비교 시 상승/하락
+            if parsed.get("is_compare") and len(parsed["years"]) == 2:
+                y1, y2 = parsed["years"]
+                상승, 하락 = compare_rank(df, y1, y2)
+                st.subheader(f"📈 {y1} → {y2} 순위 상승")
+                st.dataframe(상승.reset_index(drop=True))
+                st.subheader(f"📉 {y1} → {y2} 순위 하락")
+                st.dataframe(하락.reset_index(drop=True))
