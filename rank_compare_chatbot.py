@@ -11,7 +11,7 @@ import json
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 
-# ✅ 한글 폰트 수동 설정
+# 한국 폰트 설정
 def set_korean_font():
     font_path = "NanumGothic.ttf"
     if os.path.exists(font_path):
@@ -19,16 +19,17 @@ def set_korean_font():
         plt.rcParams['font.family'] = fontprop.get_name()
     else:
         plt.rcParams['font.family'] = 'sans-serif'
-        st.warning("⚠️ 'NanumGothic.ttf' 폰트 파일이 없어 한글이 깨질 수 있습니다.")
+        st.warning("\u26a0️ 'NanumGothic.ttf' 폰트 파일이 없어 한글이 깨지리지 모른다.")
     plt.rcParams['axes.unicode_minus'] = False
 
-# ✅ 환경 변수 및 GPT 클라이언트
+# 환경방안 & GPT 컨키텍션
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 data_dir = os.path.dirname(__file__)
 dfs = load_dataframes(data_dir)
 
-# ✅ GPT 질문 파싱 함수
+# GPT 질문 파시
+
 def parse_natural_query_with_gpt(query):
     try:
         system_prompt = (
@@ -53,10 +54,10 @@ def parse_natural_query_with_gpt(query):
         )
         return json.loads(response.choices[0].message.content)
     except Exception as e:
-        st.error(f"❌ GPT 파서 오류: {e}")
+        st.error(f"\u274c GPT 파서 오류: {e}")
         return None
 
-# ✅ 연도별 순위 비교 함수 (상승/하락)
+# 순위 비교 함수
 def compare_rank(df, year1, year2):
     df1 = df[df["연도"] == year1].copy()
     df2 = df[df["연도"] == year2].copy()
@@ -64,21 +65,25 @@ def compare_rank(df, year1, year2):
     df2["순위2"] = df2["순위"]
     merged = pd.merge(df1[["주관사", "순위1"]], df2[["주관사", "순위2"]], on="주관사")
     merged["순위변화"] = merged["순위1"] - merged["순위2"]
-    상승 = merged[merged["순위변화"] > 0].copy()
-    하락 = merged[merged["순위변화"] < 0].copy()
-    상승["상승등수"] = 상승["순위변화"]
-    하락["하락등수"] = -하락["순위변화"]
-    상승 = 상승[["주관사", "순위1", "순위2", "상승등수"]].sort_values("상승등수", ascending=False)
-    하락 = 하락[["주관사", "순위1", "순위2", "하락등수"]].sort_values("하락등수", ascending=False)
+    상승 = merged[merged["순위변화"] > 0].sort_values("순위변화", ascending=False)
+    하락 = merged[merged["순위변화"] < 0].sort_values("순위변화")
     return 상승, 하락
 
-# ✅ UI
-st.title("🔔 더벨 리그테이블 챗봇")
+# 점유율 비교
+def compare_share(df, year1, year2):
+    df1 = df[df["연도"] == year1][["주관사", "점유율(%)"]].copy()
+    df2 = df[df["연도"] == year2][["주관사", "점유율(%)"]].copy()
+    merged = pd.merge(df1, df2, on="주관사", suffixes=(f"_{year1}", f"_{year2}"))
+    merged["점유율변화"] = merged[f"점유율(%)_{year2}"] - merged[f"점유율(%)_{year1}"]
+    상승 = merged[merged["점유율변화"] > 0].sort_values("점유율변화", ascending=False)
+    하락 = merged[merged["점유율변화"] < 0].sort_values("점유율변화")
+    return 상승, 하락
+
+# 개인 UI
+st.title("🔔 더벨 리그테이블 차트배스")
 st.markdown("""
 이 챗봇은 더벨의 ECM / ABS / FB / 국내채권 부문 대표주관 리그테이블 데이터를 기반으로  
 자연어로 질문하고, 표 형태로 응답을 받는 챗봇입니다.
-
-✅ **모든 순위 기준은 엑셀에 있는 '순위' 열을 그대로 따릅니다.**
 
 #### 💬 예시 질문
 - 2024년 ECM 대표주관 순위 1~10위 알려줘.
@@ -91,29 +96,23 @@ with st.form(key="question_form"):
     query = st.text_input("질문을 입력하세요:")
     submit = st.form_submit_button("🔍 질문하기")
 
-# ✅ 질문 처리
+# 질문 처리
 if submit and query:
     with st.spinner("GPT가 질문을 해석 중입니다..."):
         parsed = parse_natural_query_with_gpt(query)
 
     if not parsed or not parsed.get("product"):
-        st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
+        st.error("\u274c 질문을 이해하지 못했어요. 다시 시도해 주세요.")
     else:
         df = dfs.get(parsed["product"])
         if df is None or df.empty:
             st.warning(f"⚠️ {parsed['product']} 데이터가 없습니다.")
         else:
-            col_map = {
-                "금액": "금액(원)", "건수": "건수", "점유율": "점유율(%)"
-            }
+            col_map = {"금액": "금액(원)", "건수": "건수", "점유율": "점유율(%)"}
 
             for y in parsed["years"]:
                 df_year = df[df["연도"] == y].copy()
                 df_year.columns = df_year.columns.str.strip()
-
-                if df_year.empty:
-                    st.warning(f"⚠️ {y}년 데이터가 없습니다.")
-                    continue
 
                 if parsed.get("company"):
                     row = df_year[df_year["주관사"] == parsed["company"]]
@@ -135,11 +134,20 @@ if submit and query:
                 st.subheader(f"📌 {y}년 {parsed['product']} 기준 [{start}, {end}]위 범위 (엑셀 순위 기준)")
                 st.dataframe(result.sort_values("순위").reset_index(drop=True))
 
-            # ✅ 연도 비교 시 상승/하락
+            # 점유율 비교 차원
             if parsed.get("is_compare") and len(parsed["years"]) == 2:
                 y1, y2 = parsed["years"]
-                상승, 하락 = compare_rank(df, y1, y2)
-                st.subheader(f"📈 {y1} → {y2} 순위 상승")
-                st.dataframe(상승.reset_index(drop=True))
-                st.subheader(f"📉 {y1} → {y2} 순위 하락")
-                st.dataframe(하락.reset_index(drop=True))
+
+                # 검색어에 "점유율" 가 포함되면 점유율 비교로 간정
+                if any("점유율" in col for col in parsed.get("columns", [])):
+                    상승, 하락 = compare_share(df, y1, y2)
+                    st.subheader(f"📈 {y1} → {y2} 점유율 상승")
+                    st.dataframe(상승.reset_index(drop=True))
+                    st.subheader(f"📉 {y1} → {y2} 점유율 하락")
+                    st.dataframe(하락.reset_index(drop=True))
+                else:
+                    상승, 하락 = compare_rank(df, y1, y2)
+                    st.subheader(f"🏋️ {y1} → {y2} 순위 상승")
+                    st.dataframe(상승.reset_index(drop=True))
+                    st.subheader(f"🛋️ {y1} → {y2} 순위 하락")
+                    st.dataframe(하락.reset_index(drop=True))
