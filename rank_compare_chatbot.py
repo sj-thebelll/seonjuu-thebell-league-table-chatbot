@@ -25,12 +25,10 @@ def set_korean_font():
 # ✅ 환경 변수 및 GPT 클라이언트
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
-# ✅ 데이터 로드
 data_dir = os.path.dirname(__file__)
 dfs = load_dataframes(data_dir)
 
-# ✅ GPT 질문 파싱 함수 (JSON 응답 강제)
+# ✅ GPT 질문 파싱 함수
 def parse_natural_query_with_gpt(query):
     try:
         system_prompt = (
@@ -64,11 +62,13 @@ st.markdown("""
 이 챗봇은 더벨의 ECM / ABS / FB / 국내채권 부문 대표주관 리그테이블 데이터를 기반으로  
 자연어로 질문하고, 표 형태로 응답을 받는 챗봇입니다.
 
+✅ **모든 순위 기준은 엑셀에 있는 '순위' 열을 그대로 따릅니다.**
+
 #### 💬 예시 질문
-- 2024년 ECM 대표주관사 순위 1~10위는.
+- 2024년 ECM 대표주관 순위 1~10위 알려줘.
 - 2020~2024년 ABS 대표주관 상위 3개사 보여줘.
 - 2022년에 비해 2023년 국내채권 주관 점유율이 오른 증권사는?
-- 2023년 ECM 금액과 건수 기준 순위를 그래프로 보여줘. 
+- 2023년 현대차증권이 랭크된 순위 전부 알려줘.
 """)
 
 with st.form(key="question_form"):
@@ -93,42 +93,39 @@ if submit and query:
                     st.warning(f"⚠️ {y}년 데이터가 없습니다.")
                     continue
 
+                col_map = {
+                    "금액": "금액(원)", "건수": "건수", "점유율": "점유율(%)"
+                }
+
                 for col in parsed.get("columns", ["금액"]):
-                    col_map = {
-                        "금액": "금액(원)", "건수": "건수", "점유율": "점유율(%)"
-                    }
                     colname = col_map.get(col, col)
 
-                    df_year = df_year.copy()
-                    df_year["순위"] = df_year[colname].rank(ascending=False, method="min")
-
                     if parsed.get("top_n"):
-                        result = df_year.nsmallest(parsed["top_n"], "순위")[["순위", "주관사", colname]]
-                        st.subheader(f"📌 {y}년 {parsed['product']} {col} 기준 상위 {parsed['top_n']}개사")
-                        st.dataframe(result.reset_index(drop=True))
+                        result = df_year[df_year["순위"] <= parsed["top_n"]][["순위", "주관사", colname]]
+                        st.subheader(f"📌 {y}년 {parsed['product']} 순위 상위 {parsed['top_n']}개사 (엑셀 순위 기준)")
+                        st.dataframe(result.sort_values("순위").reset_index(drop=True))
                         if parsed.get("is_chart"):
-                            plot_bar_chart_plotly(result.sort_values(colname, ascending=False), "주관사", [colname])
+                            plot_bar_chart_plotly(result.sort_values("순위"), "주관사", [colname])
 
                     elif parsed.get("rank_range"):
                         start, end = parsed["rank_range"]
                         result = df_year[(df_year["순위"] >= start) & (df_year["순위"] <= end)][["순위", "주관사", colname]]
-                        st.subheader(f"📌 {y}년 {parsed['product']} {col} 기준 [{start}, {end}]위 범위")
-                        st.dataframe(result.reset_index(drop=True))
+                        st.subheader(f"📌 {y}년 {parsed['product']} 기준 [{start}, {end}]위 범위 (엑셀 순위 기준)")
+                        st.dataframe(result.sort_values("순위").reset_index(drop=True))
                         if parsed.get("is_chart"):
-                            plot_bar_chart_plotly(result.sort_values(colname, ascending=False), "주관사", [colname])
-
+                            plot_bar_chart_plotly(result.sort_values("순위"), "주관사", [colname])
 
                     elif parsed.get("company"):
                         result = df_year[df_year["주관사"] == parsed["company"]][["순위", "주관사", colname]]
                         if not result.empty:
-                            st.subheader(f"🏅 {y}년 {parsed['product']}에서 {parsed['company']} {col} 순위")
+                            st.subheader(f"🏅 {y}년 {parsed['product']}에서 {parsed['company']} 순위")
                             st.dataframe(result.reset_index(drop=True))
                         else:
                             st.warning(f"{y}년 데이터에서 {parsed['company']} 찾을 수 없음.")
 
                     else:
                         result = df_year[["순위", "주관사", colname]]
-                        st.subheader(f"📌 {y}년 {parsed['product']} {col} 기준 전체 리그테이블")
-                        st.dataframe(result.reset_index(drop=True))
+                        st.subheader(f"📌 {y}년 {parsed['product']} 전체 순위표 (엑셀 지정 순위 기준)")
+                        st.dataframe(result.sort_values("순위").reset_index(drop=True))
                         if parsed.get("is_chart"):
-                            plot_bar_chart_plotly(result.sort_values(colname, ascending=False), "주관사", [colname])
+                            plot_bar_chart_plotly(result.sort_values("순위"), "주관사", [colname])
