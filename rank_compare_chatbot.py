@@ -37,14 +37,14 @@ def parse_natural_query_with_gpt(query):
             '사용자의 질문을 다음 항목으로 분석해서 반드시 올바른 JSON 형식으로 응답해줘. '
             'true/false/null은 반드시 소문자 그대로 사용하고, 문자열은 큰따옴표(\"\")로 감싸줘. '
             '- years: [2023, 2024] 같은 리스트 형태\n'
-            '- product: ECM, ABS, FB, 국내채권 중 하나 (질문에 명시가 없어도 문맥으로 유추해서 채워줘)\n'
+            '- product: ECM, ABS, FB, 국내채권 중 하나 또는 여러 개 (문맥 유추 가능)\n'
             '- columns: 금액, 건수, 점유율 중 하나 이상\n'
             '- company: 증권사명 (선택적)\n'
             '- top_n: 숫자 (선택적)\n'
             '- rank_range: [시작위, 끝위] (선택적)\n'
             '- is_chart: true/false\n'
             '- is_compare: true/false\n'
-            '- 만약 질문에 특정 부문(product)이 명시되지 않고, 특정 증권사(company)만 있다면 모든 product에서 해당 회사의 순위를 보여줘야 함\n'
+            '- 특정 증권사만 있을 경우 product 없이도 전체 product 순회해줘\n'
         )
         response = client.chat.completions.create(
             model="gpt-4",
@@ -87,7 +87,6 @@ st.markdown("""
 이 챗봇은 더벨의 ECM / ABS / FB / 국내채권 부문 대표주관 리그테이블 데이터를 기반으로  
 자연어로 질문하고, 표 형태로 응답을 받는 챗봇입니다.
 
-✅ **모든 순위 기준은 엑셀에 있는 '순위' 열을 그대로 따릅니다.**
 
 #### 💬 예시 질문
 - 2024년 ECM 대표주관 순위 1~10위 알려줘.
@@ -125,10 +124,16 @@ if submit and query:
             st.warning("⚠️ 전체 부문 데이터가 없습니다.")
 
     else:
-        df = dfs.get(parsed["product"])
-        if df is None or df.empty:
-            st.warning(f"⚠️ {parsed['product']} 데이터가 없습니다.")
-        else:
+        products = parsed["product"]
+        if isinstance(products, str):
+            products = [products]
+
+        for product in products:
+            df = dfs.get(product)
+            if df is None or df.empty:
+                st.warning(f"⚠️ {product} 데이터가 없습니다.")
+                continue
+
             df.columns = df.columns.str.strip()
             col_map = {"금액": "금액(원)", "건수": "건수", "점유율": "점유율(%)"}
 
@@ -158,7 +163,7 @@ if submit and query:
                     if parsed.get("company"):
                         row = df_year[df_year["주관사"] == parsed["company"]]
                         if not row.empty:
-                            st.subheader(f"🏅 {y}년 {parsed['product']} {parsed['company']} 순위 및 실적")
+                            st.subheader(f"🏅 {y}년 {product} {parsed['company']} 순위 및 실적")
                             st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
                         else:
                             st.warning(f"{y}년 데이터에서 {parsed['company']} 찾을 수 없습니다.")
@@ -172,5 +177,5 @@ if submit and query:
 
                     cols = ["순위", "주관사", "금액(원)", "건수", "점유율(%)"]
                     result = df_year[df_year["순위"].between(start, end)][cols]
-                    st.subheader(f"📌 {y}년 {parsed['product']} 기준 [{start}, {end}]위 범위 (엑셀 순위 기준)")
+                    st.subheader(f"📌 {y}년 {product} 기준 [{start}, {end}]위 범위 (엑셀 순위 기준)")
                     st.dataframe(result.sort_values("순위").reset_index(drop=True))
