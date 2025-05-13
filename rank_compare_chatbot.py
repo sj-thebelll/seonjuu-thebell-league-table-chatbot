@@ -35,7 +35,7 @@ def parse_natural_query_with_gpt(query):
     try:
         system_prompt = (
             '사용자의 질문을 다음 항목으로 분석해서 반드시 올바른 JSON 형식으로 응답해줘. '
-            'true/false/null은 반드시 소문자 그대로 사용하고, 문자열은 큰따옴표(")로 감싸줘. '
+            'true/false/null은 반드시 소문자 그대로 사용하고, 문자열은 큰따옴표("")로 감싸줘. '
             '- years: [2023, 2024] 형태\n'
             '- product: ECM, ABS, FB, 국내채권 중 하나 또는 여러 개 (문맥 유추 가능)\n'
             '- columns: 금액, 건수, 점유율 중 하나 이상\n'
@@ -86,8 +86,6 @@ st.markdown("""
 이 챗봇은 더벨의 ECM / ABS / FB / 국내채권 부문 대표주관 리그테이블 데이터를 기반으로  
 자연어로 질문하고, 표 형태로 응답을 받는 챗봇입니다.
 
-✅ **모든 순위 기준은 엑셀에 있는 '순위' 열을 그대로 따릅니다.**
-
 #### 💬 예시 질문
 - 2024년 ECM 대표주관 순위 1~10위 알려줘.
 - 2020~2024년 ABS 대표주관 상위 3개사 보여줘.
@@ -122,16 +120,11 @@ if submit and query:
                     found = True
                     st.subheader(f"🏅 {y}년 {product} 순위 및 실적")
                     st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
-
                     if parsed.get("is_chart"):
                         try:
-                            plot_bar_chart_plotly(
-                                row.sort_values("순위"),
-                                x="주관사",
-                                y=["금액(원)", "점유율(%)"]
-                            )
+                            plot_bar_chart_plotly(row.sort_values("순위"), x_col="주관사", y_cols=["금액(원)", "점유율(%)"])
                         except Exception as e:
-                            st.warning(f"⚠️ 차트 생성 중 오류 발생: {e}")
+                            st.warning(f"⚠️ 차트 오류: {e}")
         if not found:
             st.warning("⚠️ 전체 부문 데이터가 없습니다.")
 
@@ -147,7 +140,6 @@ if submit and query:
                 continue
 
             df.columns = df.columns.str.strip()
-            col_map = {"금액": "금액(원)", "건수": "건수", "점유율": "점유율(%)"}
 
             if parsed.get("is_compare") and len(parsed["years"]) == 2 and any("점유율" in col for col in parsed.get("columns", [])):
                 y1, y2 = parsed["years"]
@@ -183,13 +175,9 @@ if submit and query:
 
                             if parsed.get("is_chart"):
                                 try:
-                                    plot_bar_chart_plotly(
-                                        row.sort_values("순위"),
-                                        x="주관사",
-                                        y=["금액(원)", "점유율(%)"]
-                                    )
+                                    plot_bar_chart_plotly(row.sort_values("순위"), x_col="주관사", y_cols=["금액(원)", "점유율(%)"])
                                 except Exception as e:
-                                    st.warning(f"⚠️ 차트 생성 중 오류 발생: {e}")
+                                    st.warning(f"⚠️ 차트 오류: {e}")
                         else:
                             st.warning(f"{y}년 데이터에서 {', '.join(companies)} 찾을 수 없습니다.")
                         continue
