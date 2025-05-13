@@ -11,7 +11,7 @@ import json
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 
-# 한국 폰트 설정
+# ✅ 한글 폰트 수동 설정
 def set_korean_font():
     font_path = "NanumGothic.ttf"
     if os.path.exists(font_path):
@@ -24,19 +24,19 @@ def set_korean_font():
 
 set_korean_font()
 
-# 환경 변수 및 GPT 클라이언트 설정
+# ✅ 환경 설정
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 data_dir = os.path.dirname(__file__)
 dfs = load_dataframes(data_dir)
 
-# GPT 질문 파싱 함수
+# ✅ GPT 파서
 def parse_natural_query_with_gpt(query):
     try:
         system_prompt = (
             '사용자의 질문을 다음 항목으로 분석해서 반드시 올바른 JSON 형식으로 응답해줘. '
-            'true/false/null은 반드시 소문자 그대로 사용하고, 문자열은 큰따옴표(\"\")로 감싸줘. '
-            '- years: [2023, 2024] 같은 리스트 형태\n'
+            'true/false/null은 반드시 소문자 그대로 사용하고, 문자열은 큰따옴표(")로 감싸줘. '
+            '- years: [2023, 2024] 형태\n'
             '- product: ECM, ABS, FB, 국내채권 중 하나 또는 여러 개 (문맥 유추 가능)\n'
             '- columns: 금액, 건수, 점유율 중 하나 이상\n'
             '- company: 증권사명 (한 개 또는 여러 개 리스트 가능)\n'
@@ -59,7 +59,7 @@ def parse_natural_query_with_gpt(query):
         st.error(f"❌ GPT 파서 오류: {e}")
         return None
 
-# 순위 비교 함수
+# ✅ 비교 함수
 def compare_rank(df, year1, year2):
     df1 = df[df["연도"] == year1].copy()
     df2 = df[df["연도"] == year2].copy()
@@ -71,7 +71,6 @@ def compare_rank(df, year1, year2):
     하락 = merged[merged["순위변화"] < 0].sort_values("순위변화")
     return 상승, 하락
 
-# 점유율 비교 함수
 def compare_share(df, year1, year2):
     df1 = df[df["연도"] == year1][["주관사", "점유율(%)"]].copy()
     df2 = df[df["연도"] == year2][["주관사", "점유율(%)"]].copy()
@@ -81,7 +80,7 @@ def compare_share(df, year1, year2):
     하락 = merged[merged["점유율변화"] < 0].sort_values("점유율변화")
     return 상승, 하락
 
-# UI
+# ✅ UI
 st.title("🔔 더벨 리그테이블 챗봇")
 st.markdown("""
 이 챗봇은 더벨의 ECM / ABS / FB / 국내채권 부문 대표주관 리그테이블 데이터를 기반으로  
@@ -121,6 +120,16 @@ if submit and query:
                     found = True
                     st.subheader(f"🏅 {y}년 {product} 순위 및 실적")
                     st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
+
+                    if parsed.get("is_chart"):
+                        try:
+                            plot_bar_chart_plotly(
+                                row.sort_values("순위"),
+                                x="주관사",
+                                y=["금액(원)", "점유율(%)"]
+                            )
+                        except Exception as e:
+                            st.warning(f"⚠️ 차트 생성 중 오류 발생: {e}")
         if not found:
             st.warning("⚠️ 전체 부문 데이터가 없습니다.")
 
@@ -169,6 +178,16 @@ if submit and query:
                         if not row.empty:
                             st.subheader(f"🏅 {y}년 {product} 순위 및 실적")
                             st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
+
+                            if parsed.get("is_chart"):
+                                try:
+                                    plot_bar_chart_plotly(
+                                        row.sort_values("순위"),
+                                        x="주관사",
+                                        y=["금액(원)", "점유율(%)"]
+                                    )
+                                except Exception as e:
+                                    st.warning(f"⚠️ 차트 생성 중 오류 발생: {e}")
                         else:
                             st.warning(f"{y}년 데이터에서 {', '.join(companies)} 찾을 수 없습니다.")
                         continue
