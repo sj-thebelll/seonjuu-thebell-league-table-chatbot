@@ -64,21 +64,34 @@ def set_korean_font():
     plt.rcParams['axes.unicode_minus'] = False  # ✅ 마이너스 깨짐 방지
 
 
-# ✅ plotly 기반 바 차트 함수 (한글 깨짐 방지)
+# ✅ plotly 기반 꺾은선 차트 함수 (한글 깨짐 방지)
+def plot_line_chart_plotly(df, x_col, y_col, title="📈 주관사 순위 변화 추이"):
+    import plotly.express as px
+
+    fig = px.line(df, x=x_col, y=y_col, color='주관사', markers=True, title=title)
+    fig.update_traces(textposition="top center")
+    fig.update_layout(
+        title_font=dict(family="Nanum Gothic", size=20),
+        font=dict(family="Nanum Gothic", size=12),
+        xaxis_title=x_col,
+        yaxis_title=y_col,
+        yaxis_autorange='reversed'  # ✅ 순위는 작을수록 높은 것이므로 역순으로 표시
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+
+# ✅ bar chart 함수도 유지 (필요 시 사용 가능)
 def plot_bar_chart_plotly(df, x_col, y_cols, title="📊 주관사별 비교"):
     import plotly.express as px
 
     for y_col in y_cols:
-        fig = px.bar(df, x_col, y_col, text=y_col, title=title)  # ✅ 위치 인자로 전달
+        fig = px.bar(df, x=x_col, y=y_col, text=y_col, title=title)
         fig.update_traces(texttemplate='%{text:.2s}', textposition='outside')
         fig.update_layout(
-            title_font=dict(family="Nanum Gothic", size=20),  # ✅ 제목 한글 폰트 지정
-            font=dict(family="Nanum Gothic", size=12),        # ✅ 전체 텍스트 한글 폰트 지정
+            title_font=dict(family="Nanum Gothic", size=20),
+            font=dict(family="Nanum Gothic", size=12),
             uniformtext_minsize=8,
             uniformtext_mode='hide',
             xaxis_tickangle=-45
         )
         st.plotly_chart(fig, use_container_width=True)
-
-# 🔁 함수 호출 시 위치 인자 사용 예시:
-# plot_bar_chart_plotly(df, "주관사", ["금액(원)", "점유율(%)"])
