@@ -95,6 +95,7 @@ if submit and query:
 
                 # ✅ 컬럼명 공백 제거
                 df_year.columns = df_year.columns.str.strip()
+                st.write("📋 불러온 컬럼:", df_year.columns.tolist())
 
                 col_map = {
                     "금액": "금액(원)", "건수": "건수", "점유율": "점유율(%)"
@@ -103,8 +104,15 @@ if submit and query:
                 for col in parsed.get("columns", ["금액"]):
                     colname = col_map.get(col, col)
 
+                    필수컬럼 = ["순위", "주관사", colname]
+                    누락 = [c for c in 필수컬럼 if c not in df_year.columns]
+
+                    if 누락:
+                        st.error(f"❌ 데이터에 다음 컬럼이 없습니다: {누락}")
+                        continue
+
                     if parsed.get("top_n"):
-                        result = df_year[df_year["순위"] <= parsed["top_n"]][["순위", "주관사", colname]]
+                        result = df_year[df_year["순위"] <= parsed["top_n"]][필수컬럼]
                         st.subheader(f"📌 {y}년 {parsed['product']} 순위 상위 {parsed['top_n']}개사 (엑셀 순위 기준)")
                         st.dataframe(result.sort_values("순위").reset_index(drop=True))
                         if parsed.get("is_chart"):
@@ -112,14 +120,16 @@ if submit and query:
 
                     elif parsed.get("rank_range"):
                         start, end = parsed["rank_range"]
-                        result = df_year[(df_year["순위"] >= start) & (df_year["순위"] <= end)][["순위", "주관사", colname]]
+                        result = df_year[
+                            (df_year["순위"] >= start) & (df_year["순위"] <= end)
+                        ][필수컬럼]
                         st.subheader(f"📌 {y}년 {parsed['product']} 기준 [{start}, {end}]위 범위 (엑셀 순위 기준)")
                         st.dataframe(result.sort_values("순위").reset_index(drop=True))
                         if parsed.get("is_chart"):
                             plot_bar_chart_plotly(result.sort_values("순위"), "주관사", [colname])
 
                     elif parsed.get("company"):
-                        result = df_year[df_year["주관사"] == parsed["company"]][["순위", "주관사", colname]]
+                        result = df_year[df_year["주관사"] == parsed["company"]][필수컬럼]
                         if not result.empty:
                             st.subheader(f"🏅 {y}년 {parsed['product']}에서 {parsed['company']} 순위")
                             st.dataframe(result.reset_index(drop=True))
@@ -127,7 +137,7 @@ if submit and query:
                             st.warning(f"{y}년 데이터에서 {parsed['company']} 찾을 수 없음.")
 
                     else:
-                        result = df_year[["순위", "주관사", colname]]
+                        result = df_year[필수컬럼]
                         st.subheader(f"📌 {y}년 {parsed['product']} 전체 순위표 (엑셀 지정 순위 기준)")
                         st.dataframe(result.sort_values("순위").reset_index(drop=True))
                         if parsed.get("is_chart"):
