@@ -79,3 +79,6 @@ def plot_bar_chart_plotly(df, x_col, y_cols, title="📊 주관사별 비교"):
             xaxis_tickangle=-45
         )
         st.plotly_chart(fig, use_container_width=True)
+
+# 🔁 함수 호출 시 위치 인자 사용 예시:
+# plot_bar_chart_plotly(df, "주관사", ["금액(원)", "점유율(%)"])
