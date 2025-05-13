@@ -110,11 +110,13 @@ if submit and query:
                             plot_bar_chart_plotly(result.sort_values(colname, ascending=False), "주관사", [colname])
 
                     elif parsed.get("rank_range"):
-                        result = df_year[df_year["순위"].isin(parsed["rank_range"])][["순위", "주관사", colname]]
-                        st.subheader(f"📌 {y}년 {parsed['product']} {col} 기준 {parsed['rank_range']}위 범위")
+                        start, end = parsed["rank_range"]
+                        result = df_year[(df_year["순위"] >= start) & (df_year["순위"] <= end)][["순위", "주관사", colname]]
+                        st.subheader(f"📌 {y}년 {parsed['product']} {col} 기준 [{start}, {end}]위 범위")
                         st.dataframe(result.reset_index(drop=True))
                         if parsed.get("is_chart"):
                             plot_bar_chart_plotly(result.sort_values(colname, ascending=False), "주관사", [colname])
+
 
                     elif parsed.get("company"):
                         result = df_year[df_year["주관사"] == parsed["company"]][["순위", "주관사", colname]]
