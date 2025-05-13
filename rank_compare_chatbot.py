@@ -35,7 +35,7 @@ def parse_natural_query_with_gpt(query):
             '사용자의 질문을 다음 항목으로 분석해서 반드시 올바른 JSON 형식으로 응답해줘. '
             'true/false/null은 반드시 소문자 그대로 사용하고, 문자열은 큰따옴표 (")로 감싸줘. '
             '- years: [2023, 2024] 같은 리스트 형태\n'
-            '- product: ECM, ABS, FB, 국내채권 중 하나\n'
+            '- product: ECM, ABS, FB, 국내채권 중 하나 (질문에 명시가 없어도 문맥으로 유추해서 채워줘)\n'
             '- columns: 금액, 건수, 점유율 중 하나 이상\n'
             '- company: 증권사명 (선택적)\n'
             '- top_n: 숫자 (선택적)\n'
