@@ -56,7 +56,7 @@ def parse_natural_query_with_gpt(query):
         st.error(f"❌ GPT 파서 오류: {e}")
         return None
 
-# ✅ 순위 비교 함수
+# ✅ 연도별 순위 비교 함수 (상승/하락)
 def compare_rank(df, year1, year2):
     df1 = df[df["연도"] == year1].copy()
     df2 = df[df["연도"] == year2].copy()
@@ -64,8 +64,12 @@ def compare_rank(df, year1, year2):
     df2["순위2"] = df2["순위"]
     merged = pd.merge(df1[["주관사", "순위1"]], df2[["주관사", "순위2"]], on="주관사")
     merged["순위변화"] = merged["순위1"] - merged["순위2"]
-    상승 = merged[merged["순위변화"] > 0].sort_values("순위변화", ascending=False)
-    하락 = merged[merged["순위변화"] < 0].sort_values("순위변화")
+    상승 = merged[merged["순위변화"] > 0].copy()
+    하락 = merged[merged["순위변화"] < 0].copy()
+    상승["상승등수"] = 상승["순위변화"]
+    하락["하락등수"] = -하락["순위변화"]
+    상승 = 상승[["주관사", "순위1", "순위2", "상승등수"]].sort_values("상승등수", ascending=False)
+    하락 = 하락[["주관사", "순위1", "순위2", "하락등수"]].sort_values("하락등수", ascending=False)
     return 상승, 하락
 
 # ✅ UI
