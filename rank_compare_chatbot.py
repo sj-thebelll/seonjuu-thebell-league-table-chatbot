@@ -88,10 +88,13 @@ if submit and query:
             st.warning(f"⚠️ {parsed['product']} 데이터가 없습니다.")
         else:
             for y in parsed["years"]:
-                df_year = df[df["연도"] == y]
+                df_year = df[df["연도"] == y].copy()
                 if df_year.empty:
                     st.warning(f"⚠️ {y}년 데이터가 없습니다.")
                     continue
+
+                # ✅ 컬럼명 공백 제거
+                df_year.columns = df_year.columns.str.strip()
 
                 col_map = {
                     "금액": "금액(원)", "건수": "건수", "점유율": "점유율(%)"
