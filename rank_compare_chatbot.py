@@ -1,7 +1,5 @@
-
 import streamlit as st
 
-# ✅ 첫 줄에 위치해야 함
 st.set_page_config(page_title="더벨 리그테이블 챗봇", page_icon="🔔")
 
 import os
@@ -9,11 +7,11 @@ import pandas as pd
 from openai import OpenAI
 from dotenv import load_dotenv
 from utils import load_dataframes, plot_bar_chart_plotly
+import json
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
-import platform
 
-# ✅ 한글 폰트 수동 설정 함수 (업로드한 NanumGothic.ttf 사용)
+# ✅ 한글 폰트 수동 설정
 def set_korean_font():
     font_path = "NanumGothic.ttf"
     if os.path.exists(font_path):
@@ -24,7 +22,7 @@ def set_korean_font():
         st.warning("⚠️ 'NanumGothic.ttf' 폰트 파일이 없어 한글이 깨질 수 있습니다.")
     plt.rcParams['axes.unicode_minus'] = False
 
-# ✅ 환경 변수 및 API 키
+# ✅ 환경 변수 및 GPT 클라이언트
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -32,18 +30,20 @@ client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 data_dir = os.path.dirname(__file__)
 dfs = load_dataframes(data_dir)
 
-# ✅ GPT 기반 자연어 파싱
+# ✅ GPT 질문 파싱 함수 (JSON 응답 강제)
 def parse_natural_query_with_gpt(query):
     try:
         system_prompt = (
-            "사용자의 질문을 다음 항목으로 분석해서 JSON 형태로 정리해줘:\n"
-            "- years: [연도]\n- product: ECM, ABS, FB, 국내채권 중 택1\n"
-            "- company: 특정 증권사 있을 경우\n"
-            "- columns: 금액, 건수, 점유율 중 하나 이상\n"
-            "- top_n: 상위 몇 위인지 (선택적)\n"
-            "- rank_range: [시작위~끝위] (선택적)\n"
-            "- is_chart: 그래프 포함 여부 (boolean)\n"
-            "- is_compare: 연도 간 비교인지 여부 (boolean)"
+            "사용자의 질문을 다음 항목으로 분석해서 반드시 올바른 JSON 형식으로 응답해줘. "
+            "true/false/null은 반드시 소문자 그대로 사용하고, 문자열은 큰따옴표(\\"\\")로 감싸줘. "
+            "- years: [2023, 2024] 같은 리스트 형태\\n"
+            "- product: ECM, ABS, FB, 국내채권 중 하나\\n"
+            "- columns: 금액, 건수, 점유율 중 하나 이상\\n"
+            "- company: 증권사명 (선택적)\\n"
+            "- top_n: 숫자 (선택적)\\n"
+            "- rank_range: [시작위, 끝위] (선택적)\\n"
+            "- is_chart: true/false\\n"
+            "- is_compare: true/false"
         )
         response = client.chat.completions.create(
             model="gpt-4",
@@ -53,42 +53,27 @@ def parse_natural_query_with_gpt(query):
             ],
             temperature=0.2
         )
-        content = response.choices[0].message.content
-        return eval(content)
+        return json.loads(response.choices[0].message.content)
     except Exception as e:
         st.error(f"❌ GPT 파서 오류: {e}")
         return None
 
-# ✅ UI 안내 텍스트
+# ✅ UI
 st.title("🔔 더벨 리그테이블 챗봇")
 st.markdown("""
 이 챗봇은 더벨의 ECM / ABS / FB / 국내채권 부문 대표주관 리그테이블 데이터를 기반으로  
 자연어로 질문하고, 표 형태로 응답을 받는 챗봇입니다.
 
 #### 💬 예시 질문
-- 2024년 ECM 대표주관사 순위 알려줘.
+- 2024년 ECM 대표주관사 순위 1~10위는.
 - 2020~2024년 ABS 대표주관 상위 3개사 보여줘.
-- 2022년 FB 대표주관 1위는 어디야?
+- 2022년에 비해 2023년 국내채권 주관 점유율이 오른 증권사는?
 - 2023년 ECM 금액과 건수 기준 순위를 그래프로 보여줘. 
 """)
 
-# ✅ 입력창
 with st.form(key="question_form"):
     query = st.text_input("질문을 입력하세요:")
     submit = st.form_submit_button("🔍 질문하기")
-
-st.markdown("""
-<style>
-button[kind="formSubmit"] {
-    background-color: #ff4b4b;
-    color: white;
-    border-radius: 10px;
-    padding: 0.5em 1.5em;
-    font-size: 1.1em;
-    font-weight: bold;
-}
-</style>
-""", unsafe_allow_html=True)
 
 # ✅ 질문 처리
 if submit and query:
