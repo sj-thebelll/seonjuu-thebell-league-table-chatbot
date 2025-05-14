@@ -204,4 +204,3 @@ if submit and query:
                     result = df_year[df_year["순위"].between(start, end)][cols]
                     st.subheader(f"📌 {y}년 {product} 기준 [{start}, {end}]위 범위 (엑셀 순위 기준)")
                     st.dataframe(result.sort_values("순위").reset_index(drop=True))
-
