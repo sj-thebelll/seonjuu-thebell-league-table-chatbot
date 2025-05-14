@@ -134,6 +134,9 @@ if submit and query:
         if isinstance(products, str):
             products = [products]
 
+        companies = parsed.get("company") or []
+        years = parsed.get("years") or []  # ✅ 이 줄이 꼭 필요!
+        
         for product in products:
             df = dfs.get(product)
             if df is None or df.empty:
