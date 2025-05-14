@@ -68,6 +68,8 @@ def set_korean_font():
 def plot_line_chart_plotly(df, x_col, y_col, title="📈 주관사 순위 변화 추이"):
     import plotly.express as px
 
+    df[x_col] = df[x_col].astype(str)  # ✅ 연도 문자열 처리 추가
+
     fig = px.line(df, x=x_col, y=y_col, color='주관사', markers=True, title=title)
     fig.update_traces(textposition="top center")
     fig.update_layout(
@@ -75,7 +77,8 @@ def plot_line_chart_plotly(df, x_col, y_col, title="📈 주관사 순위 변화
         font=dict(family="Nanum Gothic", size=12),
         xaxis_title=x_col,
         yaxis_title=y_col,
-        yaxis_autorange='reversed'  # ✅ 순위는 작을수록 높은 것이므로 역순으로 표시
+        yaxis_autorange='reversed',  # ✅ 순위는 작을수록 위쪽에
+        xaxis_type='category'        # ✅ X축을 카테고리형으로 처리
     )
     st.plotly_chart(fig, use_container_width=True)
 
