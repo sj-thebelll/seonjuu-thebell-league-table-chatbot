@@ -169,7 +169,7 @@ if submit and query:
                     st.subheader(f"📉 {y1} → {y2} 순위 하락 (대상: {', '.join(companies)})")
                     st.dataframe(하락.reset_index(drop=True))
 
-                if parsed.get("is_chart") and companies:
+                if parsed.get("is_chart") and companies and len(years) >= 2:
                     chart_df = df[df["연도"].isin([y1, y2]) & df["주관사"].isin(companies)]
                     if not chart_df.empty:
                         chart_df = chart_df[["연도", "주관사", "순위"]].sort_values(["주관사", "연도"])
