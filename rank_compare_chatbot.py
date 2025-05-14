@@ -6,7 +6,7 @@ import os
 import pandas as pd
 from openai import OpenAI
 from dotenv import load_dotenv
-from utils import load_dataframes, plot_bar_chart_plotly
+from utils import load_dataframes, plot_bar_chart_plotly, plot_line_chart_plotly
 import json
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
