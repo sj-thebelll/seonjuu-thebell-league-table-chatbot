@@ -153,13 +153,14 @@ if submit and query:
                         상승 = 상승[상승["주관사"].isin(companies)]
                         하락 = 하락[하락["주관사"].isin(companies)]
                     if not 상승.empty:
+                        상승 = 상승[[ "주관사", f"{y1}년 순위", f"{y2}년 순위", "순위변화" ]]
                         st.subheader(f"📈 {y1} → {y2} 순위 상승 (대상: {', '.join(companies)})")
                         st.dataframe(상승.reset_index(drop=True))
+
                     if not 하락.empty:
+                        하락 = 하락[[ "주관사", f"{y1}년 순위", f"{y2}년 순위", "순위변화" ]]
                         st.subheader(f"📉 {y1} → {y2} 순위 하락 (대상: {', '.join(companies)})")
                         st.dataframe(하락.reset_index(drop=True))
-
-
 
 
             else:
