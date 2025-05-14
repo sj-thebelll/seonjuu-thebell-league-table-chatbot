@@ -141,21 +141,23 @@ if submit and query:
 
             df.columns = df.columns.str.strip()
 
-            if parsed.get("is_compare") and len(parsed["years"]) == 2 and any("점유율" in col for col in parsed.get("columns", [])):
-                y1, y2 = parsed["years"]
-                상승, 하락 = compare_share(df, y1, y2)
-                st.subheader(f"📈 {y1} → {y2} 점유율 상승")
-                st.dataframe(상승.reset_index(drop=True))
-                st.subheader(f"📉 {y1} → {y2} 점유율 하락")
-                st.dataframe(하락.reset_index(drop=True))
-
-            elif parsed.get("is_compare") and len(parsed["years"]) == 2:
+            if parsed.get("is_compare") and len(parsed["years"]) == 2:
                 y1, y2 = parsed["years"]
                 상승, 하락 = compare_rank(df, y1, y2)
-                st.subheader(f"📈 {y1} → {y2} 순위 상승")
-                st.dataframe(상승.reset_index(drop=True))
-                st.subheader(f"📉 {y1} → {y2} 순위 하락")
-                st.dataframe(하락.reset_index(drop=True))
+
+                companies = parsed.get("company")
+                if companies:
+                    if isinstance(companies, str):
+                        companies = [companies]
+                    상승 = 상승[상승["주관사"].isin(companies)]
+                    하락 = 하락[하락["주관사"].isin(companies)]
+
+                if not 상승.empty:
+                    st.subheader(f"📈 {y1} → {y2} 순위 상승")
+                    st.dataframe(상승.reset_index(drop=True))
+                if not 하락.empty:
+                    st.subheader(f"📉 {y1} → {y2} 순위 하락")
+                    st.dataframe(하락.reset_index(drop=True))
 
             else:
                 for y in parsed["years"]:
@@ -173,12 +175,11 @@ if submit and query:
                             st.subheader(f"🏅 {y}년 {product} 순위 및 실적")
                             st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
 
-                         if parsed.get("is_chart") and not parsed.get("is_compare"):
-                             try:
-                                 plot_bar_chart_plotly(row.sort_values("순위"), x_col="주관사", y_cols=["금액(원)", "점유율(%)"])
-                             except Exception as e:
-                                 st.warning(f"⚠️ 차트 오류: {e}")
-
+                            if parsed.get("is_chart") and not parsed.get("is_compare"):
+                                try:
+                                    plot_bar_chart_plotly(row.sort_values("순위"), x_col="주관사", y_cols=["금액(원)", "점유율(%)"])
+                                except Exception as e:
+                                    st.warning(f"⚠️ 차트 오류: {e}")
                         else:
                             st.warning(f"{y}년 데이터에서 {', '.join(companies)} 찾을 수 없습니다.")
                         continue
