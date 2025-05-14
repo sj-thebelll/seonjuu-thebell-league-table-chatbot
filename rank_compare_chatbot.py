@@ -173,6 +173,7 @@ if submit and query:
                     chart_df = df[df["연도"].isin([y1, y2]) & df["주관사"].isin(companies)]
                     if not chart_df.empty:
                         chart_df = chart_df[["연도", "주관사", "순위"]].sort_values(["주관사", "연도"])
+                        chart_df["연도"] = chart_df["연도"].astype(str)  # ✅ 연도를 문자열로 변환
                         title = f"📊 {' vs '.join(companies)} {y1}→{y2} 순위 변화"
                         st.subheader(title)
                         plot_line_chart_plotly(chart_df, x_col="연도", y_col="순위")
