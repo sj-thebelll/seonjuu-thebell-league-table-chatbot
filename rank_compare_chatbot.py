@@ -173,11 +173,12 @@ if submit and query:
                             st.subheader(f"🏅 {y}년 {product} 순위 및 실적")
                             st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
 
-                            if parsed.get("is_chart"):
-                                try:
-                                    plot_bar_chart_plotly(row.sort_values("순위"), x_col="주관사", y_cols=["금액(원)", "점유율(%)"])
-                                except Exception as e:
-                                    st.warning(f"⚠️ 차트 오류: {e}")
+                         if parsed.get("is_chart") and not parsed.get("is_compare"):
+                             try:
+                                 plot_bar_chart_plotly(row.sort_values("순위"), x_col="주관사", y_cols=["금액(원)", "점유율(%)"])
+                             except Exception as e:
+                                 st.warning(f"⚠️ 차트 오류: {e}")
+
                         else:
                             st.warning(f"{y}년 데이터에서 {', '.join(companies)} 찾을 수 없습니다.")
                         continue
@@ -192,3 +193,15 @@ if submit and query:
                     result = df_year[df_year["순위"].between(start, end)][cols]
                     st.subheader(f"📌 {y}년 {product} 기준 [{start}, {end}]위 범위 (엑셀 순위 기준)")
                     st.dataframe(result.sort_values("순위").reset_index(drop=True))
+
+# ✅ 꺾은선 그래프 출력 조건 (여러 연도 비교, 특정 증권사, 차트 요청 포함)
+if parsed.get("is_chart") and parsed.get("is_compare") and companies and len(years) > 1:
+    for product in products:
+        df = dfs.get(product)
+        if df is None:
+            continue
+        df.columns = df.columns.str.strip()
+        chart_df = df[df["연도"].isin(years) & df["주관사"].isin(companies)]
+        if not chart_df.empty:
+            chart_df = chart_df[["연도", "주관사", "순위"]].sort_values(["주관사", "연도"])
+            plot_line_chart_plotly(chart_df, x_col="연도", y_col="순위")
