@@ -63,10 +63,11 @@ def parse_natural_query_with_gpt(query):
 def compare_rank(df, year1, year2):
     df1 = df[df["연도"] == year1].copy()
     df2 = df[df["연도"] == year2].copy()
-    df1["순위1"] = df1["순위"]
-    df2["순위2"] = df2["순위"]
-    merged = pd.merge(df1[["주관사", "순위1"]], df2[["주관사", "순위2"]], on="주관사")
-    merged["순위변화"] = merged["순위1"] - merged["순위2"]
+    df1[f"{year1}년 순위"] = df1["순위"]
+    df2[f"{year2}년 순위"] = df2["순위"]
+    merged = pd.merge(df1[["주관사", f"{year1}년 순위"]], df2[["주관사", f"{year2}년 순위"]], on="주관사")
+    merged["순위변화"] = merged[f"{year1}년 순위"] - merged[f"{year2}년 순위"]
+
     상승 = merged[merged["순위변화"] > 0].sort_values("순위변화", ascending=False)
     하락 = merged[merged["순위변화"] < 0].sort_values("순위변화")
     return 상승, 하락
@@ -141,23 +142,24 @@ if submit and query:
 
             df.columns = df.columns.str.strip()
 
-            if parsed.get("is_compare") and len(parsed["years"]) == 2:
-               y1, y2 = parsed["years"]
-               상승, 하락 = compare_rank(df, y1, y2)
+            if parsed.get("is_compare") and len(years) == 2:
+                y1, y2 = years
+                for product in products:
+                    df = dfs.get(product)
+                    if df is None:
+                        continue
+                    상승, 하락 = compare_rank(df, y1, y2)
+                    if companies:
+                        상승 = 상승[상승["주관사"].isin(companies)]
+                        하락 = 하락[하락["주관사"].isin(companies)]
+                    if not 상승.empty:
+                        st.subheader(f"📈 {y1} → {y2} 순위 상승 (대상: {', '.join(companies)})")
+                        st.dataframe(상승.reset_index(drop=True))
+                    if not 하락.empty:
+                        st.subheader(f"📉 {y1} → {y2} 순위 하락 (대상: {', '.join(companies)})")
+                        st.dataframe(하락.reset_index(drop=True))
 
-               companies = parsed.get("company")
-               if companies:
-                   if isinstance(companies, str):
-                       companies = [companies]
-                   상승 = 상승[상승["주관사"].isin(companies)]
-                   하락 = 하락[하락["주관사"].isin(companies)]
 
-               if not 상승.empty:
-                   st.subheader(f"📈 {y1} → {y2} 순위 상승")
-                   st.dataframe(상승.reset_index(drop=True))
-               if not 하락.empty:
-                   st.subheader(f"📉 {y1} → {y2} 순위 하락")
-                   st.dataframe(하락.reset_index(drop=True))
 
 
             else:
@@ -196,7 +198,7 @@ if submit and query:
                     st.subheader(f"📌 {y}년 {product} 기준 [{start}, {end}]위 범위 (엑셀 순위 기준)")
                     st.dataframe(result.sort_values("순위").reset_index(drop=True))
 
-# ✅ 꺾은선 그래프 출력 조건 (여러 연도 비교, 특정 증권사, 차트 요청 포함)
+# ✅ 꺾은선 그래프 출력 조건 처리
 if parsed.get("is_chart") and parsed.get("is_compare") and companies and len(years) > 1:
     for product in products:
         df = dfs.get(product)
@@ -206,4 +208,6 @@ if parsed.get("is_chart") and parsed.get("is_compare") and companies and len(yea
         chart_df = df[df["연도"].isin(years) & df["주관사"].isin(companies)]
         if not chart_df.empty:
             chart_df = chart_df[["연도", "주관사", "순위"]].sort_values(["주관사", "연도"])
+            title = f"📊 {' vs '.join(companies)} {min(years)}→{max(years)} 순위 변화"
+            st.subheader(title)
             plot_line_chart_plotly(chart_df, x_col="연도", y_col="순위")
