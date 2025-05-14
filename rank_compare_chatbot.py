@@ -154,11 +154,10 @@ if submit and query:
                     하락 = 하락[하락["주관사"].isin(companies)]
 
                 # ✅ 누락된 증권사 경고 추가
-                    missing_companies = [c for c in companies if c not in 상승["주관사"].values and c not in 하락["주관사"].values]
-                    if missing_companies:
-                        st.warning(f"⚠️ {', '.join(missing_companies)}의 {y1}년 또는 {y2}년 순위 데이터가 없습니다.")
+                missing_companies = [c for c in companies if c not in 상승["주관사"].values and c not in 하락["주관사"].values]
+                if missing_companies:
+                    st.warning(f"⚠️ {', '.join(missing_companies)}의 {y1}년 또는 {y2}년 순위 데이터가 없습니다.")
 
-                
                 if not 상승.empty:
                     상승 = 상승[["주관사", f"{y1}년 순위", f"{y2}년 순위", "순위변화"]]
                     st.subheader(f"📈 {y1} → {y2} 순위 상승 (대상: {', '.join(companies)})")
@@ -169,12 +168,23 @@ if submit and query:
                     st.subheader(f"📉 {y1} → {y2} 순위 하락 (대상: {', '.join(companies)})")
                     st.dataframe(하락.reset_index(drop=True))
 
-                if parsed.get("is_chart") and companies and len(years) >= 2:
+                # ✅ 순위 비교용 그래프 (2개 연도일 때)
+                if parsed.get("is_chart") and companies and len(years) == 2:
                     chart_df = df[df["연도"].isin([y1, y2]) & df["주관사"].isin(companies)]
                     if not chart_df.empty:
                         chart_df = chart_df[["연도", "주관사", "순위"]].sort_values(["주관사", "연도"])
-                        chart_df["연도"] = chart_df["연도"].astype(int)  # ✅ 반드시 정수로 바꿔줌
+                        chart_df["연도"] = chart_df["연도"].astype(int)
                         title = f"📊 {' vs '.join(companies)} {y1}→{y2} 순위 변화"
+                        st.subheader(title)
+                        plot_line_chart_plotly(chart_df, x_col="연도", y_col="순위")
+
+                # ✅ 3개 이상 연도일 때도 그래프 출력 추가 (is_compare 여부 무관)
+                elif parsed.get("is_chart") and companies and len(years) > 2:
+                    chart_df = df[df["연도"].isin(years) & df["주관사"].isin(companies)]
+                    if not chart_df.empty:
+                        chart_df = chart_df[["연도", "주관사", "순위"]].sort_values(["주관사", "연도"])
+                        chart_df["연도"] = chart_df["연도"].astype(int)
+                        title = f"📊 {' vs '.join(companies)} {min(years)}→{max(years)} 순위 변화"
                         st.subheader(title)
                         plot_line_chart_plotly(chart_df, x_col="연도", y_col="순위")
 
