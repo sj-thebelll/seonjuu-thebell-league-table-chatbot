@@ -153,6 +153,12 @@ if submit and query:
                     상승 = 상승[상승["주관사"].isin(companies)]
                     하락 = 하락[하락["주관사"].isin(companies)]
 
+                # ✅ 누락된 증권사 경고 추가
+                    missing_companies = [c for c in companies if c not in 상승["주관사"].values and c not in 하락["주관사"].values]
+                    if missing_companies:
+                        st.warning(f"⚠️ {', '.join(missing_companies)}의 {y1}년 또는 {y2}년 순위 데이터가 없습니다.")
+
+                
                 if not 상승.empty:
                     상승 = 상승[["주관사", f"{y1}년 순위", f"{y2}년 순위", "순위변화"]]
                     st.subheader(f"📈 {y1} → {y2} 순위 상승 (대상: {', '.join(companies)})")
