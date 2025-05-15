@@ -222,5 +222,12 @@ if submit and query:
 
                     cols = ["순위", "주관사", "금액(원)", "건수", "점유율(%)"]
                     result = df_year[df_year["순위"].between(start, end)][cols]
-                    st.subheader(f"📌 {y}년 {product} 기준 [{start}, {end}]위 범위 (엑셀 순위 기준)")
+
+                    # ⬇️ 제목 형식 개선
+                    title = f"{y}년 {product} 대표주관 순위"
+                    if start != 1 or end != 10:
+                        title += f" ({start}~{end}위)"
+
+                    st.subheader(f"📌 {title}")
                     st.dataframe(result.sort_values("순위").reset_index(drop=True))
+
