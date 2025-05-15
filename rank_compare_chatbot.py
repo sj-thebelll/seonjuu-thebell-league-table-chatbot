@@ -109,10 +109,8 @@ if submit and query:
         st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
 
         elif parsed.get("company") and not parsed.get("product"):
-                companies = parsed["company"]
-                if isinstance(companies, str):
-                    companies = [companies]
-                years = parsed.get("years", [])
+            from improved_company_year_chart_logic import handle_company_year_chart_logic
+            handle_company_year_chart_logic(parsed, dfs)
 
                 if len(companies) == 1 and len(years) >= 2 and parsed.get("is_chart"):
                     combined_df = pd.DataFrame()
