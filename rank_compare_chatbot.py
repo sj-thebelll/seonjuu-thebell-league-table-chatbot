@@ -177,8 +177,8 @@ if submit and query:
                 st.warning("⚠️ 전체 부문 데이터가 없습니다.")
 
 
-    if not handled:
-        products = parsed.get("product")
+    if not handled and parsed.get("product"):
+        products = parsed["product"]
         if isinstance(products, str):
             products = [products]
 
