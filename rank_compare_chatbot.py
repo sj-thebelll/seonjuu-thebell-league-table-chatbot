@@ -112,7 +112,6 @@ if submit and query:
             from improved_company_year_chart_logic import handle_company_year_chart_logic
             handle_company_year_chart_logic(parsed, dfs)
 
-                   
 
             # 나머지 일반 루틴 처리... (기존 처리 방식 이어짐)
             products = parsed.get("product")
