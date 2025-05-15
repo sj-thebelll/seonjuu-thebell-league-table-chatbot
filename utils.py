@@ -65,22 +65,22 @@ def set_korean_font():
 
 
 # ✅ plotly 기반 꺾은선 차트 함수 (한글 깨짐 방지)
-def plot_line_chart_plotly(df, x_col, y_col, title="📈 주관사 순위 변화 추이"):
+def plot_line_chart_plotly(df, x_col, y_col, color_col='주관사', title="📈 주관사 순위 변화 추이", key=None):
     import plotly.express as px
 
-    df[x_col] = df[x_col].astype(str)  # ✅ 연도 문자열 처리 추가
+    df[x_col] = df[x_col].astype(str)
 
-    fig = px.line(df, x=x_col, y=y_col, color='주관사', markers=True, title=title)
+    fig = px.line(df, x=x_col, y=y_col, color=color_col, markers=True, title=title)
     fig.update_traces(textposition="top center")
     fig.update_layout(
         title_font=dict(family="Nanum Gothic", size=20),
         font=dict(family="Nanum Gothic", size=12),
         xaxis_title=x_col,
         yaxis_title=y_col,
-        yaxis_autorange='reversed',  # ✅ 순위는 작을수록 위쪽에
-        xaxis_type='category'        # ✅ X축을 카테고리형으로 처리
+        yaxis_autorange='reversed',
+        xaxis_type='category'
     )
-    st.plotly_chart(fig, use_container_width=True, key=f"{x_col}_{y_col}_{title}")
+    st.plotly_chart(fig, use_container_width=True, key=key)
 
 
 # ✅ bar chart 함수도 유지 (필요 시 사용 가능)
