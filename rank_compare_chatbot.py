@@ -107,7 +107,7 @@ if submit and query:
 
     if not parsed:
         st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
-        return
+        handled = True
 
     elif parsed.get("company") and not parsed.get("product"):
         from improved_company_year_chart_logic import handle_company_year_chart_logic
