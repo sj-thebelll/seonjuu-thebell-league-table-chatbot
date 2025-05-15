@@ -119,6 +119,9 @@ if submit and query:
         products = [products]
 
     companies = parsed.get("company") or []
+    if isinstance(companies, str):  # 문자열이면 리스트로 변환
+       companies = [companies]
+
     years = parsed.get("years") or []
 
     for product in products:
