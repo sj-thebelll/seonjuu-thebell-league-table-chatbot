@@ -112,7 +112,7 @@ if submit and query:
             companies = [companies]
         years = parsed.get("years", [])
 
-        # ✅ 회사가 하나고 연도 여러 개 + 그래프 요청 시, 먼저 처리 (금액 기준 그래프)
+        # ✅ 회사 하나 + 연도 여러 개 + 차트 요청인 경우
         if len(companies) == 1 and len(years) >= 2 and parsed.get("is_chart"):
             combined_df = pd.DataFrame()
             for product, df in dfs.items():
@@ -130,6 +130,7 @@ if submit and query:
                 chart_df = combined_df[["연도", "product", "금액(원)"]].copy()
                 chart_df["연도"] = chart_df["연도"].astype(int)
                 chart_df = chart_df.sort_values(["product", "연도"])
+
                 import plotly.express as px
                 fig = px.line(chart_df, x="연도", y="금액(원)", color="product", markers=True,
                               title=f"{companies[0]} 연도별 금액 추이")
@@ -142,31 +143,30 @@ if submit and query:
                 )
                 st.plotly_chart(fig, use_container_width=True)
 
-                # 👉 실적 테이블도 함께 출력
                 display_cols = ["연도", "product", "순위", "주관사", "금액(원)", "건수", "점유율(%)"]
                 st.dataframe(combined_df[display_cols].sort_values(["product", "연도"]).reset_index(drop=True))
             else:
                 st.warning("⚠️ 해당 주관사의 연도별 실적이 없습니다.")
-            return  # ✅ 아래 for 루프 실행 안 하도록 종료
 
-        # ✅ 기본 분기: 여러 회사 또는 그래프 조건 없는 경우
-        found = False
-        for product, df in dfs.items():
-            df.columns = df.columns.str.strip()
-            for y in years:
-                df_year = df[df["연도"] == y]
-                row = df_year[df_year["주관사"].isin(companies)]
-                if not row.empty:
-                    found = True
-                    st.subheader(f"🏅 {y}년 {product} 순위 및 실적")
-                    st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
-                    if parsed.get("is_chart"):
-                        try:
-                            plot_bar_chart_plotly(row.sort_values("순위"), x_col="주관사", y_cols=["금액(원)", "점유율(%)"])
-                        except Exception as e:
-                            st.warning(f"⚠️ 차트 오류: {e}")
-        if not found:
-            st.warning("⚠️ 전체 부문 데이터가 없습니다.")
+        else:
+            # ✅ 기본 처리: 여러 회사이거나 차트 미요청인 경우
+            found = False
+            for product, df in dfs.items():
+                df.columns = df.columns.str.strip()
+                for y in years:
+                    df_year = df[df["연도"] == y]
+                    row = df_year[df_year["주관사"].isin(companies)]
+                    if not row.empty:
+                        found = True
+                        st.subheader(f"🏅 {y}년 {product} 순위 및 실적")
+                        st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
+                        if parsed.get("is_chart"):
+                            try:
+                                plot_bar_chart_plotly(row.sort_values("순위"), x_col="주관사", y_cols=["금액(원)", "점유율(%)"])
+                            except Exception as e:
+                                st.warning(f"⚠️ 차트 오류: {e}")
+            if not found:
+                st.warning("⚠️ 전체 부문 데이터가 없습니다.")
 
 
     else:
