@@ -69,11 +69,19 @@ def handle_company_year_chart_logic(parsed, dfs):
                     title_chart = f"📊 {', '.join(companies)}의 {req_years[0]}년 {y_title_suffix} 현황 ({color_by}별)"
 
                 st.subheader(title_chart)
-                plot_line_chart_plotly(combined_df_all_products, x_col="연돌", y_col=y_column_to_plot, color_col=color_by, title=title_chart)
+                plot_line_chart_plotly(
+                    combined_df_all_products,
+                    x_col="연도",
+                    y_col=y_column_to_plot,
+                    color_col=color_by,
+                    title=title_chart,
+                    key=f"{title_chart}_{y_column_to_plot}_{color_by}"  # ✅ 고유 key 지정
+                )
+
             elif is_chart_requested:
                 st.info(f"ℹ️ '{', '.join(companies)}'에 대한 차트({y_column_to_plot} 기준)만큼의 데이터가 없거나 충분하지 않습니다.")
         elif is_chart_requested:
-            st.warning(f"⚠️ '{', '.join(companies)}'에 대한 차트 데이터를 찾을 수 없습니다 (요청 연돌: {req_years}).")
+            st.warning(f"⚠️ '{', '.join(companies)}'에 대한 차트 데이터를 찾을 수 없습니다 (요청 연도: {req_years}).")
 
     elif not is_chart_requested or not req_years:
         table_data_to_display_no_chart_company = {}
@@ -102,4 +110,4 @@ def handle_company_year_chart_logic(parsed, dfs):
             if not found_data_for_company_table_only:
                 st.warning(f"⚠️ '{', '.join(companies)}'의 {min(req_years)}~{max(req_years)}년 데이터를 찾을 수 없습니다.")
         elif not req_years and companies:
-            st.warning(f"⚠️ '{', '.join(companies)}' 관련 데이터를 표시하려면 조회할 연돌을 지정해주세요. (예: 최근 3개년)")
+            st.warning(f"⚠️ '{', '.join(companies)}' 관련 데이터를 표시하려면 조회할 연도를 지정해주세요. (예: 최근 3개년)")
