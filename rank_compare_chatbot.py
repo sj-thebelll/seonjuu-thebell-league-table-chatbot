@@ -107,10 +107,11 @@ if submit and query:
 
     if not parsed:
         st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
+        return  # 혹은 handled = True, 또는 이후 코드가 실행되지 않도록 처리
 
-        elif parsed.get("company") and not parsed.get("product"):
-            from improved_company_year_chart_logic import handle_company_year_chart_logic
-            handle_company_year_chart_logic(parsed, dfs)
+    elif parsed.get("company") and not parsed.get("product"):
+        from improved_company_year_chart_logic import handle_company_year_chart_logic
+        handle_company_year_chart_logic(parsed, dfs)
 
 
             # 나머지 일반 루틴 처리... (기존 처리 방식 이어짐)
