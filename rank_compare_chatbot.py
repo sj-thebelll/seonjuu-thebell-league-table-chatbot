@@ -100,6 +100,7 @@ with st.form(key="question_form"):
     submit = st.form_submit_button("🔍 질문하기")
 
 if submit and query:
+    handled = False  # 추가해서 체단적 처리 여부 확인
     with st.spinner("GPT가 질문을 해석 중입니다..."):
         parsed = parse_natural_query_with_gpt(query)
 
@@ -145,6 +146,8 @@ if submit and query:
 
                 display_cols = ["연도", "product", "순위", "주관사", "금액(원)", "건수", "점유율(%)"]
                 st.dataframe(combined_df[display_cols].sort_values(["product", "연도"]).reset_index(drop=True))
+                handled = True   
+                
             else:
                 st.warning("⚠️ 해당 주관사의 연도별 실적이 없습니다.")
 
@@ -173,8 +176,8 @@ if submit and query:
                 st.warning("⚠️ 전체 부문 데이터가 없습니다.")
 
 
-    else:
-        products = parsed["product"]
+    if not handled:
+        products = parsed.get("product")
         if isinstance(products, str):
             products = [products]
 
