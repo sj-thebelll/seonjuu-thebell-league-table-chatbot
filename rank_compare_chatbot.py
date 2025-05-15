@@ -113,27 +113,27 @@ if submit and query:
         from improved_company_year_chart_logic import handle_company_year_chart_logic
         handle_company_year_chart_logic(parsed, dfs)
 
+    # ✅ 나머지 일반 루틴 처리... (기존 처리 방식 이어짐)
+    products = parsed.get("product")
+    if isinstance(products, str):
+        products = [products]
+    companies = parsed.get("company") or []
+    years = parsed.get("years") or []
 
-            # 나머지 일반 루틴 처리... (기존 처리 방식 이어짐)
-            products = parsed.get("product")
-            if isinstance(products, str):
-                products = [products]
-            companies = parsed.get("company") or []
-            years = parsed.get("years") or []
+    for product in products:
+        df = dfs.get(product)
+        if df is None or df.empty:
+            st.warning(f"⚠️ {product} 데이터가 없습니다.")
+            continue
 
-            for product in products:
-                df = dfs.get(product)
-                if df is None or df.empty:
-                    st.warning(f"⚠️ {product} 데이터가 없습니다.")
-                    continue
+    df.columns = df.columns.str.strip()
 
-                df.columns = df.columns.str.strip()
+    for y in years:
+        df_year = df[df["연도"] == y]
+        if df_year.empty:
+            st.warning(f"⚠️ {y}년 데이터가 없습니다.")
+            continue
 
-                for y in years:
-                    df_year = df[df["연도"] == y]
-                    if df_year.empty:
-                        st.warning(f"⚠️ {y}년 데이터가 없습니다.")
-                        continue
 
                     if companies:
                         row = df_year[df_year["주관사"].isin(companies)]
