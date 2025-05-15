@@ -121,10 +121,9 @@ if submit and query:
                     df_year = df[df["연도"] == y]
                     row = df_year[df_year["주관사"] == companies[0]]
                     if not row.empty:
-                       row = row.copy()
+                        row = row.copy()
                         row["product"] = product
                         combined_df = pd.concat([combined_df, row])
-
             if not combined_df.empty:
                 st.subheader(f"📊 {companies[0]}의 연도별 ECM/ABS 등 실적 (금액 기준)")
                 chart_df = combined_df[["연도", "product", "금액(원)"]].copy()
