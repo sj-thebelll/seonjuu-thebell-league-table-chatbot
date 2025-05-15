@@ -225,9 +225,8 @@ if submit and query:
 
                     # ⬇️ 제목 형식 개선
                     title = f"{y}년 {product} 대표주관 순위"
-                    if start != 1 or end != 10:
+                    if not (start == 1 and end == 9999):
                         title += f" ({start}~{end}위)"
 
                     st.subheader(f"📌 {title}")
                     st.dataframe(result.sort_values("순위").reset_index(drop=True))
-
