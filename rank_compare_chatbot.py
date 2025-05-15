@@ -147,10 +147,12 @@ if submit and query:
 
                 display_cols = ["연도", "product", "순위", "주관사", "금액(원)", "건수", "점유율(%)"]
                 st.dataframe(combined_df[display_cols].sort_values(["product", "연도"]).reset_index(drop=True))
-                handled = True   
-                
+                handled = True
+
             else:
                 st.warning("⚠️ 해당 주관사의 연도별 실적이 없습니다.")
+                handled = True  # ✅ 이 줄 반드시 있어야 중복 실행 방지됨!
+
 
         # ✅ 위 조건이 아닌 경우: 기존 방식 (연도별 출력 반복)
         else:
