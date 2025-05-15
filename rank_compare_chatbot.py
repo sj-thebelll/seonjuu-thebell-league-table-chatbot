@@ -182,7 +182,7 @@ if submit and query:
             products = [products]
 
         companies = parsed.get("company") or []
-        years = parsed.get("years") or []  # ✅ 이 줄이 꼭 필요!
+        years = parsed.get("years") or [] 
         
         for product in products:
             df = dfs.get(product)
