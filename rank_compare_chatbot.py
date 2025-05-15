@@ -117,8 +117,9 @@ if submit and query:
         products = parsed.get("product")
         if isinstance(products, str):
             products = [products]
-          companies = parsed.get("company") or []
-          years = parsed.get("years") or []
+
+        companies = parsed.get("company") or []
+        years = parsed.get("years") or []
 
          for product in products:
             df = dfs.get(product)
