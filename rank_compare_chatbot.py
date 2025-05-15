@@ -101,57 +101,57 @@ with st.form(key="question_form"):
     submit = st.form_submit_button("🔍 질문하기")
 
 if submit and query:
-    handled = False  # 추가해서 체단적 처리 여부 확인
+    handled = False
     with st.spinner("GPT가 질문을 해석 중입니다..."):
         parsed = parse_natural_query_with_gpt(query)
 
     if not parsed:
         st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
-        return  # 혹은 handled = True, 또는 이후 코드가 실행되지 않도록 처리
+        return
 
     elif parsed.get("company") and not parsed.get("product"):
         from improved_company_year_chart_logic import handle_company_year_chart_logic
         handle_company_year_chart_logic(parsed, dfs)
 
-        # ✅ 나머지 일반 루틴 처리... (기존 처리 방식 이어짐)
-        products = parsed.get("product")
-        if isinstance(products, str):
-            products = [products]
+    # ✅ 나머지 일반 루틴 처리
+    products = parsed.get("product")
+    if isinstance(products, str):
+        products = [products]
 
-        companies = parsed.get("company") or []
-        years = parsed.get("years") or []
+    companies = parsed.get("company") or []
+    years = parsed.get("years") or []
 
-         for product in products:
-            df = dfs.get(product)
-           if df is None or df.empty:
-               st.warning(f"⚠️ {product} 데이터가 없습니다.")
-               continue
+    for product in products:
+        df = dfs.get(product)
+        if df is None or df.empty:
+            st.warning(f"⚠️ {product} 데이터가 없습니다.")
+            continue
 
-           df.columns = df.columns.str.strip()
+        df.columns = df.columns.str.strip()
 
-           for y in years:
-               df_year = df[df["연도"] == y]
-               if df_year.empty:
-                  st.warning(f"⚠️ {y}년 데이터가 없습니다.")
-                  continue
+        for y in years:
+            df_year = df[df["연도"] == y]
+            if df_year.empty:
+                st.warning(f"⚠️ {y}년 데이터가 없습니다.")
+                continue
 
-              if companies:
-                 row = df_year[df_year["주관사"].isin(companies)]
-                 if not row.empty:
-                     st.subheader(f"🏅 {y}년 {product} 순위 및 실적")
-                     st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
+            if companies:
+                row = df_year[df_year["주관사"].isin(companies)]
+                if not row.empty:
+                    st.subheader(f"🏅 {y}년 {product} 순위 및 실적")
+                    st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
 
-                     if parsed.get("is_chart"):
-                         try:
-                             plot_bar_chart_plotly(
-                                  row.sort_values("순위"),
-                                  x_col="주관사",
-                                  y_cols=["금액(원)", "점유율(%)"]
-                                    )
-                                except Exception as e:
-                                    st.warning(f"⚠️ 차트 오류: {e}")
-                        else:
-                            st.warning(f"⚠️ {y}년 데이터에서 {', '.join(companies)} 찾을 수 없습니다.")
+                    if parsed.get("is_chart"):
+                        try:
+                            plot_bar_chart_plotly(
+                                row.sort_values("순위"),
+                                x_col="주관사",
+                                y_cols=["금액(원)", "점유율(%)"]
+                            )
+                        except Exception as e:
+                            st.warning(f"⚠️ 차트 오류: {e}")
+                else:
+                    st.warning(f"⚠️ {y}년 데이터에서 {', '.join(companies)} 찾을 수 없습니다.")
 
 
     if not handled and parsed.get("product"):
