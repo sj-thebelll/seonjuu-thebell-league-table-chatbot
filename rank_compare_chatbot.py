@@ -112,7 +112,7 @@ if submit and query:
             companies = [companies]
         years = parsed.get("years", [])
 
-        # ✅ 회사 하나 + 연도 여러 개 + 차트 요청인 경우
+        # ✅ 단일 회사 + 여러 연도 + 그래프 요청이면 이 블록만 실행
         if len(companies) == 1 and len(years) >= 2 and parsed.get("is_chart"):
             combined_df = pd.DataFrame()
             for product, df in dfs.items():
@@ -121,7 +121,7 @@ if submit and query:
                     df_year = df[df["연도"] == y]
                     row = df_year[df_year["주관사"] == companies[0]]
                     if not row.empty:
-                        row = row.copy()
+                       row = row.copy()
                         row["product"] = product
                         combined_df = pd.concat([combined_df, row])
 
@@ -149,7 +149,7 @@ if submit and query:
                 st.warning("⚠️ 해당 주관사의 연도별 실적이 없습니다.")
 
         else:
-            # ✅ 기본 처리: 여러 회사이거나 차트 미요청인 경우
+            # ✅ 그 외의 경우 (회사 여러 개 or 차트 미요청 시 기존 처리)
             found = False
             for product, df in dfs.items():
                 df.columns = df.columns.str.strip()
@@ -162,6 +162,7 @@ if submit and query:
                         st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
                         if parsed.get("is_chart"):
                             try:
+                               # ✅ 이건 두 기준 모두 넣음 → 금액만으로 바꾸고 싶으면 여기서 수정 가능
                                 plot_bar_chart_plotly(row.sort_values("순위"), x_col="주관사", y_cols=["금액(원)", "점유율(%)"])
                             except Exception as e:
                                 st.warning(f"⚠️ 차트 오류: {e}")
