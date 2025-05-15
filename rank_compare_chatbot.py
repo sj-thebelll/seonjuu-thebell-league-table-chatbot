@@ -149,8 +149,10 @@ if submit and query:
                             plot_bar_chart_plotly(
                                 row.sort_values("순위"),
                                 x_col="주관사",
-                                y_cols=["금액(원)", "점유율(%)"]
+                                y_cols=["금액(원)", "점유율(%)"],
+                                key=f"{product}_{y}_bar"
                             )
+
                         except Exception as e:
                             st.warning(f"⚠️ 차트 오류: {e}")
                 else:
