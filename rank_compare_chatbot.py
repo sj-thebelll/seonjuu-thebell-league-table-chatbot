@@ -160,7 +160,10 @@ if submit and query:
             products = [products]
 
         companies = parsed.get("company") or []
-        years = parsed.get("years") or [] 
+            if isinstance(companies, str):
+                companies = [companies]  # ✅ 여기 추가
+
+    years = parsed.get("years") or [] 
         
         for product in products:
             df = dfs.get(product)
