@@ -112,7 +112,7 @@ if submit and query:
             companies = [companies]
         years = parsed.get("years", [])
 
-        # ✅ 단일 회사 + 여러 연도 + 차트 요청이면 여기서만 처리하고 return 없이 끝냄
+        # ✅ 단일 회사 + 여러 연도 + 차트 요청일 경우 → 그래프 1개 + 표 1개 출력
         if len(companies) == 1 and len(years) >= 2 and parsed.get("is_chart"):
             combined_df = pd.DataFrame()
             for product, df in dfs.items():
@@ -147,8 +147,8 @@ if submit and query:
                 st.dataframe(combined_df[display_cols].sort_values(["product", "연도"]).reset_index(drop=True))
             else:
                 st.warning("⚠️ 해당 주관사의 연도별 실적이 없습니다.")
-    
-        # ✅ 조건에 해당하지 않으면 기존 로직 실행
+
+        # ✅ 위 조건이 아닌 경우: 기존 방식 (연도별 출력 반복)
         else:
             found = False
             for product, df in dfs.items():
@@ -161,13 +161,13 @@ if submit and query:
                         st.subheader(f"🏅 {y}년 {product} 순위 및 실적")
                         st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
                         if parsed.get("is_chart"):
-                           try:
+                            try:
                                 plot_bar_chart_plotly(
                                     row.sort_values("순위"),
                                     x_col="주관사",
                                     y_cols=["금액(원)", "점유율(%)"]
                                 )
-                           except Exception as e:
+                            except Exception as e:
                                 st.warning(f"⚠️ 차트 오류: {e}")
             if not found:
                 st.warning("⚠️ 전체 부문 데이터가 없습니다.")
