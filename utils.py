@@ -80,7 +80,7 @@ def plot_line_chart_plotly(df, x_col, y_col, title="📈 주관사 순위 변화
         yaxis_autorange='reversed',  # ✅ 순위는 작을수록 위쪽에
         xaxis_type='category'        # ✅ X축을 카테고리형으로 처리
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, key=f"{x_col}_{y_col}_{title}")
 
 
 # ✅ bar chart 함수도 유지 (필요 시 사용 가능)
