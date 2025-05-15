@@ -287,3 +287,4 @@ if submit and query:
 
                     st.subheader(f"📌 {title}")
                     st.dataframe(result.sort_values("순위").reset_index(drop=True))
+
