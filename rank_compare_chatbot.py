@@ -114,38 +114,38 @@ if submit and query:
         handle_company_year_chart_logic(parsed, dfs)
 
         # ✅ 나머지 일반 루틴 처리... (기존 처리 방식 이어짐)
-            products = parsed.get("product")
-            if isinstance(products, str):
-                products = [products]
-            companies = parsed.get("company") or []
-            years = parsed.get("years") or []
+        products = parsed.get("product")
+        if isinstance(products, str):
+            products = [products]
+          companies = parsed.get("company") or []
+          years = parsed.get("years") or []
 
-            for product in products:
-                df = dfs.get(product)
-                if df is None or df.empty:
-                    st.warning(f"⚠️ {product} 데이터가 없습니다.")
-                    continue
+         for product in products:
+            df = dfs.get(product)
+           if df is None or df.empty:
+               st.warning(f"⚠️ {product} 데이터가 없습니다.")
+               continue
 
-                df.columns = df.columns.str.strip()
+           df.columns = df.columns.str.strip()
 
-                for y in years:
-                    df_year = df[df["연도"] == y]
-                    if df_year.empty:
-                        st.warning(f"⚠️ {y}년 데이터가 없습니다.")
-                        continue
+           for y in years:
+               df_year = df[df["연도"] == y]
+               if df_year.empty:
+                  st.warning(f"⚠️ {y}년 데이터가 없습니다.")
+                  continue
 
-                    if companies:
-                        row = df_year[df_year["주관사"].isin(companies)]
-                        if not row.empty:
-                            st.subheader(f"🏅 {y}년 {product} 순위 및 실적")
-                            st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
+              if companies:
+                 row = df_year[df_year["주관사"].isin(companies)]
+                 if not row.empty:
+                     st.subheader(f"🏅 {y}년 {product} 순위 및 실적")
+                     st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
 
-                            if parsed.get("is_chart"):
-                                try:
-                                    plot_bar_chart_plotly(
-                                        row.sort_values("순위"),
-                                        x_col="주관사",
-                                        y_cols=["금액(원)", "점유율(%)"]
+                     if parsed.get("is_chart"):
+                         try:
+                             plot_bar_chart_plotly(
+                                  row.sort_values("순위"),
+                                  x_col="주관사",
+                                  y_cols=["금액(원)", "점유율(%)"]
                                     )
                                 except Exception as e:
                                     st.warning(f"⚠️ 차트 오류: {e}")
