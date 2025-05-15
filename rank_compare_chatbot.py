@@ -108,75 +108,82 @@ if submit and query:
     if not parsed:
         st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
 
-    elif parsed.get("company") and not parsed.get("product"):
-        companies = parsed["company"]
-        if isinstance(companies, str):
-            companies = [companies]
-        years = parsed.get("years", [])
+        elif parsed.get("company") and not parsed.get("product"):
+                companies = parsed["company"]
+                if isinstance(companies, str):
+                    companies = [companies]
+                years = parsed.get("years", [])
 
-        # ✅ 단일 회사 + 여러 연도 + 차트 요청일 경우 → 그래프 1개 + 표 1개 출력
-        if len(companies) == 1 and len(years) >= 2 and parsed.get("is_chart"):
-            combined_df = pd.DataFrame()
-            for product, df in dfs.items():
+                if len(companies) == 1 and len(years) >= 2 and parsed.get("is_chart"):
+                    combined_df = pd.DataFrame()
+                    for product, df in dfs.items():
+                        df.columns = df.columns.str.strip()
+                        for y in years:
+                            df_year = df[df["연도"] == y]
+                            row = df_year[df_year["주관사"] == companies[0]]
+                            if not row.empty:
+                                row = row.copy()
+                                row["product"] = product
+                                combined_df = pd.concat([combined_df, row])
+
+                    if not combined_df.empty:
+                        st.subheader(f"📊 {companies[0]}의 연도별 ECM/ABS 등 실적 (금액 기준)")
+                        chart_df = combined_df[["연도", "product", "금액(원)"]].copy()
+                        chart_df["연도"] = chart_df["연도"].astype(int)
+                        chart_df = chart_df.sort_values(["product", "연도"])
+
+                        import plotly.express as px
+                        fig = px.line(chart_df, x="연도", y="금액(원)", color="product", markers=True,
+                                      title=f"{companies[0]} 연도별 금액 추이")
+                        fig.update_layout(
+                            title_font=dict(family="Nanum Gothic", size=20),
+                            font=dict(family="Nanum Gothic", size=12),
+                            xaxis_title="연도",
+                            yaxis_title="금액(원)",
+                            xaxis_type='category'
+                        )
+                        st.plotly_chart(fig, use_container_width=True)
+
+                        display_cols = ["연도", "product", "순위", "주관사", "금액(원)", "건수", "점유율(%)"]
+                        st.dataframe(combined_df[display_cols].sort_values(["product", "연도"]).reset_index(drop=True))
+                    else:
+                        st.warning("⚠️ 해당 주관사의 연도별 실적이 없습니다.")
+                    st.stop()  # ✅ 중복 방지를 위한 흐름 종료
+
+            # 나머지 일반 루틴 처리... (기존 처리 방식 이어짐)
+            products = parsed.get("product")
+            if isinstance(products, str):
+                products = [products]
+            companies = parsed.get("company") or []
+            years = parsed.get("years") or []
+
+            for product in products:
+                df = dfs.get(product)
+                if df is None or df.empty:
+                    st.warning(f"⚠️ {product} 데이터가 없습니다.")
+                    continue
+
                 df.columns = df.columns.str.strip()
+
                 for y in years:
                     df_year = df[df["연도"] == y]
-                    row = df_year[df_year["주관사"] == companies[0]]
-                    if not row.empty:
-                        row = row.copy()
-                        row["product"] = product
-                        combined_df = pd.concat([combined_df, row])
+                    if df_year.empty:
+                        st.warning(f"⚠️ {y}년 데이터가 없습니다.")
+                        continue
 
-            if not combined_df.empty:
-                st.subheader(f"📊 {companies[0]}의 연도별 ECM/ABS 등 실적 (금액 기준)")
-                chart_df = combined_df[["연도", "product", "금액(원)"]].copy()
-                chart_df["연도"] = chart_df["연도"].astype(int)
-                chart_df = chart_df.sort_values(["product", "연도"])
+                    if companies:
+                        row = df_year[df_year["주관사"].isin(companies)]
+                        if not row.empty:
+                            st.subheader(f"🏅 {y}년 {product} 순위 및 실적")
+                            st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
 
-                import plotly.express as px
-                fig = px.line(chart_df, x="연도", y="금액(원)", color="product", markers=True,
-                              title=f"{companies[0]} 연도별 금액 추이")
-                fig.update_layout(
-                    title_font=dict(family="Nanum Gothic", size=20),
-                    font=dict(family="Nanum Gothic", size=12),
-                    xaxis_title="연도",
-                    yaxis_title="금액(원)",
-                    xaxis_type='category'
-                )
-                st.plotly_chart(fig, use_container_width=True)
-
-                display_cols = ["연도", "product", "순위", "주관사", "금액(원)", "건수", "점유율(%)"]
-                st.dataframe(combined_df[display_cols].sort_values(["product", "연도"]).reset_index(drop=True))
-                handled = True
-
-            else:
-                st.warning("⚠️ 해당 주관사의 연도별 실적이 없습니다.")
-                handled = True  # ✅ 이 줄 반드시 있어야 중복 실행 방지됨!
-
-
-        # ✅ 위 조건이 아닌 경우: 기존 방식 (연도별 출력 반복)
-        else:
-            found = False
-            for product, df in dfs.items():
-                df.columns = df.columns.str.strip()
-                for y in years:
-                    df_year = df[df["연도"] == y]
-                    row = df_year[df_year["주관사"].isin(companies)]
-                    if not row.empty:
-                        found = True
-                        st.subheader(f"🏅 {y}년 {product} 순위 및 실적")
-                        st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
-                        if parsed.get("is_chart"):
-                            try:
-                                plot_bar_chart_plotly(
-                                    row.sort_values("순위"),
-                                    x_col="주관사",
-                                    y_cols=["금액(원)", "점유율(%)"]
-                                )
-                            except Exception as e:
-                                st.warning(f"⚠️ 차트 오류: {e}")
-            if not found:
-                st.warning("⚠️ 전체 부문 데이터가 없습니다.")
+                            if parsed.get("is_chart"):
+                                try:
+                                    plot_bar_chart_plotly(row.sort_values("순위"), x_col="주관사", y_cols=["금액(원)", "점유율(%)"])
+                                except Exception as e:
+                                    st.warning(f"⚠️ 차트 오류: {e}")
+                        else:
+                            st.warning(f"⚠️ {y}년 데이터에서 {', '.join(companies)} 찾을 수 없습니다.")
 
 
     if not handled and parsed.get("product"):
