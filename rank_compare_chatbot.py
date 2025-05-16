@@ -144,21 +144,6 @@ if submit and query:
                     st.subheader(f"🏅 {y}년 {product} 순위 및 실적")
                     st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
 
-                    if parsed.get("is_chart"):
-                        try:
-                            key_suffix = f"{product}_{y}_{'_'.join(companies)}"
-                            import uuid
-                            unique_id = str(uuid.uuid4())[:8]  # 짧은 고유 ID 생성
-
-                            plot_bar_chart_plotly(
-                                row.sort_values("순위"),
-                                x_col="주관사",
-                                y_cols=["금액(원)", "점유율(%)"],
-                                key=f"{product}_{y}_{'_'.join(companies)}_{unique_id}_bar"
-                            )
-
-                        except Exception as e:
-                            st.warning(f"⚠️ 차트 오류: {e}")
                 else:
                     st.warning(f"⚠️ {y}년 데이터에서 {', '.join(companies)} 찾을 수 없습니다.")
 
