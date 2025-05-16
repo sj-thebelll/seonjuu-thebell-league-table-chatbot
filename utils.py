@@ -109,6 +109,14 @@ def plot_multi_metric_line_chart_for_single_company(df, company_name, x_col="연
         st.warning(f"⚠️ {company_name}의 그래프 데이터가 없습니다.")
         return
 
+    # ✅ 사용자 요청 컬럼명을 실제 컬럼명으로 매핑
+    col_name_map = {
+        "금액": "금액(원)",
+        "점유율": "점유율(%)",
+        "건수": "건수"
+    }
+    y_cols = [col_name_map.get(col, col) for col in y_cols]
+
     df[x_col] = df[x_col].astype(int)
     df_melted = df.melt(id_vars=[x_col, "주관사"], value_vars=y_cols,
                         var_name="항목", value_name="값")
