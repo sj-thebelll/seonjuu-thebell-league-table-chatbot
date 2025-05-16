@@ -147,11 +147,14 @@ if submit and query:
                     if parsed.get("is_chart"):
                         try:
                             key_suffix = f"{product}_{y}_{'_'.join(companies)}"
+                            import uuid
+                            unique_id = str(uuid.uuid4())[:8]  # 짧은 고유 ID 생성
+
                             plot_bar_chart_plotly(
                                 row.sort_values("순위"),
                                 x_col="주관사",
                                 y_cols=["금액(원)", "점유율(%)"],
-                                key=f"{key_suffix}_bar"
+                                key=f"{product}_{y}_{'_'.join(companies)}_{unique_id}_bar"
                             )
 
                         except Exception as e:
@@ -226,14 +229,7 @@ if submit and query:
                             y_cols=["금액(원)", "점유율(%)"]
                         )
                     else:
-                        from utils import plot_multi_line_chart_plotly
-                        plot_multi_line_chart_plotly(
-                            chart_df,
-                            x_col="연도",
-                            y_cols=["금액(원)", "점유율(%)"],
-                            color_col="주관사",
-                            title=f"📊 {' vs '.join(companies)} {min(years)}→{max(years)} 실적 추이"
-                        )
+                        st.info("⚠️ 여러 기업의 꺾은선 그래프 비교 기능은 현재 미지원입니다. 단일 기업으로 질문해 주세요.")
 
             else:
                 for y in parsed["years"]:
