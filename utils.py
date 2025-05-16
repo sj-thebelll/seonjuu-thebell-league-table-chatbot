@@ -103,9 +103,13 @@ def plot_bar_chart_plotly(df, x_col, y_cols, title="📊 주관사별 비교", k
 def plot_multi_metric_line_chart_for_single_company(df, company_name, x_col="연도", y_cols=["금액(원)", "건수", "점유율(%)"]):
     import plotly.express as px
 
+    if df.empty:
+        st.warning(f"⚠️ {company_name}의 그래프 데이터가 없습니다.")
+        return
+
+    df[x_col] = df[x_col].astype(int)
     df_melted = df.melt(id_vars=[x_col, "주관사"], value_vars=y_cols,
                         var_name="항목", value_name="값")
-    df_melted[x_col] = df_melted[x_col].astype(int)
 
     fig = px.line(df_melted, x=x_col, y="값", color="항목", markers=True,
                   title=f"📊 {company_name} 연도별 실적 추이")
@@ -117,4 +121,4 @@ def plot_multi_metric_line_chart_for_single_company(df, company_name, x_col="연
         yaxis_title="값",
         legend_title="항목"
     )
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, use_container_width=True, key=f"{company_name}_line_chart")
