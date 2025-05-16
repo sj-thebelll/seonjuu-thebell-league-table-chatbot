@@ -82,8 +82,9 @@ def plot_line_chart_plotly(df, x_col, y_col, color_col="주관사", title="📈 
     st.plotly_chart(fig, use_container_width=True, key=key)
 
 # ✅ bar chart 함수도 유지 (필요 시 사용 가능)
-def plot_bar_chart_plotly(df, x_col, y_cols, title="📊 주관사별 비교"):
+def plot_bar_chart_plotly(df, x_col, y_cols, title="📊 주관사별 비교", key=None):
     import plotly.express as px
+    import streamlit as st
 
     for y_col in y_cols:
         fig = px.bar(df, x=x_col, y=y_col, text=y_col, title=title)
@@ -95,7 +96,8 @@ def plot_bar_chart_plotly(df, x_col, y_cols, title="📊 주관사별 비교"):
             uniformtext_mode='hide',
             xaxis_tickangle=-45
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=True, key=key)
+
 
 # ✅ 단일 주관사 기준, 여러 연도 실적 항목을 하나의 꺾은선 그래프로 표현
 def plot_multi_metric_line_chart_for_single_company(df, company_name, x_col="연도", y_cols=["금액(원)", "건수", "점유율(%)"]):
