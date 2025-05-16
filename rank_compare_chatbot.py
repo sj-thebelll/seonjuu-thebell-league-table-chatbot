@@ -146,11 +146,12 @@ if submit and query:
 
                     if parsed.get("is_chart"):
                         try:
+                            key_suffix = f"{product}_{y}_{'_'.join(companies)}"
                             plot_bar_chart_plotly(
                                 row.sort_values("순위"),
                                 x_col="주관사",
                                 y_cols=["금액(원)", "점유율(%)"],
-                                key=f"{product}_{y}_bar"
+                                key=f"{key_suffix}_bar"
                             )
 
                         except Exception as e:
@@ -216,15 +217,23 @@ if submit and query:
                         st.markdown(f"- **{c}** → " + ", ".join(summary))
 
                     # ✅ 꺾은선 그래프 (금액, 점유율 등 y_col 여러개)
-                    from utils import plot_multi_line_chart_plotly
-                    plot_multi_line_chart_plotly(
-                        chart_df,
-                        x_col="연도",
-                        y_cols=["금액(원)", "점유율(%)"],
-                        color_col="주관사",
-                        title=f"📊 {' vs '.join(companies)} {min(years)}→{max(years)} 실적 추이"
-                    )
-
+                    if len(companies) == 1:
+                        from utils import plot_multi_metric_line_chart_for_single_company
+                        plot_multi_metric_line_chart_for_single_company(
+                            chart_df,
+                            company_name=companies[0],
+                            x_col="연도",
+                            y_cols=["금액(원)", "점유율(%)"]
+                        )
+                    else:
+                        from utils import plot_multi_line_chart_plotly
+                        plot_multi_line_chart_plotly(
+                            chart_df,
+                            x_col="연도",
+                            y_cols=["금액(원)", "점유율(%)"],
+                            color_col="주관사",
+                            title=f"📊 {' vs '.join(companies)} {min(years)}→{max(years)} 실적 추이"
+                        )
 
             else:
                 for y in parsed["years"]:
