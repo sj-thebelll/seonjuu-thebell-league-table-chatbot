@@ -1,3 +1,5 @@
+# ✅ <utils.py> 수정: plot_multi_metric_line_chart_for_single_company 함수 추가
+
 import os
 import pandas as pd
 import streamlit as st  # ✅ Streamlit 로그 표시
@@ -48,7 +50,6 @@ def load_dataframes(data_dir):
     print("📂 [DEBUG] 최종 로드된 데이터 키:", dfs.keys())
     return dfs
 
-
 # ✅ (옵션) matplotlib 그래프에서 사용할 한글 폰트 설정
 def set_korean_font():
     import matplotlib.pyplot as plt
@@ -62,7 +63,6 @@ def set_korean_font():
     else:
         plt.rcParams['font.family'] = 'sans-serif'
     plt.rcParams['axes.unicode_minus'] = False  # ✅ 마이너스 깨짐 방지
-
 
 # ✅ plotly 기반 꺾은선 차트 함수 (한글 깨짐 방지)
 def plot_line_chart_plotly(df, x_col, y_col, color_col="주관사", title="📈 주관사 순위 변화 추이", key=None):
@@ -81,7 +81,6 @@ def plot_line_chart_plotly(df, x_col, y_col, color_col="주관사", title="📈 
     )
     st.plotly_chart(fig, use_container_width=True, key=key)
 
-
 # ✅ bar chart 함수도 유지 (필요 시 사용 가능)
 def plot_bar_chart_plotly(df, x_col, y_cols, title="📊 주관사별 비교"):
     import plotly.express as px
@@ -98,15 +97,13 @@ def plot_bar_chart_plotly(df, x_col, y_cols, title="📊 주관사별 비교"):
         )
         st.plotly_chart(fig, use_container_width=True)
 
-# ✅ 한 기업의 여러 연도 실적 (금액/건수/점유율)을 한 그래프에 그리는 꺾은선 차트 함수
+# ✅ 단일 주관사 기준, 여러 연도 실적 항목을 하나의 꺾은선 그래프로 표현
 def plot_multi_metric_line_chart_for_single_company(df, company_name, x_col="연도", y_cols=["금액(원)", "건수", "점유율(%)"]):
     import plotly.express as px
 
-    # ✅ 데이터 melt: 하나의 y축에 여러 항목(금액/건수/점유율)을 표현
     df_melted = df.melt(id_vars=[x_col, "주관사"], value_vars=y_cols,
                         var_name="항목", value_name="값")
-
-    df_melted[x_col] = df_melted[x_col].astype(int)  # 연도 정수 처리
+    df_melted[x_col] = df_melted[x_col].astype(int)
 
     fig = px.line(df_melted, x=x_col, y="값", color="항목", markers=True,
                   title=f"📊 {company_name} 연도별 실적 추이")
