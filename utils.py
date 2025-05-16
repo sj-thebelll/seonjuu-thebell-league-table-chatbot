@@ -117,6 +117,13 @@ def plot_multi_metric_line_chart_for_single_company(df, company_name, x_col="연
     }
     y_cols = [col_name_map.get(col, col) for col in y_cols]
 
+    # ✅ 실제 존재하는 컬럼만 사용
+    y_cols = [col for col in y_cols if col in df.columns]
+
+    if not y_cols:
+        st.warning(f"⚠️ {company_name}에 대해 시각화할 수 있는 컬럼이 없습니다.")
+        return
+    
     df[x_col] = df[x_col].astype(int)
     df_melted = df.melt(id_vars=[x_col, "주관사"], value_vars=y_cols,
                         var_name="항목", value_name="값")
