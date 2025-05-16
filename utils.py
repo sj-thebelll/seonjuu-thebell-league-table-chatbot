@@ -77,25 +77,33 @@ def set_korean_font():
     plt.rcParams['axes.unicode_minus'] = False
 
 
-def plot_line_chart_plotly(df, x_col, y_col, color_col="주관사", title="📈 주관사 순위 변화 추이", key=None):
+def plot_bar_chart_plotly(df, x_col, y_cols, title="📊 주관사별 비교", key_prefix=None): # 매개변수 이름 확인
     # import plotly.express as px # 상단으로 이동
 
-    if df.empty or x_col not in df.columns or y_col not in df.columns:
-        st.warning(f"라인 차트를 그릴 데이터가 없거나, 필요한 컬럼({x_col}, {y_col})이 없습니다.")
+    if df.empty or x_col not in df.columns:
+        st.warning(f"막대 차트를 그릴 데이터가 없거나, 필요한 X축 컬럼({x_col})이 없습니다.")
         return
 
-    df_copy = df.copy() # 원본 데이터 변경 방지
-    df_copy[x_col] = df_copy[x_col].astype(str) # X축을 문자열(카테고리)로 변환하여 모든 연도 표시
+    for i, y_col in enumerate(y_cols):
+        if y_col not in df.columns:
+            st.warning(f"막대 차트를 위한 Y축 컬럼 '{y_col}'이 데이터에 없습니다.")
+            continue
 
-    fig = px.line(df_copy, x=x_col, y=y_col, color=color_col, markers=True, title=title)
-    fig.update_traces(textposition="top center")
-    fig.update_layout(
-        title_font=dict(family="NanumGothic, sans-serif", size=20), # NanumGothic 우선, 없으면 sans-serif
-        font=dict(family="NanumGothic, sans-serif", size=12),
-        xaxis_title=x_col,
-        yaxis_title=y_col,
-        xaxis_type='category' # X축을 카테고리 타입으로 명시
-    )
+        fig = px.bar(df, x=x_col, y=y_col, text=y_col, title=f"{title} - {y_col}")
+        fig.update_traces(texttemplate='%{text:,.0f}', textposition='outside') # 금액 등은 천단위 콤마
+        fig.update_layout(
+            title_font=dict(family="NanumGothic, sans-serif", size=18),
+            font=dict(family="NanumGothic, sans-serif", size=12),
+            uniformtext_minsize=8,
+            uniformtext_mode='hide',
+            xaxis_tickangle=-45,
+            xaxis_title=x_col,
+            yaxis_title=y_col
+        )
+        # 각 차트에 고유한 key 부여
+        current_key = f"{key_prefix}_{y_col}_{i}" if key_prefix else f"bar_{x_col}_{y_col}_{i}" # 여기서 key 생성
+        st.plotly_chart(fig, use_container_width=True, key=current_key) # 생성된 key 사용
+        
     if y_col == "순위": # '순위' 컬럼일 경우 y축을 뒤집음
         fig.update_yaxes(autorange='reversed')
 
