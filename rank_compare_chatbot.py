@@ -133,6 +133,10 @@ if submit and query:
         df.columns = df.columns.str.strip()
 
         for y in years:
+            # ✅ 꺾은선 그래프 요청 시, 이 루틴은 생략
+            if parsed.get("is_chart"):
+                continue
+
             df_year = df[df["연도"] == y]
             if df_year.empty:
                 st.warning(f"⚠️ {y}년 데이터가 없습니다.")
@@ -143,10 +147,8 @@ if submit and query:
                 if not row.empty:
                     st.subheader(f"🏅 {y}년 {product} 순위 및 실적")
                     st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
-
                 else:
                     st.warning(f"⚠️ {y}년 데이터에서 {', '.join(companies)} 찾을 수 없습니다.")
-
 
     if not handled and parsed.get("product"):
         products = parsed["product"]
