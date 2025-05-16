@@ -196,6 +196,7 @@ if submit and query:
             if parsed.get("is_chart") and companies and len(years) >= 1:
                 chart_df = df[df["연도"].isin(years) & df["주관사"].isin(companies)]
                 if not chart_df.empty:
+                    chart_df.columns = chart_df.columns.str.strip()  # ✅ 이 줄 추가
                     chart_df = chart_df.sort_values(["주관사", "연도"])
                     chart_df["연도"] = chart_df["연도"].astype(int)
 
