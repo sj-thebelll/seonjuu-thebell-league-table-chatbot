@@ -122,3 +122,21 @@ def plot_multi_metric_line_chart_for_single_company(df, company_name, x_col="연
         legend_title="항목"
     )
     st.plotly_chart(fig, use_container_width=True, key=f"{company_name}_line_chart")
+
+# ✅ 여러 기업 비교용 꺾은선 그래프 함수
+def plot_multi_line_chart_plotly(df, x_col, y_cols, color_col, title="📊 비교 꺾은선 그래프"):
+    import plotly.express as px
+    import streamlit as st
+
+    df[x_col] = df[x_col].astype(int)
+
+    for y_col in y_cols:
+        fig = px.line(df, x=x_col, y=y_col, color=color_col, markers=True, title=f"{title} - {y_col}")
+        fig.update_layout(
+            title_font=dict(family="Nanum Gothic", size=20),
+            font=dict(family="Nanum Gothic", size=12),
+            xaxis_title=x_col,
+            yaxis_title=y_col,
+            legend_title=color_col
+        )
+        st.plotly_chart(fig, use_container_width=True, key=f"{y_col}_{color_col}_multi")
