@@ -166,9 +166,9 @@ if submit and query:
 
         companies = parsed.get("company") or []
         if isinstance(companies, str):
-            companies = [companies]  # ✅ 여기 추가
+            companies = [companies]
 
-        years = parsed.get("years") or [] 
+        years = parsed.get("years") or []
 
         for product in products:
             df = dfs.get(product)
@@ -201,26 +201,29 @@ if submit and query:
                     st.subheader(f"📉 {y1} → {y2} 순위 하락 (대상: {', '.join(companies)})")
                     st.dataframe(하락.reset_index(drop=True))
 
-            # ✅ 2개 연도일 때 그래프 출력
-            if parsed.get("is_chart") and companies and len(years) == 2:
-                y1, y2 = years
-                chart_df = df[df["연도"].isin([y1, y2]) & df["주관사"].isin(companies)]
-                if not chart_df.empty:
-                    chart_df = chart_df[["연도", "주관사", "순위"]].sort_values(["주관사", "연도"])
-                    chart_df["연도"] = chart_df["연도"].astype(int)
-                    title = f"📊 {' vs '.join(companies)} {y1}→{y2} 순위 변화"
-                    st.subheader(title)
-                    plot_line_chart_plotly(chart_df, x_col="연도", y_col="순위")
-
-           # ✅ 3개 이상 연도일 때 그래프 출력
-            elif parsed.get("is_chart") and companies and len(years) > 2:
+            # ✅ 연도별 단일 주관사 실적 비교 요약 + 꺾은선 그래프 출력
+            if parsed.get("is_chart") and companies and len(years) >= 1:
                 chart_df = df[df["연도"].isin(years) & df["주관사"].isin(companies)]
                 if not chart_df.empty:
-                    chart_df = chart_df[["연도", "주관사", "순위"]].sort_values(["주관사", "연도"])
+                    chart_df = chart_df.sort_values(["주관사", "연도"])
                     chart_df["연도"] = chart_df["연도"].astype(int)
-                    title = f"📊 {' vs '.join(companies)} {min(years)}→{max(years)} 순위 변화"
-                    st.subheader(title)
-                    plot_line_chart_plotly(chart_df, x_col="연도", y_col="순위")
+
+                    # ✅ 간단 요약 텍스트 출력
+                    st.markdown("### ✅ 연도별 ECM 실적 비교 요약")
+                    for c in companies:
+                        rows = chart_df[chart_df["주관사"] == c]
+                        summary = [f"{r['연도']}년: {r['금액(원)']:,}원 ({r['점유율(%)']}%)" for _, r in rows.iterrows()]
+                        st.markdown(f"- **{c}** → " + ", ".join(summary))
+
+                    # ✅ 꺾은선 그래프 (금액, 점유율 등 y_col 여러개)
+                    from utils import plot_multi_line_chart_plotly
+                    plot_multi_line_chart_plotly(
+                        chart_df,
+                        x_col="연도",
+                        y_cols=["금액(원)", "점유율(%)"],
+                        color_col="주관사",
+                        title=f"📊 {' vs '.join(companies)} {min(years)}→{max(years)} 실적 추이"
+                    )
 
 
             else:
