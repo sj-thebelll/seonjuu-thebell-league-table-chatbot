@@ -87,44 +87,55 @@ def parse_natural_query_with_gpt(query):
         return None
 
 # 비교 함수 (기존 코드 유지)
-def compare_rank(df, year1, year2):
-    df1 = df[df["연도"] == year1].copy()
-    df2 = df[df["연도"] == year2].copy()
-
-    if df1.empty or df2.empty: return pd.DataFrame(), pd.DataFrame() # 빈 DF 반환
-
-    df1[f"{year1}년 순위"] = df1["순위"]
-    df2[f"{year2}년 순위"] = df2["순위"]
-    # '주관사' 컬럼이 있는지 확인
-    if "주관사" not in df1.columns or "주관사" not in df2.columns:
-        return pd.DataFrame(), pd.DataFrame()
-
-    merged = pd.merge(df1[["주관사", f"{year1}년 순위"]], df2[["주관사", f"{year2}년 순위"]], on="주관사", how="inner")
-    if merged.empty: return pd.DataFrame(), pd.DataFrame()
-
-    merged["순위변화"] = merged[f"{year1}년 순위"] - merged[f"{year2}년 순위"] # 양수: 순위 상승(숫자 작아짐), 음수: 순위 하락
-    merged["순위변화"] = merged["순위변화"] * -1 # 변화량 직관적으로 (양수: 좋아짐, 음수: 나빠짐) -> 사용자 피드백에 따라 결정
-
-    상승 = merged[merged["순위변화"] > 0].sort_values("순위변화", ascending=False) # 순위변화가 큰 순 (예: +5)
-    하락 = merged[merged["순위변화"] < 0].sort_values("순위변화", ascending=True)  # 순위변화가 작은 순 (예: -5)
-    return 상승, 하락
-
 def compare_share(df, year1, year2):
     df1 = df[df["연도"] == year1].copy()
     df2 = df[df["연도"] == year2].copy()
 
-    if df1.empty or df2.empty or "점유율(%)" not in df1.columns or "점유율(%)" not in df2.columns :
+    # 컬럼 존재 및 데이터 유효성 검사 강화
+    if "주관사" not in df1.columns or "주관사" not in df2.columns or \
+       "점유율(%)" not in df1.columns or "점유율(%)" not in df2.columns:
+        st.warning(f"점유율 비교를 위한 '주관사' 또는 '점유율(%)' 컬럼이 {year1}년 또는 {year2}년 데이터에 없습니다.")
+        return pd.DataFrame(), pd.DataFrame() # 빈 데이터프레임 반환
+
+    if df1.empty or df2.empty:
+        # st.info(f"{year1}년 또는 {year2}년 데이터가 없어 점유율 비교를 할 수 없습니다.") # 너무 많은 메시지를 피하기 위해 주석 처리 가능
         return pd.DataFrame(), pd.DataFrame()
-    if "주관사" not in df1.columns or "주관사" not in df2.columns:
+
+    merged = pd.merge(df1[["주관사", "점유율(%)"]], df2[["주관사", "점유율(%)"]], on="주관사", suffixes=(f"_{year1}", f"_{year2}"), how="inner") # how="inner" 확인
+
+    if merged.empty:
+        # st.info("두 연도 간 공통된 주관사가 없어 점유율 비교 데이터를 생성할 수 없습니다.")
         return pd.DataFrame(), pd.DataFrame()
 
+    # merged DataFrame의 컬럼명 확인 (디버깅용)
+    # st.write("merged DataFrame for compare_share:", merged.columns)
 
-    merged = pd.merge(df1[["주관사", "점유율(%)"]], df2[["주관사", "점유율(%)"]], on="주관사", suffixes=(f"_{year1}", f"_{year2}"), how="inner")
-    if merged.empty: return pd.DataFrame(), pd.DataFrame()
+    # 점유율 컬럼명 정확히 확인
+    y1_share_col = f"점유율(%)_{year1}"
+    y2_share_col = f"점유율(%)_{year2}"
 
-    merged["점유율변화"] = merged[f"점유율(%)_{year2}"] - merged[f"점유율(%)_{year1}"]
+    if y1_share_col not in merged.columns or y2_share_col not in merged.columns:
+        st.error(f"점유율 비교 중 컬럼명 오류 발생: '{y1_share_col}' 또는 '{y2_share_col}' 컬럼이 merged 데이터프에 없습니다.")
+        return pd.DataFrame(), pd.DataFrame()
+
+    # 데이터 타입 확인 및 변환 (문자열 등 다른 타입으로 되어 있을 가능성)
+    try:
+        merged[y1_share_col] = pd.to_numeric(merged[y1_share_col], errors='coerce')
+        merged[y2_share_col] = pd.to_numeric(merged[y2_share_col], errors='coerce')
+    except Exception as e:
+        st.error(f"점유율 데이터를 숫자로 변환 중 오류: {e}")
+        return pd.DataFrame(), pd.DataFrame()
+
+    # NaN 값 처리 (예: 0으로 채우거나, 해당 행 제거)
+    merged.dropna(subset=[y1_share_col, y2_share_col], inplace=True)
+    if merged.empty:
+        # st.info("점유율 데이터에 유효한 숫자 값이 없어 비교할 수 없습니다.")
+        return pd.DataFrame(), pd.DataFrame()
+
+    merged["점유율변화"] = merged[y2_share_col] - merged[y1_share_col]
+
     상승 = merged[merged["점유율변화"] > 0].sort_values("점유율변화", ascending=False)
-    하락 = merged[merged["점유율변화"] < 0].sort_values("점유율변화", ascending=True)
+    하락 = merged[merged["점유율변화"] < 0].sort_values("점유율변화", ascending=True) # image_1babb9.png 오류 발생 지점
     return 상승, 하락
 
 
