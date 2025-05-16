@@ -213,7 +213,7 @@ if submit and query:
                             chart_df,
                             company_name=companies[0],
                             x_col="연도",
-                            y_cols=["금액(원)", "점유율(%)"]
+                            y_cols = parsed.get("columns") or ["금액(원)", "점유율(%)"]
                         )
                     else:
                         st.info("⚠️ 여러 기업의 꺾은선 그래프 비교 기능은 현재 미지원입니다. 단일 기업으로 질문해 주세요.")
