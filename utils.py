@@ -97,3 +97,25 @@ def plot_bar_chart_plotly(df, x_col, y_cols, title="📊 주관사별 비교"):
             xaxis_tickangle=-45
         )
         st.plotly_chart(fig, use_container_width=True)
+
+# ✅ 한 기업의 여러 연도 실적 (금액/건수/점유율)을 한 그래프에 그리는 꺾은선 차트 함수
+def plot_multi_metric_line_chart_for_single_company(df, company_name, x_col="연도", y_cols=["금액(원)", "건수", "점유율(%)"]):
+    import plotly.express as px
+
+    # ✅ 데이터 melt: 하나의 y축에 여러 항목(금액/건수/점유율)을 표현
+    df_melted = df.melt(id_vars=[x_col, "주관사"], value_vars=y_cols,
+                        var_name="항목", value_name="값")
+
+    df_melted[x_col] = df_melted[x_col].astype(int)  # 연도 정수 처리
+
+    fig = px.line(df_melted, x=x_col, y="값", color="항목", markers=True,
+                  title=f"📊 {company_name} 연도별 실적 추이")
+
+    fig.update_layout(
+        title_font=dict(family="Nanum Gothic", size=20),
+        font=dict(family="Nanum Gothic", size=12),
+        xaxis_title=x_col,
+        yaxis_title="값",
+        legend_title="항목"
+    )
+    st.plotly_chart(fig, use_container_width=True)
