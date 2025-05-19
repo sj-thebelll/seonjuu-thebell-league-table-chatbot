@@ -193,7 +193,7 @@ def plot_rank_comparison_for_up_to_two_companies(df, companies, x_col="연도", 
     )
 
 # ✅ 순위 요청 시 y축 반전 추가
-if all(col == "순위" for col in y_cols):
+if y_col == "순위":
     fig.update_yaxes(autorange="reversed")
     
     fig.update_layout(
