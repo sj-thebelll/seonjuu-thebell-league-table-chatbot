@@ -163,7 +163,7 @@ if submit and query:
                     st.warning(f"⚠️ {y}년 데이터에서 {', '.join(companies)} 찾을 수 없습니다.")
 
     if not handled and parsed.get("product"):
-        products = parsed["product"]
+        products = parsed.get("product")
         if isinstance(products, str):
             products = [products]
 
@@ -172,6 +172,7 @@ if submit and query:
             companies = [companies]
 
         years = parsed.get("years") or []
+        columns = parsed.get("columns") or ["금액", "점유율"]  # 기본값은 원형 이름으로
 
         for product in products:
             df = dfs.get(product)
@@ -181,6 +182,7 @@ if submit and query:
 
             df.columns = df.columns.str.strip()
 
+            # ✅ 비교 요청 처리 (순위 or 점유율 변화)
             if parsed.get("is_compare") and len(years) == 2:
                 y1, y2 = years
                 상승, 하락 = compare_rank(df, y1, y2)
@@ -189,50 +191,49 @@ if submit and query:
                     상승 = 상승[상승["주관사"].isin(companies)]
                     하락 = 하락[하락["주관사"].isin(companies)]
 
-                    # ✅ 누락된 증권사 경고 추가
-                    missing_companies = [c for c in companies if c not in 상승["주관사"].values and c not in 하락["주관사"].values]
-                    if missing_companies:
-                        st.warning(f"⚠️ {', '.join(missing_companies)}의 {y1}년 또는 {y2}년 순위 데이터가 없습니다.")
+                    missing = [c for c in companies if c not in 상승["주관사"].values and c not in 하락["주관사"].values]
+                    if missing:
+                        st.warning(f"⚠️ {', '.join(missing)}의 {y1}년 또는 {y2}년 순위 데이터가 없습니다.")
 
                 if not 상승.empty:
-                    상승 = 상승[["주관사", f"{y1}년 순위", f"{y2}년 순위", "순위변화"]]
-                    st.subheader(f"📈 {y1} → {y2} 순위 상승 (대상: {', '.join(companies)})")
+                    st.subheader(f"📈 {y1} → {y2} 순위 상승")
                     st.dataframe(상승.reset_index(drop=True))
 
                 if not 하락.empty:
-                    하락 = 하락[["주관사", f"{y1}년 순위", f"{y2}년 순위", "순위변화"]]
-                    st.subheader(f"📉 {y1} → {y2} 순위 하락 (대상: {', '.join(companies)})")
+                    st.subheader(f"📉 {y1} → {y2} 순위 하락")
                     st.dataframe(하락.reset_index(drop=True))
 
-            # ✅ 연도별 단일 주관사 실적 비교 요약 + 꺾은선 그래프 출력
-            if parsed.get("is_chart") and companies and len(years) >= 1:
-                chart_df = df[df["연도"].isin(years) & df["주관사"].isin(companies)]
+            # ✅ 그래프 요청 처리
+            if parsed.get("is_chart") and companies and years:
+                chart_df = df[df["연도"].isin(years) & df["주관사"].isin(companies)].copy()
                 if not chart_df.empty:
-                    chart_df.columns = chart_df.columns.str.strip()  # ✅ 이 줄 추가
+                    chart_df.columns = chart_df.columns.str.strip()
                     chart_df = chart_df.sort_values(["주관사", "연도"])
                     chart_df["연도"] = chart_df["연도"].astype(int)
 
-                    # ✅ 간단 요약 텍스트 출력
-                    st.markdown("### ✅ 연도별 ECM 실적 비교 요약")
+                    # ✅ 요약 문구 (2개 기업까지 가능)
+                    st.markdown("### ✅ 연도별 실적 요약")
                     for c in companies:
                         rows = chart_df[chart_df["주관사"] == c]
-                        summary = [f"{r['연도']}년: {r['금액(원)']:,}원 ({r['점유율(%)']}%)" for _, r in rows.iterrows()]
+                        summary = [f"{r['연도']}년: {r.get('금액(원)', 0):,}원 ({r.get('점유율(%)', 0)}%)" for _, r in rows.iterrows()]
                         st.markdown(f"- **{c}** → " + ", ".join(summary))
 
-                    # ✅ 꺾은선 그래프 (금액, 점유율 등 y_col 여러개)
-                    if len(companies) == 1:
+                    # ✅ 순위 그래프 2개 기업까지 비교 지원
+                    if len(companies) == 2 and columns == ["순위"]:
+                        from utils import plot_rank_comparison_for_up_to_two_companies
+                        plot_rank_comparison_for_up_to_two_companies(
+                            chart_df, companies=companies, x_col="연도", y_col="순위"
+                        )
+
+                    # ✅ 단일 기업이면 멀티지표 그래프 지원
+                    elif len(companies) == 1:
                         from utils import plot_multi_metric_line_chart_for_single_company
-
-                        # 🟢 기본값으로 "순위"만 보여주도록 수정
-                        default_columns = ["순위"]
-
                         plot_multi_metric_line_chart_for_single_company(
                             chart_df,
                             company_name=companies[0],
                             x_col="연도",
-                            y_cols=parsed.get("columns") or default_columns
+                            y_cols=columns
                         )
 
                     else:
-                        st.info("⚠️ 여러 기업의 꺾은선 그래프 비교 기능은 현재 미지원입니다. 단일 기업으로 질문해 주세요.")
-
+                        st.info("⚠️ 여러 기업의 꺾은선 그래프 비교는 '순위' 항목에서만 2개까지 지원됩니다.")
