@@ -194,12 +194,15 @@ def plot_rank_comparison_for_up_to_two_companies(df, companies, x_col="연도", 
         font=dict(family="Nanum Gothic", size=12),
         xaxis_title=x_col,
         yaxis_title=y_col,
-        legend_title="주관사"
+        legend_title="주관사",
+        xaxis=dict(
+            type="category",
+            tickformat=".0f"  # ✅ 연도를 소수점 없이 정수로 표시
+        )
     )
 
-    if "순위" in y_cols:
-       fig.update_yaxes(autorange="reversed")
+    if y_col == "순위":
+        fig.update_yaxes(autorange="reversed")  # ✅ 순위는 낮을수록 상위
 
     key_suffix = str(uuid.uuid4())[:8]
     st.plotly_chart(fig, use_container_width=True, key=f"rank_compare_{key_suffix}")
-
