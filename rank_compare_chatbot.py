@@ -211,21 +211,6 @@ if submit and query:
                     chart_df = chart_df.sort_values(["주관사", "연도"])
                     chart_df["연도"] = chart_df["연도"].astype(int)
 
-                    # ✅ 요약 문구 (2개 기업까지 가능)
-                    st.markdown("### ✅ 연도별 실적 요약")
-                    for c in companies:
-                        rows = chart_df[chart_df["주관사"] == c]
-                        summary = []
-                        for _, r in rows.iterrows():
-                            parts = [f"{r['연도']}년"]
-                            if "순위" in columns and "순위" in r:
-                                parts.append(f"{int(r['순위'])}위")
-                            if "금액" in columns and "금액(원)" in r:
-                                parts.append(f"{r['금액(원)']:,}원")
-                            if "점유율" in columns and "점유율(%)" in r:
-                                parts.append(f"({r['점유율(%)']}%)")
-                            summary.append(" ".join(parts))
-                        st.markdown(f"- **{c}** → " + ", ".join(summary))
 
                     # ✅ 순위 그래프 2개 기업까지 비교 지원
                     if 1 < len(companies) <= 5 and "순위" in columns:
