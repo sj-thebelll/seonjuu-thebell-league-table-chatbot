@@ -222,12 +222,17 @@ if submit and query:
                     # ✅ 꺾은선 그래프 (금액, 점유율 등 y_col 여러개)
                     if len(companies) == 1:
                         from utils import plot_multi_metric_line_chart_for_single_company
+
+                        # 🟢 기본값으로 "순위"만 보여주도록 수정
+                        default_columns = ["순위"]
+
                         plot_multi_metric_line_chart_for_single_company(
                             chart_df,
                             company_name=companies[0],
                             x_col="연도",
-                            y_cols = parsed.get("columns") or ["금액(원)", "점유율(%)"]
+                            y_cols=parsed.get("columns") or default_columns
                         )
+
                     else:
                         st.info("⚠️ 여러 기업의 꺾은선 그래프 비교 기능은 현재 미지원입니다. 단일 기업으로 질문해 주세요.")
 
