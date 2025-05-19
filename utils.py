@@ -206,3 +206,50 @@ def plot_rank_comparison_for_up_to_two_companies(df, companies, x_col="연도", 
 
     key_suffix = str(uuid.uuid4())[:8]
     st.plotly_chart(fig, use_container_width=True, key=f"rank_compare_{key_suffix}")
+
+def plot_multi_metric_line_chart_for_two_companies(df, companies, x_col="연도", y_cols=["금액(원)", "점유율(%)", "순위"]):
+    import plotly.express as px
+    import streamlit as st
+    import uuid
+
+    if df.empty or not companies:
+        st.warning("⚠️ 비교할 데이터가 없습니다.")
+        return
+
+    if len(companies) != 2:
+        st.warning("⚠️ 정확히 2개 기업만 비교 가능합니다.")
+        return
+
+    col_name_map = {
+        "금액": "금액(원)",
+        "점유율": "점유율(%)",
+        "건수": "건수",
+        "순위": "순위"
+    }
+    y_cols = [col_name_map.get(c, c) for c in y_cols if c in df.columns]
+
+    if not y_cols:
+        st.warning("⚠️ 비교 가능한 항목이 없습니다.")
+        return
+
+    df = df[df["주관사"].isin(companies)].copy()
+    df[x_col] = df[x_col].astype(int)
+    df_melted = df.melt(id_vars=[x_col, "주관사"], value_vars=y_cols,
+                        var_name="항목", value_name="값")
+
+    for 항목 in df_melted["항목"].unique():
+        sub_df = df_melted[df_melted["항목"] == 항목]
+        fig = px.line(sub_df, x=x_col, y="값", color="주관사", markers=True,
+                      title=f"📊 {' vs '.join(companies)} 연도별 {항목} 추이")
+        fig.update_layout(
+            title_font=dict(family="Nanum Gothic", size=20),
+            font=dict(family="Nanum Gothic", size=12),
+            xaxis_title=x_col,
+            yaxis_title=항목,
+            legend_title="주관사",
+            xaxis=dict(type="category", tickformat=".0f")
+        )
+        if 항목 == "순위":
+            fig.update_yaxes(autorange="reversed")
+
+        st.plotly_chart(fig, use_container_width=True, key=f"{항목}_{uuid.uuid4().hex[:8]}")
