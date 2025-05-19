@@ -212,6 +212,7 @@ if submit and query:
                 chart_df = df[df["연도"].isin(years) & df["주관사"].isin(companies)].copy()
                 if not chart_df.empty:
                     chart_df.columns = chart_df.columns.str.strip()
+                    st.write("📋 현재 columns 목록:", chart_df.columns.tolist())  # ✅ 디버그 출력
                     chart_df = chart_df.sort_values(["주관사", "연도"])
                     chart_df["연도"] = chart_df["연도"].astype(int)
 
