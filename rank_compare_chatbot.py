@@ -212,7 +212,7 @@ if submit and query:
                     chart_df["연도"] = chart_df["연도"].astype(int)
 
 
-                    # ✅ 순위 그래프 2개 기업까지 비교 지원
+                    # ✅ 순위 그래프 다중 기업 비교 (최대 5개까지)
                     if 1 < len(companies) <= 5 and "순위" in columns:
                         from utils import plot_rank_comparison_for_up_to_two_companies
                         plot_rank_comparison_for_up_to_two_companies(
