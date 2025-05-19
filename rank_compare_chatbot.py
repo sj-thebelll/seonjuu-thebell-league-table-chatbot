@@ -215,15 +215,12 @@ if submit and query:
                     chart_df = chart_df.sort_values(["주관사", "연도"])
                     chart_df["연도"] = chart_df["연도"].astype(int)
 
-
-                    # ✅ 순위 그래프 다중 기업 비교 (최대 5개까지)
-                    if 1 < len(companies) <= 5 and "순위" in columns:
-                        from utils import plot_rank_comparison_for_up_to_five_companies
-                        plot_rank_comparison_for_up_to_five_companies(
-                            chart_df, companies=companies, x_col="연도", y_col="순위"
+                    if len(companies) == 2:
+                        from utils import plot_multi_metric_line_chart_for_two_companies
+                        plot_multi_metric_line_chart_for_two_companies(
+                            chart_df, companies=companies, x_col="연도", y_cols=columns
                         )
 
-                    # ✅ 단일 기업이면 멀티지표 그래프 지원
                     elif len(companies) == 1:
                         from utils import plot_multi_metric_line_chart_for_single_company
                         plot_multi_metric_line_chart_for_single_company(
@@ -234,4 +231,4 @@ if submit and query:
                         )
 
                     else:
-                        st.info("⚠️ 여러 기업 순위 그래프 비교는 최대 5개까지 가능합니다. 그 외 항목은 단일 기업만 지원됩니다.")
+                        st.info("⚠️ 그래프 비교는 최대 2개 기업까지만 지원됩니다.")
