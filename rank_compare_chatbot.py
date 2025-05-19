@@ -172,7 +172,11 @@ if submit and query:
             companies = [companies]
 
         years = parsed.get("years") or []
-        columns = parsed.get("columns") or ["금액", "점유율"]  # 기본값은 원형 이름으로
+        columns = parsed.get("columns") or []
+
+        # fallback: 질문에 '순위' 포함되었으면 columns에 강제로 추가
+        if "순위" in query and "순위" not in columns:
+            columns.append("순위")
 
         for product in products:
             df = dfs.get(product)
@@ -214,8 +218,8 @@ if submit and query:
 
                     # ✅ 순위 그래프 다중 기업 비교 (최대 5개까지)
                     if 1 < len(companies) <= 5 and "순위" in columns:
-                        from utils import plot_rank_comparison_for_up_to_two_companies
-                        plot_rank_comparison_for_up_to_two_companies(
+                        from utils import plot_rank_comparison_for_up_to_five_companies
+                        plot_rank_comparison_for_up_to_five_companies(
                             chart_df, companies=companies, x_col="연도", y_col="순위"
                         )
 
