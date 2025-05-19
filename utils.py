@@ -197,8 +197,8 @@ def plot_rank_comparison_for_up_to_two_companies(df, companies, x_col="연도", 
         legend_title="주관사"
     )
 
-    if y_col == "순위":
-        fig.update_yaxes(autorange="reversed")  # ✅ 순위는 작을수록 위로
+    if "순위" in y_cols:
+       fig.update_yaxes(autorange="reversed")
 
     key_suffix = str(uuid.uuid4())[:8]
     st.plotly_chart(fig, use_container_width=True, key=f"rank_compare_{key_suffix}")
