@@ -192,6 +192,10 @@ def plot_rank_comparison_for_up_to_two_companies(df, companies, x_col="연도", 
         title=f"📊 {', '.join(companies)} 연도별 순위 추이 (낮을수록 우수)"
     )
 
+# ✅ 순위 요청 시 y축 반전 추가
+if all(col == "순위" for col in y_cols):
+    fig.update_yaxes(autorange="reversed")
+    
     fig.update_layout(
         title_font=dict(family="Nanum Gothic", size=20),
         font=dict(family="Nanum Gothic", size=12),
@@ -199,7 +203,6 @@ def plot_rank_comparison_for_up_to_two_companies(df, companies, x_col="연도", 
         yaxis_title="순위",
         legend_title="주관사"
     )
-    fig.update_yaxes(autorange="reversed")  # ✅ 순위는 낮을수록 좋음
 
     key_suffix = str(uuid.uuid4())[:8]
     st.plotly_chart(fig, use_container_width=True, key=f"rank_compare_{key_suffix}")
