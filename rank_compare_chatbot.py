@@ -215,11 +215,20 @@ if submit and query:
                     st.markdown("### ✅ 연도별 실적 요약")
                     for c in companies:
                         rows = chart_df[chart_df["주관사"] == c]
-                        summary = [f"{r['연도']}년: {r.get('금액(원)', 0):,}원 ({r.get('점유율(%)', 0)}%)" for _, r in rows.iterrows()]
+                        summary = []
+                        for _, r in rows.iterrows():
+                            parts = [f"{r['연도']}년"]
+                            if "순위" in columns and "순위" in r:
+                                parts.append(f"{int(r['순위'])}위")
+                            if "금액" in columns and "금액(원)" in r:
+                                parts.append(f"{r['금액(원)']:,}원")
+                            if "점유율" in columns and "점유율(%)" in r:
+                                parts.append(f"({r['점유율(%)']}%)")
+                            summary.append(" ".join(parts))
                         st.markdown(f"- **{c}** → " + ", ".join(summary))
 
                     # ✅ 순위 그래프 2개 기업까지 비교 지원
-                    if len(companies) == 2 and columns == ["순위"]:
+                    if len(companies) == 2 and "순위" in columns:
                         from utils import plot_rank_comparison_for_up_to_two_companies
                         plot_rank_comparison_for_up_to_two_companies(
                             chart_df, companies=companies, x_col="연도", y_col="순위"
