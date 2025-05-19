@@ -119,7 +119,7 @@ if submit and query:
     if not parsed:
         st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
         st.info("예: 2024년 ECM 대표주관 순위 1~10위 알려줘")
-        return
+        handled = True  # ✅ return 대신 이것만 사용
 
     elif parsed.get("company") and not parsed.get("product"):
         from improved_company_year_chart_logic import handle_company_year_chart_logic
