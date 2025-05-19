@@ -180,16 +180,13 @@ def plot_rank_comparison_for_up_to_two_companies(df, companies, x_col="연도", 
     chart_df = df[df["주관사"].isin(companies)].copy()
     chart_df = chart_df.sort_values([x_col, "주관사"])
 
-    # 긴 형식으로 변환
-    df_melted = chart_df[[x_col, "주관사", y_col]].copy()
-
     fig = px.line(
-        df_melted,
+        chart_df,
         x=x_col,
         y=y_col,
         color="주관사",
         markers=True,
-        title=f"📊 {', '.join(companies)} 연도별 {y_col} 추이" + (" (낮을수록 우수)" if y_col == "순위" else "")
+        title=f"📊 {' vs '.join(companies)} 연도별 순위 추이"
     )
 
     fig.update_layout(
@@ -200,9 +197,8 @@ def plot_rank_comparison_for_up_to_two_companies(df, companies, x_col="연도", 
         legend_title="주관사"
     )
 
-    # ✅ 순위는 낮을수록 좋으므로 y축 반전
     if y_col == "순위":
-        fig.update_yaxes(autorange="reversed")
+        fig.update_yaxes(autorange="reversed")  # ✅ 순위는 작을수록 위로
 
     key_suffix = str(uuid.uuid4())[:8]
     st.plotly_chart(fig, use_container_width=True, key=f"rank_compare_{key_suffix}")
