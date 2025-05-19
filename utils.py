@@ -157,3 +157,49 @@ def plot_multi_line_chart_plotly(df, x_col, y_cols, color_col, title="📊 비�
             legend_title=color_col
         )
         st.plotly_chart(fig, use_container_width=True, key=f"{y_col}_{color_col}_multi")
+
+# ✅ 2개 이하 기업의 순위 비교 꺾은선 그래프 함수
+def plot_rank_comparison_for_up_to_two_companies(df, companies, x_col="연도", y_col="순위"):
+    import plotly.express as px
+    import streamlit as st
+    import uuid
+
+    if df.empty or not companies:
+        st.warning("⚠️ 비교할 데이터가 없습니다.")
+        return
+
+    if y_col not in df.columns:
+        st.warning(f"⚠️ '{y_col}' 항목이 데이터에 없습니다.")
+        return
+
+    if len(companies) > 2:
+        st.warning("⚠️ 현재는 기업 2개까지만 비교 가능합니다.")
+        return
+
+    df[x_col] = df[x_col].astype(int)
+    chart_df = df[df["주관사"].isin(companies)].copy()
+    chart_df = chart_df.sort_values([x_col, "주관사"])
+
+    # 긴 형식으로 변환
+    df_melted = chart_df[[x_col, "주관사", y_col]].copy()
+
+    fig = px.line(
+        df_melted,
+        x=x_col,
+        y=y_col,
+        color="주관사",
+        markers=True,
+        title=f"📊 {', '.join(companies)} 연도별 순위 추이 (낮을수록 우수)"
+    )
+
+    fig.update_layout(
+        title_font=dict(family="Nanum Gothic", size=20),
+        font=dict(family="Nanum Gothic", size=12),
+        xaxis_title=x_col,
+        yaxis_title="순위",
+        legend_title="주관사"
+    )
+    fig.update_yaxes(autorange="reversed")  # ✅ 순위는 낮을수록 좋음
+
+    key_suffix = str(uuid.uuid4())[:8]
+    st.plotly_chart(fig, use_container_width=True, key=f"rank_compare_{key_suffix}")
