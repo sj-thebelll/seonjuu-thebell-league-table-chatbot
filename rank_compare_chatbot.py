@@ -228,7 +228,7 @@ if submit and query:
                         st.markdown(f"- **{c}** → " + ", ".join(summary))
 
                     # ✅ 순위 그래프 2개 기업까지 비교 지원
-                    if len(companies) == 2 and "순위" in columns:
+                    if 1 < len(companies) <= 5 and "순위" in columns:
                         from utils import plot_rank_comparison_for_up_to_two_companies
                         plot_rank_comparison_for_up_to_two_companies(
                             chart_df, companies=companies, x_col="연도", y_col="순위"
@@ -245,4 +245,4 @@ if submit and query:
                         )
 
                     else:
-                        st.info("⚠️ 여러 기업의 꺾은선 그래프 비교는 '순위' 항목에서만 2개까지 지원됩니다.")
+                        st.info("⚠️ 여러 기업 순위 그래프 비교는 최대 5개까지 가능합니다. 그 외 항목은 단일 기업만 지원됩니다.")
