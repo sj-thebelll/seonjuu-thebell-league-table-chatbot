@@ -4,7 +4,6 @@ st.set_page_config(page_title="더벨 리그테이블 챗봇", page_icon="🔔")
 
 import os
 import pandas as pd
-import streamlit as st
 import json
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
