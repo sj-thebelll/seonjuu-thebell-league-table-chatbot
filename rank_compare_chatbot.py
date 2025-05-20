@@ -19,7 +19,6 @@ from utils import (
     plot_multi_metric_line_chart_for_two_companies
 )
 
-
 # ✅ 한글 폰트 수동 설정
 def set_korean_font():
     font_path = "NanumGothic.ttf"
