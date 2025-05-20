@@ -4,6 +4,16 @@ import os
 import pandas as pd
 import streamlit as st  # ✅ Streamlit 로그 표시
 
+# ✅ 공통 컬럼 정규화 함수
+def normalize_column_name(col):
+    column_map = {
+        "금액": "금액(원)",
+        "점유율": "점유율(%)",
+        "건수": "건수",
+        "순위": "순위"
+    }
+    return column_map.get(col.strip(), col.strip())
+
 def load_dataframes(data_dir):
     dfs = {}
 
