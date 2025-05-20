@@ -142,7 +142,7 @@ if submit and query:
         handle_company_year_chart_logic(parsed, dfs)
 
     # ✅ 나머지 일반 루틴 처리
-    products = parsed.get("product")
+    products = parsed.get("product") or []
     if isinstance(products, str):
         products = [products]
 
