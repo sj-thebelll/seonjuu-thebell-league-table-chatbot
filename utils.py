@@ -106,7 +106,8 @@ def plot_multi_metric_line_chart_for_single_company(df, company_name, x_col="연
     import plotly.express as px
 
     if df.empty:
-        st.warning(f"⚠️ {company_name}의 그래프 데이터가 없습니다.")
+        label = f"{product_name} 데이터에서 " if product_name else ""
+        st.warning(f"⚠️ {label}{company_name}의 그래프 데이터가 없습니다.")
         return
 
     # ✅ 컬럼명 정규화 및 필터링
