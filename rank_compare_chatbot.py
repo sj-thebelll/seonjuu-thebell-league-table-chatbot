@@ -10,7 +10,14 @@ import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 from openai import OpenAI
 from dotenv import load_dotenv
-from utils import load_dataframes, plot_bar_chart_plotly, plot_line_chart_plotly, normalize_column_name
+from utils import (
+    load_dataframes,
+    plot_bar_chart_plotly,
+    plot_line_chart_plotly,
+    normalize_column_name,
+    plot_multi_metric_line_chart_for_single_company,
+    plot_multi_metric_line_chart_for_two_companies
+)
 
 
 # ✅ 한글 폰트 수동 설정
