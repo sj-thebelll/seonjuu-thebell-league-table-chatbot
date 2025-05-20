@@ -1,10 +1,14 @@
-# ✅ <utils.py> 수정: plot_multi_metric_line_chart_for_single_company 함수 추가
-
 import os
 import pandas as pd
-import streamlit as st  # ✅ Streamlit 로그 표시
+import streamlit as st
+import json
+import matplotlib.pyplot as plt
+import matplotlib.font_manager as fm
+from openai import OpenAI
+from dotenv import load_dotenv
+from utils import load_dataframes, plot_bar_chart_plotly, plot_line_chart_plotly, normalize_column_name
 
-# ✅ 공통 컬럼 정규화 함수
+# ✅ 공통 컬럼 정규화 함수 (모든 함수에서 공통 사용)
 def normalize_column_name(col):
     column_map = {
         "금액": "금액(원)",
@@ -112,7 +116,7 @@ def plot_bar_chart_plotly(df, x_col, y_cols, title="📊 주관사별 비교", k
 
 
 # ✅ 단일 주관사 기준, 여러 연도 실적 항목을 하나의 꺾은선 그래프로 표현
-def plot_multi_metric_line_chart_for_single_company(df, company_name, x_col="연도", y_cols=["금액(원)", "건수", "점유율(%)"]):
+def plot_multi_metric_line_chart_for_single_company(df, company_name, x_col="연도", y_cols=["금액(원)", "건수", "점유율(%)"], product_name=None):
     import plotly.express as px
 
     if df.empty:
@@ -132,22 +136,25 @@ def plot_multi_metric_line_chart_for_single_company(df, company_name, x_col="연
     df_melted = df.melt(id_vars=[x_col, "주관사"], value_vars=y_cols,
                         var_name="항목", value_name="값")
 
-    fig = px.line(df_melted, x=x_col, y="값", color="항목", markers=True,
-                  title=f"📊 {company_name} 연도별 실적 추이")
+    for 항목 in df_melted["항목"].unique():
+        sub_df = df_melted[df_melted["항목"] == 항목].copy()
+        fig = px.line(sub_df, x=x_col, y="값", color="주관사", markers=True,
+                      title=f"📊 {company_name} 연도별 {항목} 추이")
 
-    fig.update_layout(
-        title_font=dict(family="Nanum Gothic", size=20),
-        font=dict(family="Nanum Gothic", size=12),
-        xaxis_title=x_col,
-        yaxis_title="값",
-        legend_title="항목"
-    )
+        fig.update_layout(
+            title_font=dict(family="Nanum Gothic", size=20),
+            font=dict(family="Nanum Gothic", size=12),
+            xaxis_title=x_col,
+            yaxis_title=항목,
+            legend_title="주관사",
+            xaxis=dict(type="category", tickformat=".0f")
+        )
 
-    if "순위" in y_cols:
-        fig.update_yaxes(autorange="reversed")
+        if 항목 == "순위":
+            fig.update_yaxes(autorange="reversed")
 
-    unique_key = f"{company_name}_{'_'.join(y_cols)}_{x_col}_line_chart"
-    st.plotly_chart(fig, use_container_width=True, key=unique_key)
+        st.plotly_chart(fig, use_container_width=True, key=f"{company_name}_{항목}_line_chart")
+
 
 # ✅ 여러 기업 비교용 꺾은선 그래프 함수
 def plot_multi_line_chart_plotly(df, x_col, y_cols, color_col, title="📊 비교 꺾은선 그래프"):
