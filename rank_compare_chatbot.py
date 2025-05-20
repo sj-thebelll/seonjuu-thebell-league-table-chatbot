@@ -233,7 +233,7 @@ if submit and query:
                         break
 
                 if not metric_col:
-                    st.warning("⚠️ 비교할 수 있는 항목이 없습니다. (순위/건수/점유율 중 하나 필요)")
+                    st.warning("⚠️ 비교할 수 있는 항목이 없습니다.")
                     return
 
 
