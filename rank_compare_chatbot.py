@@ -141,6 +141,11 @@ if submit and query:
         from improved_company_year_chart_logic import handle_company_year_chart_logic
         handle_company_year_chart_logic(parsed, dfs)
 
+    elif not any([parsed.get("product"), parsed.get("company"), parsed.get("years")]):
+        st.warning("⚠️ 어떤 항목이나 증권사에 대한 요청인지 명확하지 않아요. 예: '2024년 ECM 순위', '신영증권 그래프' 등으로 질문해주세요.")
+        handled = True
+
+    
     # ✅ 나머지 일반 루틴 처리
     products = parsed.get("product") or []
     if isinstance(products, str):
