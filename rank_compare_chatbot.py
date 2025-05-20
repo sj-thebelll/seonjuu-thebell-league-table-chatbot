@@ -249,8 +249,8 @@ if submit and query:
                     하락 = 하락[하락["주관사"].isin(companies)]
 
                     missing = [c for c in companies if c not in 상승["주관사"].values and c not in 하락["주관사"].values]
-                            if missing:
-                                st.warning(f"⚠️ {', '.join(missing)}의 {y1}년 또는 {y2}년 데이터가 없습니다.")
+                        if missing:
+                            st.warning(f"⚠️ {', '.join(missing)}의 {y1}년 또는 {y2}년 데이터가 없습니다.")
    
                 # ✅ 출력
                 if not 상승.empty:
