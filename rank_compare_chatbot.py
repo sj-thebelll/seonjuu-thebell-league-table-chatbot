@@ -83,7 +83,6 @@ def compare_rank(df, year1, year2, metric_col="순위"):
     merged = pd.merge(df1, df2, on="주관사")
     merged["변화"] = merged[f"{year2}년 {metric_col}"] - merged[f"{year1}년 {metric_col}"]
 
-    # ✅ 순위일 경우 반대로 처리
     if metric_col == "순위":
         상승 = merged[merged["변화"] < 0].sort_values("변화")
         하락 = merged[merged["변화"] > 0].sort_values("변화", ascending=False)
@@ -235,7 +234,8 @@ if submit and query:
 
                 if not metric_col:
                     st.warning("⚠️ 비교할 수 있는 항목이 없습니다. (순위/건수/점유율 중 하나 필요)")
-                    return  # ← 이 return은 반드시 if문과 같은 들여쓰기 레벨이어야 함
+                    return
+
 
                 # ✅ 항목별 비교 함수 호출
                 if metric_col == "점유율(%)":
@@ -248,13 +248,10 @@ if submit and query:
                     상승 = 상승[상승["주관사"].isin(companies)]
                     하락 = 하락[하락["주관사"].isin(companies)]
 
-                    missing = [
-                        c for c in companies
-                        if c not in 상승["주관사"].values and c not in 하락["주관사"].values
-                    ]
-                    if missing:
-                        st.warning(f"⚠️ {', '.join(missing)}의 {y1}년 또는 {y2}년 데이터가 없습니다.")
-
+                    missing = [c for c in companies if c not in 상승["주관사"].values and c not in 하락["주관사"].values]
+                            if missing:
+                                st.warning(f"⚠️ {', '.join(missing)}의 {y1}년 또는 {y2}년 데이터가 없습니다.")
+   
                 # ✅ 출력
                 if not 상승.empty:
                     st.subheader(f"📈 {y1} → {y2} {metric_col} 상승")
@@ -263,10 +260,6 @@ if submit and query:
                 if not 하락.empty:
                     st.subheader(f"📉 {y1} → {y2} {metric_col} 하락")
                     st.dataframe(하락.reset_index(drop=True))
-
-                            if not 하락.empty:
-                                st.subheader(f"📉 {y1} → {y2} {metric_col} 하락")
-                                st.dataframe(하락.reset_index(drop=True))
 
 
             # ✅ 그래프 요청 처리
