@@ -109,21 +109,14 @@ def plot_multi_metric_line_chart_for_single_company(df, company_name, x_col="연
         st.warning(f"⚠️ {company_name}의 그래프 데이터가 없습니다.")
         return
 
-    # ✅ 사용자 요청 컬럼명을 실제 컬럼명으로 매핑
-    col_name_map = {
-        "금액": "금액(원)",
-        "점유율": "점유율(%)",
-        "건수": "건수"
-    }
-    y_cols = [col_name_map.get(col, col) for col in y_cols]
-
-    # ✅ 실제 존재하는 컬럼만 사용
+    # ✅ 컬럼명 정규화 및 필터링
+    y_cols = [normalize_column_name(col) for col in y_cols]
     y_cols = [col for col in y_cols if col in df.columns]
 
     if not y_cols:
         st.warning(f"⚠️ {company_name}에 대해 시각화할 수 있는 컬럼이 없습니다.")
         return
-    
+
     df[x_col] = df[x_col].astype(int)
     df_melted = df.melt(id_vars=[x_col, "주관사"], value_vars=y_cols,
                         var_name="항목", value_name="값")
@@ -138,6 +131,10 @@ def plot_multi_metric_line_chart_for_single_company(df, company_name, x_col="연
         yaxis_title="값",
         legend_title="항목"
     )
+
+    if "순위" in y_cols:
+        fig.update_yaxes(autorange="reversed")
+
     unique_key = f"{company_name}_{'_'.join(y_cols)}_{x_col}_line_chart"
     st.plotly_chart(fig, use_container_width=True, key=unique_key)
 
