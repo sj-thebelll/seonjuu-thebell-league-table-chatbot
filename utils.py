@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 from openai import OpenAI
 from dotenv import load_dotenv
-from utils import load_dataframes, plot_bar_chart_plotly, plot_line_chart_plotly, normalize_column_name
+
 
 # ✅ 공통 컬럼 정규화 함수 (모든 함수에서 공통 사용)
 def normalize_column_name(col):
