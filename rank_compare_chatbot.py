@@ -162,21 +162,20 @@ if submit and query:
                 else:
                     st.warning(f"⚠️ {y}년 데이터에서 {', '.join(companies)} 찾을 수 없습니다.")
                     
-             elif not companies and (parsed.get("top_n") or parsed.get("rank_range")):
-                 st.subheader(f"📊 {y}년 {product} 상위 주관사")
-                 if parsed.get("rank_range"):
-                     start, end = parsed["rank_range"]
-                     row = df_year[df_year["순위"].between(start, end)]
-                 elif parsed.get("top_n"):
-                     row = df_year.nsmallest(parsed["top_n"], "순위")
-                 else:
-                     row = pd.DataFrame()
+            elif not companies and (parsed.get("top_n") or parsed.get("rank_range")):
+                st.subheader(f"📊 {y}년 {product} 상위 주관사")
+                if parsed.get("rank_range"):
+                    start, end = parsed["rank_range"]
+                    row = df_year[df_year["순위"].between(start, end)]
+                elif parsed.get("top_n"):
+                    row = df_year.nsmallest(parsed["top_n"], "순위")
+                else:
+                    row = pd.DataFrame()
 
-                 if not row.empty:
-                     st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
-                 else:
-                     st.warning(f"⚠️ {y}년 {product} 데이터에서 상위 주관사를 찾을 수 없습니다.")
-
+                if not row.empty:
+                    st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
+                else:
+                    st.warning(f"⚠️ {y}년 {product} 데이터에서 상위 주관사를 찾을 수 없습니다.")
     
     if not handled and parsed.get("product"):
         products = parsed.get("product")
