@@ -139,7 +139,10 @@ def plot_multi_metric_line_chart_for_single_company(df, company_name, x_col="연
     for 항목 in df_melted["항목"].unique():
         sub_df = df_melted[df_melted["항목"] == 항목].copy()
         fig = px.line(sub_df, x=x_col, y="값", color="주관사", markers=True,
-                      title=f"📊 [{product_name}] {company_name} 연도별 {항목} 추이" if product_name else f"📊 {company_name} 연도별 {항목} 추이"
+                      title=(
+                          f"📊 [{product_name}] {company_name} 연도별 {항목} 추이"
+                          if product_name else f"📊 {company_name} 연도별 {항목} 추이"
+                      )
 
 
         fig.update_layout(
@@ -209,8 +212,10 @@ def plot_rank_comparison_for_up_to_two_companies(df, companies, x_col="연도", 
         y=y_col,
         color="주관사",
         markers=True,
-        title=f"📊 {' vs '.join(companies)} 연도별 순위 추이"
-    )
+        title=(
+            f"📊 [{product_name}] {' vs '.join(companies)} 연도별 {y_col} 추이"
+            if product_name else f"📊 {' vs '.join(companies)} 연도별 {y_col} 추이"
+        )
 
     fig.update_layout(
         title_font=dict(family="Nanum Gothic", size=20),
