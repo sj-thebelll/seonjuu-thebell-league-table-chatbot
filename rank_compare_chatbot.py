@@ -4,12 +4,14 @@ st.set_page_config(page_title="더벨 리그테이블 챗봇", page_icon="🔔")
 
 import os
 import pandas as pd
-from openai import OpenAI
-from dotenv import load_dotenv
-from utils import load_dataframes, plot_bar_chart_plotly, plot_line_chart_plotly
+import streamlit as st
 import json
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
+from openai import OpenAI
+from dotenv import load_dotenv
+from utils import load_dataframes, plot_bar_chart_plotly, plot_line_chart_plotly, normalize_column_name
+
 
 # ✅ 한글 폰트 수동 설정
 def set_korean_font():
