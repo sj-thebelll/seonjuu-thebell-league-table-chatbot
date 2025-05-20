@@ -233,9 +233,8 @@ if submit and query:
                         break
 
                 if not metric_col:
-                    st.warning("⚠️ 비교할 수 있는 항목이 없습니다.")
-                    return
-
+                    st.warning("⚠️ 비교할 수 있는 항목이 없습니다. (순위/건수/점유율 중 하나 필요)")
+                    return  # ✅ 이 return은 반드시 이 블록 안으로 들여쓰기 되어야 함
 
                 # ✅ 항목별 비교 함수 호출
                 if metric_col == "점유율(%)":
@@ -244,19 +243,15 @@ if submit and query:
                     상승, 하락 = compare_rank(df, y1, y2, metric_col)
 
                 # ✅ 기업 필터링
-                    if companies:
-                        상승 = 상승[상승["주관사"].isin(companies)]
-                        하락 = 하락[하락["주관사"].isin(companies)]
+                if companies:
+                    상승 = 상승[상승["주관사"].isin(companies)]
+                    하락 = 하락[하락["주관사"].isin(companies)]
 
-                        missing = [
-                            c for c in companies
-                            if c not in 상승["주관사"].values and c not in 하락["주관사"].values
-                        ]
-                        if missing:
-                            st.warning(f"⚠️ {', '.join(missing)}의 {y1}년 또는 {y2}년 데이터가 없습니다.")
+                    missing = [c for c in companies if c not in 상승["주관사"].values and c not in 하락["주관사"].values]
+                    if missing:
+                        st.warning(f"⚠️ {', '.join(missing)}의 {y1}년 또는 {y2}년 데이터가 없습니다.")
 
-   
-                # ✅ 출력
+                # ✅ 출력 (중복 없이)
                 if not 상승.empty:
                     st.subheader(f"📈 {y1} → {y2} {metric_col} 상승")
                     st.dataframe(상승.reset_index(drop=True))
