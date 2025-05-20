@@ -189,6 +189,15 @@ if submit and query:
         years = parsed.get("years") or []
         columns = parsed.get("columns") or []
 
+        # ✅ columns 매핑 (실제 컬럼명에 맞게 정규화)
+        column_map = {
+            "금액": "금액(원)",
+            "점유율": "점유율(%)",
+            "건수": "건수",
+            "순위": "순위"
+        }
+        columns = [column_map.get(c.strip(), c.strip()) for c in columns]
+        
         # fallback: 질문에 '순위' 포함되었으면 columns에 강제로 추가
         if "순위" in query and "순위" not in columns:
             columns.append("순위")
