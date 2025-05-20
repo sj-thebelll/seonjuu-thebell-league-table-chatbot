@@ -234,7 +234,7 @@ if submit and query:
 
                 if not metric_col:
                     st.warning("⚠️ 비교할 수 있는 항목이 없습니다. (순위/건수/점유율 중 하나 필요)")
-                    return  # ✅ 이 return은 반드시 이 블록 안으로 들여쓰기 되어야 함
+                    handled = True  # ✅ 이 return은 반드시 이 블록 안으로 들여쓰기 되어야 함
 
                 # ✅ 항목별 비교 함수 호출
                 if metric_col == "점유율(%)":
