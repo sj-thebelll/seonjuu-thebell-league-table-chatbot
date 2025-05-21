@@ -263,7 +263,8 @@ if submit and query:
 
                     missing = [c for c in companies if c not in 상승["주관사"].values and c not in 하락["주관사"].values]
                     if missing:
-                        st.warning(f"⚠️ {', '.join(missing)}의 {y1}년 또는 {y2}년 데이터가 없습니다.")
+                        product_str = product if isinstance(product, str) else ', '.join(product) if product else "(상품군 없음)"
+                        st.warning(f"⚠️ {y1}, {y2}년 {product_str} 데이터에서 {', '.join(missing)} 증권사의 실적을 찾을 수 없습니다.")
 
                 # ✅ 출력 (중복 없이)
                 if isinstance(product, list):
