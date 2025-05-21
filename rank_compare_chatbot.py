@@ -263,7 +263,12 @@ if submit and query:
                         st.warning(f"⚠️ {', '.join(missing)}의 {y1}년 또는 {y2}년 데이터가 없습니다.")
 
                 # ✅ 출력 (중복 없이)
-                product_str = product if isinstance(product, str) else ', '.join(product)
+                if isinstance(product, list):
+                    product_str = ', '.join(product) if product else "(상품군 없음)"
+                elif isinstance(product, str):
+                    product_str = product
+                else:
+                    product_str = "(상품군 없음)"
 
                 if not 상승.empty:
                     상승 = 상승[["주관사", f"{y1}년 순위", f"{y2}년 순위", "변화"]]
