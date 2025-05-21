@@ -155,6 +155,9 @@ if submit and query:
     if isinstance(companies, str):  # 문자열이면 리스트로 변환
        companies = [companies]
 
+    from utils import company_aliases  # utils.py에서 딕셔너리 가져오기
+    companies = [company_aliases.get(c, c) for c in companies]  # 약칭 → 정식명칭 보정
+    
     years = parsed.get("years") or []
 
     for product in products:
