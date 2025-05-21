@@ -264,11 +264,11 @@ if submit and query:
 
                 # ✅ 출력 (중복 없이)
                 if not 상승.empty:
-                    st.subheader(f"📈 {y1} → {y2} {metric_col} 상승")
+                    st.subheader(f"📈 {y1} → {y2} {product} 주관 순위 상승 (대상: {', '.join(companies)})")
                     st.dataframe(상승.reset_index(drop=True))
 
                 if not 하락.empty:
-                    st.subheader(f"📉 {y1} → {y2} {metric_col} 하락")
+                    st.subheader(f"📉 {y1} → {y2} {product} 주관 순위 하락 (대상: {', '.join(companies)})")
                     st.dataframe(하락.reset_index(drop=True))
 
 
