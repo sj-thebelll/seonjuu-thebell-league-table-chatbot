@@ -2,16 +2,23 @@ import streamlit as st
 
 st.set_page_config(page_title="더벨 리그테이블 챗봇", page_icon="🔔")
 
+# ✅ 기본 모듈
 import os
 import pandas as pd
 import json
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import datetime
-from openai import OpenAI
+
+# ✅ 이메일 전송용 모듈 추가 (Gmail용)
+import smtplib
+from email.message import EmailMessage
+
+# ✅ 환경변수 로드
 from dotenv import load_dotenv
+load_dotenv()  # ← .env에서 GMAIL_USER, GMAIL_PASS 불러오기
 
-
+# ✅ 유틸 함수 import
 from utils import (
     load_dataframes,
     plot_bar_chart_plotly,
@@ -324,26 +331,32 @@ st.markdown("## 🛠️ 피드백 보내기")
 with st.form("feedback_form"):
     user_name = st.text_input("이름 또는 닉네임 (선택)")
     feedback_text = st.text_area("불편하거나 이상한 점을 알려주세요")
-    uploaded_file = st.file_uploader("스크린샷 업로드 (선택)", type=["png", "jpg", "jpeg"])
+    uploaded_file = st.file_uploader(
+        "스크린샷 업로드 (선택, 파일명은 영문/숫자만 사용)", type=["png", "jpg", "jpeg"]
+    )
     submitted = st.form_submit_button("✉️ 피드백 제출")
 
     if submitted:
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = f"feedback_{timestamp}.txt"
-
-        # ✅ 피드백 저장 디렉토리
         os.makedirs("feedback", exist_ok=True)
-        filepath = os.path.join("feedback", filename)
 
-        # ✅ 피드백 텍스트 저장
+        # ✅ 텍스트 저장
+        filepath = os.path.join("feedback", f"feedback_{timestamp}.txt")
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(f"[이름] {user_name or '익명'}\n")
             f.write(f"[내용]\n{feedback_text}\n")
 
-        # ✅ 이미지 저장 (선택)
+        # ✅ 이미지 저장 (있을 경우)
+        image_path = None
         if uploaded_file:
-            image_path = os.path.join("feedback", f"{timestamp}_{uploaded_file.name}")
+            safe_filename = f"{timestamp}_{uploaded_file.name}"
+            image_path = os.path.join("feedback", safe_filename)
             with open(image_path, "wb") as f:
                 f.write(uploaded_file.getbuffer())
 
-        st.success("✅ 피드백이 저장되었습니다. 감사합니다!")
+        # ✅ 이메일 전송 시도
+        try:
+            send_feedback_email(user_name, feedback_text, image_path)
+            st.success("✅ 피드백이 저장되었고 이메일로도 전송되었습니다. 감사합니다!")
+        except Exception as e:
+            st.error(f"❌ 이메일 전송 중 오류 발생: {e}")
