@@ -52,7 +52,6 @@ set_korean_font()
 
 # ✅ 환경 설정
 load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 data_dir = os.path.dirname(__file__)
 dfs = load_dataframes(data_dir)
 
