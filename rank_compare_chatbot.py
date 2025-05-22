@@ -358,7 +358,7 @@ with st.form("feedback_form"):
         # ✅ 이미지 저장 (있을 경우)
         image_path = None
         if uploaded_file:
-            safe_filename = f"{timestamp}_{uploaded_file.name}"
+            safe_filename = f"{timestamp}_{uploaded_file.name.replace(' ', '_')}"
             image_path = os.path.join("feedback", safe_filename)
             with open(image_path, "wb") as f:
                 f.write(uploaded_file.getbuffer())
@@ -369,3 +369,21 @@ with st.form("feedback_form"):
             st.success("✅ 피드백이 저장되었고 이메일로도 전송되었습니다. 감사합니다!")
         except Exception as e:
             st.error(f"❌ 이메일 전송 중 오류 발생: {e}")
+
+
+st.markdown("🧠 GPT 응답:\n\n" + gpt_answer)
+
+user_question = st.text_input("GPT에게 질문해보세요", placeholder="예: 2024년 ECM 순위 알려줘")
+
+if st.button("질문하기") and user_question:
+    with st.spinner("GPT에게 질문 중입니다..."):
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "당신은 더벨 리그테이블 분석가입니다."},
+                {"role": "user", "content": user_question}
+            ]
+        )
+        gpt_answer = response.choices[0].message["content"]
+        st.success("🧠 GPT 응답:")
+        st.write(gpt_answer)
