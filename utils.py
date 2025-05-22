@@ -4,7 +4,6 @@ import streamlit as st
 import json
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
-from openai import OpenAI
 from dotenv import load_dotenv
 
 
