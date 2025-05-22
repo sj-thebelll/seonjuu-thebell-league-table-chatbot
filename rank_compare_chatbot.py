@@ -14,6 +14,23 @@ import datetime
 import smtplib
 from email.message import EmailMessage
 
+def send_feedback_email(user_name, feedback_text, image_path=None):
+    msg = EmailMessage()
+    msg["Subject"] = f"[더벨 챗봇 피드백] {user_name or '익명 사용자'}"
+    msg["From"] = os.getenv("GMAIL_USER")
+    msg["To"] = "1001juu@thebell.co.kr"
+    msg.set_content(feedback_text)
+
+    if image_path:
+        with open(image_path, "rb") as f:
+            file_data = f.read()
+            filename = os.path.basename(image_path)
+            msg.add_attachment(file_data, maintype="image", subtype="jpeg", filename=filename)
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+        smtp.login(os.getenv("GMAIL_USER"), os.getenv("GMAIL_PASS"))
+        smtp.send_message(msg)
+
 # ✅ 환경변수 로드
 from dotenv import load_dotenv
 load_dotenv()  # .env에서 GMAIL_USER, GMAIL_PASS, OPENAI_API_KEY 불러오기
@@ -376,13 +393,15 @@ user_question = st.text_input("GPT에게 질문해보세요", placeholder="예: 
 
 if st.button("질문하기") and user_question:
     with st.spinner("GPT에게 질문 중입니다..."):
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": "당신은 더벨 리그테이블 분석가입니다."},
-                {"role": "user", "content": user_question}
-            ]
-        )
-        gpt_answer = response.choices[0].message["content"]
-        st.success("🧠 GPT 응답:")
-        st.write(gpt_answer)
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": "당신은 더벨 리그테이블 분석가입니다."},
+                    {"role": "user", "content": user_question}
+                ]
+            )
+            gpt_answer = response.choices[0].message["content"]
+            st.markdown("🧠 GPT 응답:\n\n" + gpt_answer)
+        except Exception as e:
+            st.error(f"❌ GPT 호출 실패: {e}")
