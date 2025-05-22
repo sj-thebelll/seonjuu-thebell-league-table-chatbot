@@ -7,8 +7,10 @@ import pandas as pd
 import json
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
+import datetime
 from openai import OpenAI
 from dotenv import load_dotenv
+
 
 from utils import (
     load_dataframes,
