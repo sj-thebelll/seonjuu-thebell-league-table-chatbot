@@ -16,7 +16,11 @@ from email.message import EmailMessage
 
 # ✅ 환경변수 로드
 from dotenv import load_dotenv
-load_dotenv()  # ← .env에서 GMAIL_USER, GMAIL_PASS 불러오기
+load_dotenv()  # .env에서 GMAIL_USER, GMAIL_PASS, OPENAI_API_KEY 불러오기
+
+# ✅ OpenAI GPT API 연결
+import openai
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # ✅ 유틸 함수 import
 from utils import (
