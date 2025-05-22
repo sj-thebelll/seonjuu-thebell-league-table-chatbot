@@ -316,3 +316,32 @@ if submit and query:
 
                     else:
                         st.info("⚠️ 그래프 비교는 최대 2개 기업까지만 지원됩니다.")
+
+# ✅ 피드백 폼 UI
+st.markdown("## 🛠️ 피드백 보내기")
+with st.form("feedback_form"):
+    user_name = st.text_input("이름 또는 닉네임 (선택)")
+    feedback_text = st.text_area("불편하거나 이상한 점을 알려주세요")
+    uploaded_file = st.file_uploader("스크린샷 업로드 (선택)", type=["png", "jpg", "jpeg"])
+    submitted = st.form_submit_button("✉️ 피드백 제출")
+
+    if submitted:
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"feedback_{timestamp}.txt"
+
+        # ✅ 피드백 저장 디렉토리
+        os.makedirs("feedback", exist_ok=True)
+        filepath = os.path.join("feedback", filename)
+
+        # ✅ 피드백 텍스트 저장
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(f"[이름] {user_name or '익명'}\n")
+            f.write(f"[내용]\n{feedback_text}\n")
+
+        # ✅ 이미지 저장 (선택)
+        if uploaded_file:
+            image_path = os.path.join("feedback", f"{timestamp}_{uploaded_file.name}")
+            with open(image_path, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+
+        st.success("✅ 피드백이 저장되었습니다. 감사합니다!")
