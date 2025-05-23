@@ -49,10 +49,6 @@ from utils import (
     plot_multi_metric_line_chart_for_two_companies
 )
 
-# ✅ 테스트용 출력
-st.write("📧 Gmail:", os.getenv("GMAIL_USER"))
-st.write("🔑 Password length:", len(os.getenv("GMAIL_PASS") or ''))
-
 
 # ✅ 한글 폰트 수동 설정
 def set_korean_font():
