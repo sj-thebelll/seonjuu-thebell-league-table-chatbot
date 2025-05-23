@@ -387,7 +387,7 @@ with st.form("feedback_form"):
             st.error(f"❌ 이메일 전송 중 오류 발생: {e}")
 
 
-st.markdown("🧠 GPT 응답:\n\n" + gpt_answer)
+st.markdown("## 🤖 GPT에게 질문해보기")
 
 user_question = st.text_input("GPT에게 질문해보세요", placeholder="예: 2024년 ECM 순위 알려줘")
 
