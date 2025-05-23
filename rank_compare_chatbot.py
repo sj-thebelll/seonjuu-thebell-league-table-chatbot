@@ -95,17 +95,24 @@ def parse_natural_query_with_gpt(query):
             '- 특정 증권사만 있을 경우 product 없이도 전체 product 순회해줘\n'
         )
 
-        response = client.chat.completions.create(
-            model="gpt-4",
+        response = openai.ChatCompletion.create(
+            model="gpt-4",  # 또는 gpt-3.5-turbo
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": query}
             ],
-            temperature=0.2
+            temperature=0.2,
+            max_tokens=800
         )
-        return json.loads(response.choices[0].message.content)
+
+        parsed_content = response.choices[0].message["content"]
+        parsed = json.loads(parsed_content)
+        return parsed
+
     except Exception as e:
-        st.error(f"❌ GPT 파서 오류: {e}")
+        st.error("❌ GPT 질문 해석에 실패했습니다.")
+        st.info("질문 예시: '2024년 ECM 대표주관 순위 알려줘', 'NH와 KB 2023년 순위 비교'")
+        print(f"[GPT 파서 오류]: {e}")
         return None
 
 # ✅ 비교 함수
