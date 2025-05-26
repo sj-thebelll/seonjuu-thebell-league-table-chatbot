@@ -174,7 +174,7 @@ if submit and query:
             st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
             st.info("예: 2024년 ECM 대표주관 순위 1~10위 알려줘")
             st.caption(f"[디버그 정보] GPT 파싱 오류: {e}")
-            return  # ✅ 여기서 바로 종료 (None 처리 끝)
+            handled = True  # ✅ 여기서 바로 종료 (None 처리 끝)
 
     # ✅ 여기부터는 parsed가 유효한 dict라는 것이 보장됨
     if parsed.get("company") and not parsed.get("product"):
