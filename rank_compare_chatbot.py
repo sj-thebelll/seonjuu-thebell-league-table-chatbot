@@ -401,7 +401,7 @@ with st.form("feedback_form"):
     user_name = st.text_input("이름 또는 닉네임 (선택)")
     feedback_text = st.text_area("불편하거나 이상한 점을 알려주세요")
     uploaded_file = st.file_uploader(
-        "스크린샷 업로드 (선택, 파일명은 영문/숫자만 사용)", type=["png", "jpg", "jpeg"]
+        "스크린샷 업로드", type=["png", "jpg", "jpeg"]
     )
     submitted = st.form_submit_button("✉️ 피드백 제출")
 
