@@ -166,16 +166,21 @@ with st.form(key="question_form"):
 if submit and query:
     handled = False
     with st.spinner("GPT가 질문을 해석 중입니다..."):
-        parsed = parse_natural_query_with_gpt(query)
+        try:
+            parsed = parse_natural_query_with_gpt(query)
+            if not isinstance(parsed, dict):  # ✅ dict가 아닌 경우 방지
+                raise ValueError("GPT 결과가 유효한 JSON 형식이 아님")
+        except Exception as e:
+            st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
+            st.info("예: 2024년 ECM 대표주관 순위 1~10위 알려줘")
+            st.caption(f"[디버그 정보] GPT 파싱 오류: {e}")
+            return  # ✅ 여기서 바로 종료 (None 처리 끝)
 
-    if not parsed:
-        st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
-        st.info("예: 2024년 ECM 대표주관 순위 1~10위 알려줘")
-        handled = True  # ✅ return 대신 이것만 사용
-
-    elif parsed.get("company") and not parsed.get("product"):
+    # ✅ 여기부터는 parsed가 유효한 dict라는 것이 보장됨
+    if parsed.get("company") and not parsed.get("product"):
         from improved_company_year_chart_logic import handle_company_year_chart_logic
         handle_company_year_chart_logic(parsed, dfs)
+        handled = True
 
     elif not any([parsed.get("product"), parsed.get("company"), parsed.get("years")]):
         st.warning("⚠️ 어떤 항목이나 증권사에 대한 요청인지 명확하지 않아요. 예: '2024년 ECM 순위', '신영증권 그래프' 등으로 질문해주세요.")
