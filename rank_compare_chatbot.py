@@ -400,8 +400,10 @@ st.markdown("❗ 챗봇이 제대로 작동하지 않거나, 좋은 아이디어
 with st.form("feedback_form"):
     user_name = st.text_input("이름 또는 닉네임 (선택)")
     feedback_text = st.text_area("불편하거나 이상한 점을 알려주세요")
-    uploaded_file = st.file_uploader(
-        "스크린샷 업로드", type=["png", "jpg", "jpeg"]
+    uploaded_files = st.file_uploader(
+        "스크린샷 업로드 (여러 개 선택 가능)", 
+        type=["png", "jpg", "jpeg"], 
+        accept_multiple_files=True
     )
     submitted = st.form_submit_button("✉️ 피드백 제출")
 
