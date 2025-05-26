@@ -150,10 +150,19 @@ def compare_rank(df, year1, year2, metric_col="순위"):
 def compare_share(df, year1, year2):
     df1 = df[df["연도"] == year1][["주관사", "점유율(%)"]].copy()
     df2 = df[df["연도"] == year2][["주관사", "점유율(%)"]].copy()
-    merged = pd.merge(df1, df2, on="주관사", suffixes=(f"_{year1}", f"_{year2}"))
-    merged["점유율변화"] = merged[f"점유율(%)_{year2}"] - merged[f"점유율(%)_{year1}"]
-    상승 = merged[merged["점유율변화"] > 0].sort_values("점유율변화", ascending=False)
-    하락 = merged[merged["점유율변화"] < 0].sort_values("점유율변화")
+
+    # ✅ 열 이름을 비교 출력에 맞게 변경 (예: "2022년 점유율(%)")
+    df1.rename(columns={"점유율(%)": f"{year1}년 점유율(%)"}, inplace=True)
+    df2.rename(columns={"점유율(%)": f"{year2}년 점유율(%)"}, inplace=True)
+
+    # ✅ 병합 후 변화 계산
+    merged = pd.merge(df1, df2, on="주관사")
+    merged["변화"] = merged[f"{year2}년 점유율(%)"] - merged[f"{year1}년 점유율(%)"]
+
+    # ✅ 상승/하락 정렬
+    상승 = merged[merged["변화"] > 0].sort_values("변화", ascending=False)
+    하락 = merged[merged["변화"] < 0].sort_values("변화")
+
     return 상승, 하락
 
 # ✅ UI
