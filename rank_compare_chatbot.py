@@ -405,7 +405,7 @@ with st.form("feedback_form"):
         type=["png", "jpg", "jpeg"], 
         accept_multiple_files=True
     )
-    submitted = st.form_submit_button("✉️ 피드백 제출")
+    submitted = st.form_submit_button("✉️ 보내기")
 
     if submitted:
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
