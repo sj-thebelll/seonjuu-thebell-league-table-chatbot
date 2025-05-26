@@ -10,26 +10,6 @@ import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 import datetime
 
-# ✅ 이메일 전송용 모듈 추가 (Gmail용)
-import smtplib
-from email.message import EmailMessage
-
-def send_feedback_email(user_name, feedback_text, image_path=None):
-    msg = EmailMessage()
-    msg["Subject"] = f"[더벨 챗봇 피드백] {user_name or '익명 사용자'}"
-    msg["From"] = os.getenv("GMAIL_USER")
-    msg["To"] = "1001juu@thebell.co.kr"
-    msg.set_content(feedback_text)
-
-    if image_path:
-        with open(image_path, "rb") as f:
-            file_data = f.read()
-            filename = os.path.basename(image_path)
-            msg.add_attachment(file_data, maintype="image", subtype="jpeg", filename=filename)
-
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-        smtp.login(os.getenv("GMAIL_USER"), os.getenv("GMAIL_PASS"))
-        smtp.send_message(msg)
 
 # ✅ 환경변수 로드
 from dotenv import load_dotenv
@@ -48,6 +28,9 @@ from utils import (
     plot_multi_metric_line_chart_for_single_company,
     plot_multi_metric_line_chart_for_two_companies
 )
+
+# utils.py에 있는 다중 첨부 지원 함수 가져오기
+from utils import send_feedback_email
 
 
 # ✅ 한글 폰트 수동 설정
