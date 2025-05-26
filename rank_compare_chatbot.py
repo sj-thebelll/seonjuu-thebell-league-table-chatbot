@@ -418,19 +418,19 @@ with st.form("feedback_form"):
             f.write(f"[이름] {user_name or '익명'}\n")
             f.write(f"[내용]\n{feedback_text}\n")
 
-        # ✅ 이미지 저장
-        saved_paths = []
+        # ✅ 파일 저장
+        saved_image_paths = []
         if uploaded_files:
             for i, file in enumerate(uploaded_files, 1):
                 filename = f"{timestamp}_{i}_{file.name.replace(' ', '_')}"
                 filepath = os.path.join("feedback", filename)
                 with open(filepath, "wb") as out_file:
                     out_file.write(file.getbuffer())
-                saved_paths.append(filepath)
+                saved_image_paths.append(filepath)
 
         # ✅ 이메일 전송
         try:
-            send_feedback_email(user_name, feedback_text, saved_paths)
+            send_feedback_email(user_name, feedback_text, saved_image_paths)
             st.success("✅ 피드백이 저장되었고 이메일로도 전송되었습니다. 감사합니다!")
         except Exception as e:
             st.error(f"❌ 이메일 전송 중 오류가 발생했습니다: {e}")
