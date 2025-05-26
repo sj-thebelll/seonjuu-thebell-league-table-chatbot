@@ -33,7 +33,7 @@ def send_feedback_email(user_name, feedback_text, image_paths=None):
     # ✅ 여러 이미지 첨부
     if image_paths:
         for path in image_paths:
-            if isinstance(path, str) and os.path.exists(path):
+            if path and isinstance(path, str) and os.path.exists(path):
                 with open(path, "rb") as f:
                     file_data = f.read()
                     filename = os.path.basename(path)
@@ -42,6 +42,7 @@ def send_feedback_email(user_name, feedback_text, image_paths=None):
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
         smtp.login(os.getenv("GMAIL_USER"), os.getenv("GMAIL_PASS"))
         smtp.send_message(msg)
+
         
 # ✅ 공통 컬럼 정규화 함수 (모든 함수에서 공통 사용)
 def normalize_column_name(col):
