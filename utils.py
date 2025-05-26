@@ -19,34 +19,35 @@ company_aliases = {
     "신금투": "신한투자증권"
 }
 
-def send_feedback_email(name, text, image_paths=None):
-    from email.mime.multipart import MIMEMultipart
-    from email.mime.text import MIMEText
-    from email.mime.image import MIMEImage
-    import smtplib
+def send_feedback_email(user_name, feedback_text, image_paths=None):
     import os
+    import smtplib
+    from email.message import EmailMessage
 
-    msg = MIMEMultipart()
-    msg["Subject"] = f"[챗봇 피드백] {name or '익명'}"
+    msg = EmailMessage()
+    msg["Subject"] = f"[더벨 챗봇 피드백] {user_name or '익명 사용자'}"
     msg["From"] = os.getenv("GMAIL_USER")
-    msg["To"] = os.getenv("GMAIL_USER")  # 본인에게 전송
+    msg["To"] = "1001juuu@thebell.co.kr"
+    msg.set_content(feedback_text)
 
-    # 본문 텍스트
-    msg.attach(MIMEText(text, "plain", _charset="utf-8"))
-
-    # 이미지 첨부 (여러 개 가능)
+    # ✅ 이미지 여러 개 첨부
     if image_paths:
         for path in image_paths:
             if os.path.exists(path):
                 with open(path, "rb") as f:
-                    img_data = f.read()
-                    image_part = MIMEImage(img_data, name=os.path.basename(path))
-                    msg.attach(image_part)
+                    file_data = f.read()
+                    filename = os.path.basename(path)
+                    msg.add_attachment(
+                        file_data,
+                        maintype="image",
+                        subtype="jpeg",  # 또는 이미지 확장자 감지 가능
+                        filename=filename,
+                    )
 
-    # 이메일 전송
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(os.getenv("GMAIL_USER"), os.getenv("GMAIL_PASS"))
-        server.send_message(msg)
+    # ✅ 이메일 전송
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+        smtp.login(os.getenv("GMAIL_USER"), os.getenv("GMAIL_PASS"))
+        smtp.send_message(msg)
 
 
 # ✅ 공통 컬럼 정규화 함수 (모든 함수에서 공통 사용)
