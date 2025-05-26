@@ -105,14 +105,18 @@ def parse_natural_query_with_gpt(query):
         )
 
         content = response.choices[0].message.content.strip()
-        parsed = json.loads(content)
-        return parsed
-    except Exception as e:
-        st.error("❌ GPT 질문 해석에 실패했습니다.")
-        st.info("질문 예시: '2024년 ECM 대표주관 순위 알려줘', 'NH와 KB 2023년 순위 비교'")
-        print(f"[GPT 파서 오류]: {e}")
-        return None
 
+        try:
+            parsed = json.loads(content)
+            if not isinstance(parsed, dict):
+                raise ValueError("응답이 JSON 객체가 아님")
+            return parsed
+        except Exception as parse_error:
+            st.error("❌ GPT 응답을 JSON으로 변환하지 못했습니다.")
+            print(f"[JSON 파싱 오류]: {parse_error}")
+            print("[GPT 원본 응답]:", content)
+            return None
+    
 # ✅ 비교 함수
 def compare_rank(df, year1, year2, metric_col="순위"):
     df1 = df[df["연도"] == year1][["주관사", metric_col]].copy()
