@@ -137,10 +137,16 @@ def compare_rank(df, year1, year2, metric_col="순위"):
 
     if metric_col == "순위":
         상승 = merged[merged["변화"] < 0].sort_values("변화")
+        상승 = 상승[["주관사", f"{year1}년 {metric_col}", f"{year2}년 {metric_col}", "변화"]]
+
         하락 = merged[merged["변화"] > 0].sort_values("변화", ascending=False)
+        하락 = 하락[["주관사", f"{year1}년 {metric_col}", f"{year2}년 {metric_col}", "변화"]]
     else:
         상승 = merged[merged["변화"] > 0].sort_values("변화", ascending=False)
+        상승 = 상승[["주관사", f"{year1}년 {metric_col}", f"{year2}년 {metric_col}", "변화"]]
+
         하락 = merged[merged["변화"] < 0].sort_values("변화")
+        하락 = 하락[["주관사", f"{year1}년 {metric_col}", f"{year2}년 {metric_col}", "변화"]]
 
     return 상승, 하락
 
