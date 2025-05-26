@@ -64,7 +64,6 @@ def set_korean_font():
 set_korean_font()
 
 # ✅ 환경 설정
-load_dotenv()
 data_dir = os.path.dirname(__file__)
 dfs = load_dataframes(data_dir)
 
@@ -96,7 +95,7 @@ def parse_natural_query_with_gpt(query):
         )
 
         response = openai.ChatCompletion.create(
-            model="gpt-4",  # 또는 gpt-3.5-turbo
+            model="gpt-4",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": query}
