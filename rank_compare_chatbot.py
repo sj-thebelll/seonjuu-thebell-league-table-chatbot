@@ -271,7 +271,9 @@ if submit and query:
             "건수": "건수",
             "순위": "순위"
         }
-        columns = [column_map.get(c.strip(), c.strip()) for c in columns]
+        from utils import normalize_column_name  # 맨 위에 import 되어 있어야 함
+
+        columns = [normalize_column_name(c.strip()) for c in columns]
         
         # fallback: 질문에 '순위' 포함되었으면 columns에 강제로 추가
         if "순위" in query and "순위" not in columns:
