@@ -19,21 +19,21 @@ company_aliases = {
     "신금투": "신한투자증권"
 }
 
-def send_feedback_email(user_name, feedback_text, image_paths=None):
-    from email.message import EmailMessage
+def send_feedback_email(name, text, image_paths=None):
     import os
     import smtplib
+    from email.message import EmailMessage
 
     msg = EmailMessage()
-    msg["Subject"] = f"[더벨 챗봇 피드백] {user_name or '익명 사용자'}"
+    msg["Subject"] = f"[챗봇 피드백] {name or '익명'}"
     msg["From"] = os.getenv("GMAIL_USER")
     msg["To"] = "1001juuu@thebell.co.kr"
-    msg.set_content(feedback_text)
+    msg.set_content(text)
 
     # ✅ 여러 이미지 첨부
     if image_paths:
         for path in image_paths:
-            if path and isinstance(path, str) and os.path.exists(path):
+            if isinstance(path, str) and os.path.exists(path):
                 with open(path, "rb") as f:
                     file_data = f.read()
                     filename = os.path.basename(path)
