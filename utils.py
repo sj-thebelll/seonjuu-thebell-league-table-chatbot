@@ -249,7 +249,9 @@ def plot_rank_comparison_for_up_to_two_companies(df, companies, x_col="연도", 
     key_suffix = str(uuid.uuid4())[:8]
     st.plotly_chart(fig, use_container_width=True, key=f"rank_compare_{key_suffix}")
 
-def plot_multi_metric_line_chart_for_two_companies(df, companies, x_col="연도", y_cols=["금액(원)", "점유율(%)", "순위"], title=None):
+def plot_multi_metric_line_chart_for_two_companies(
+    df, companies, x_col="연도", y_cols=["금액(원)", "점유율(%)", "순위"], title=None, product_name=None
+):
     import plotly.express as px
     import streamlit as st
     import uuid
