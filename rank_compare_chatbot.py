@@ -68,6 +68,8 @@ data_dir = os.path.dirname(__file__)
 dfs = load_dataframes(data_dir)
 
 # ✅ GPT 파서
+from openai import OpenAI  # openai>=1.0.0 기준
+
 def parse_natural_query_with_gpt(query):
     try:
         system_prompt = (
@@ -94,9 +96,7 @@ def parse_natural_query_with_gpt(query):
             '- 특정 증권사만 있을 경우 product 없이도 전체 product 순회해줘\n'
         )
 
-        from openai import OpenAI
-
-        client = OpenAI()  # ✅ openai.OpenAI 인스턴스 생성
+        client = OpenAI()
 
         response = client.chat.completions.create(
             model="gpt-4",
@@ -109,8 +109,14 @@ def parse_natural_query_with_gpt(query):
         )
 
         content = response.choices[0].message.content.strip()
-        parsed = json.loads(content)  # ✅ JSON 파싱
-        return parsed  # ✅ 파싱 성공 시 반환
+        parsed = json.loads(content)
+        return parsed
+
+    except Exception as e:
+        st.error("❌ GPT 질문 해석에 실패했습니다.")
+        st.info("질문 예시: '2024년 ECM 대표주관 순위 알려줘', 'NH와 KB 2023년 순위 비교'")
+        st.caption(f"[디버그 정보] GPT 파싱 오류: {e}")
+        return None  # ✅ 반드시 함수는 None을 반환해야 흐름에서 처리 가능
 
     except Exception as e:
         st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
