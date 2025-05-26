@@ -396,6 +396,7 @@ if submit and query:
 
 # ✅ 피드백 폼 UI
 st.markdown("## 🛠️ 피드백 보내기")
+st.markdown("❗ 챗봇이 제대로 작동하지 않거나, 좋은 아이디어가 있을 경우 자유롭게 의견을 보내주세요.")
 with st.form("feedback_form"):
     user_name = st.text_input("이름 또는 닉네임 (선택)")
     feedback_text = st.text_area("불편하거나 이상한 점을 알려주세요")
