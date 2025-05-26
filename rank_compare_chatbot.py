@@ -135,18 +135,14 @@ def compare_rank(df, year1, year2, metric_col="순위"):
     merged = pd.merge(df1, df2, on="주관사")
     merged["변화"] = merged[f"{year2}년 {metric_col}"] - merged[f"{year1}년 {metric_col}"]
 
-    if metric_col == "순위":
-        상승 = merged[merged["변화"] < 0].sort_values("변화")
-        상승 = 상승[["주관사", f"{year1}년 {metric_col}", f"{year2}년 {metric_col}", "변화"]]
+    ascending_order = True if metric_col == "순위" else False
 
-        하락 = merged[merged["변화"] > 0].sort_values("변화", ascending=False)
-        하락 = 하락[["주관사", f"{year1}년 {metric_col}", f"{year2}년 {metric_col}", "변화"]]
-    else:
-        상승 = merged[merged["변화"] > 0].sort_values("변화", ascending=False)
-        상승 = 상승[["주관사", f"{year1}년 {metric_col}", f"{year2}년 {metric_col}", "변화"]]
+    상승 = merged[merged["변화"] < 0].sort_values("변화", ascending=ascending_order)
+    하락 = merged[merged["변화"] > 0].sort_values("변화", ascending=not ascending_order)
 
-        하락 = merged[merged["변화"] < 0].sort_values("변화")
-        하락 = 하락[["주관사", f"{year1}년 {metric_col}", f"{year2}년 {metric_col}", "변화"]]
+    target_columns = ["주관사", f"{year1}년 {metric_col}", f"{year2}년 {metric_col}", "변화"]
+    상승 = 상승[target_columns]
+    하락 = 하락[target_columns]
 
     return 상승, 하락
 
