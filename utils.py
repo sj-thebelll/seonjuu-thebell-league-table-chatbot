@@ -56,8 +56,8 @@ def load_dataframes(data_dir):
         try:
             print(f"🔍 [DEBUG] {product} 로딩 중... 파일: {filename}, 시트명: {sheet_name}")
             df = pd.read_excel(file_path, sheet_name=sheet_name)
-            df.columns = df.columns.astype(str).str.strip()
-
+            df.columns = df.columns.astype(str).str.strip().str.replace('"', '', regex=False)
+            
             if "연도" in df.columns:
                 df["연도"] = df["연도"].astype(str).str.replace("년", "").astype(int)
 
