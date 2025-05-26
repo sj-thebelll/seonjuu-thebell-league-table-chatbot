@@ -282,8 +282,9 @@ if submit and query:
         columns = [normalize_column_name(c.strip()) for c in columns]
         
         # fallback: 질문에 '순위' 포함되었으면 columns에 강제로 추가
-        if "순위" in query and "순위" not in columns:
-            columns.append("순위")
+        if "순위" in query and not any(x in query for x in ["점유율", "건수", "금액"]):
+            if "순위" not in columns:
+                columns.append("순위")
 
         for product in products:
             df = dfs.get(product)
@@ -304,6 +305,10 @@ if submit and query:
                     if candidate in col_candidates:
                         metric_col = candidate
                         break
+
+                st.write("✅ metric_col:", metric_col)
+                st.write("✅ columns:", columns)
+                st.write("✅ selected function:", "compare_rank" if metric_col == "순위" else "compare_share")
 
                 if not metric_col:
                     st.warning("⚠️ 비교할 수 있는 항목이 없습니다. (순위/건수/점유율 중 하나 필요)")
