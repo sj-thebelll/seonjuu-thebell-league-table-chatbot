@@ -19,6 +19,35 @@ company_aliases = {
     "신금투": "신한투자증권"
 }
 
+def send_feedback_email(name, text, image_paths=None):
+    from email.mime.multipart import MIMEMultipart
+    from email.mime.text import MIMEText
+    from email.mime.image import MIMEImage
+    import smtplib
+    import os
+
+    msg = MIMEMultipart()
+    msg["Subject"] = f"[챗봇 피드백] {name or '익명'}"
+    msg["From"] = os.getenv("GMAIL_USER")
+    msg["To"] = os.getenv("GMAIL_USER")  # 본인에게 전송
+
+    # 본문 텍스트
+    msg.attach(MIMEText(text, "plain", _charset="utf-8"))
+
+    # 이미지 첨부 (여러 개 가능)
+    if image_paths:
+        for path in image_paths:
+            if os.path.exists(path):
+                with open(path, "rb") as f:
+                    img_data = f.read()
+                    image_part = MIMEImage(img_data, name=os.path.basename(path))
+                    msg.attach(image_part)
+
+    # 이메일 전송
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(os.getenv("GMAIL_USER"), os.getenv("GMAIL_PASS"))
+        server.send_message(msg)
+
 
 # ✅ 공통 컬럼 정규화 함수 (모든 함수에서 공통 사용)
 def normalize_column_name(col):
