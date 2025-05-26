@@ -168,7 +168,7 @@ def compare_share(df, year1, year2):
 # ✅ UI
 st.title("🔔 더벨 리그테이블 챗봇")
 st.markdown("""
-이 챗봇은 더벨의 **ECM / ABS / FB / 국내채권** 부문 대표주관 **리그테이블 데이터(2020~2024)** 를 기반으로 작동합니다. 자연어로 질문하면, **표 또는 그래프** 형태로 응답을 받을 수 있습니다.
+이 챗봇은 더벨의 ** ECM(전체) / 국내채권(전체) / ABS / FB / ** 부문 대표주관 **리그테이블 데이터(2020~2024)** 를 기반으로 작동합니다. 자연어로 질문하면, **표 또는 그래프** 형태로 응답을 받을 수 있습니다.
 
 지원되는 질문 유형:
 - 연도별 주관사 순위 조회 (금액 / 건수 / 점유율 기준)
@@ -397,6 +397,7 @@ if submit and query:
 # ✅ 피드백 폼 UI
 st.markdown("## 🛠️ 피드백 보내기")
 st.markdown("❗ 챗봇이 제대로 작동하지 않거나, 좋은 아이디어가 있을 경우 자유롭게 의견을 보내주세요.")
+
 with st.form("feedback_form"):
     user_name = st.text_input("이름 또는 닉네임 (선택)")
     feedback_text = st.text_area("불편하거나 이상한 점을 알려주세요")
@@ -412,24 +413,24 @@ with st.form("feedback_form"):
         os.makedirs("feedback", exist_ok=True)
 
         # ✅ 텍스트 저장
-        filepath = os.path.join("feedback", f"feedback_{timestamp}.txt")
-        with open(filepath, "w", encoding="utf-8") as f:
+        feedback_file = os.path.join("feedback", f"feedback_{timestamp}.txt")
+        with open(feedback_file, "w", encoding="utf-8") as f:
             f.write(f"[이름] {user_name or '익명'}\n")
             f.write(f"[내용]\n{feedback_text}\n")
 
-        # ✅ 이미지 저장 (있을 경우)
-        image_path = None
-        if uploaded_file:
-            safe_filename = f"{timestamp}_{uploaded_file.name.replace(' ', '_')}"
-            image_path = os.path.join("feedback", safe_filename)
-            with open(image_path, "wb") as f:
-                f.write(uploaded_file.getbuffer())
+        # ✅ 이미지들 저장 (여러 개 가능)
+        saved_image_paths = []
+        if uploaded_files:
+            for i, file in enumerate(uploaded_files, 1):
+                safe_filename = f"{timestamp}_img{i}_{file.name.replace(' ', '_')}"
+                image_path = os.path.join("feedback", safe_filename)
+                with open(image_path, "wb") as out_file:
+                    out_file.write(file.getbuffer())
+                saved_image_paths.append(image_path)
 
-        # ✅ 이메일 전송 시도
+        # ✅ 이메일 전송
         try:
-            send_feedback_email(user_name, feedback_text, image_path)
+            send_feedback_email(user_name, feedback_text, saved_image_paths)
             st.success("✅ 피드백이 저장되었고 이메일로도 전송되었습니다. 감사합니다!")
         except Exception as e:
-            st.error(f"❌ 이메일 전송 중 오류 발생: {e}")
-
-
+            st.error(f"❌ 이메일 전송 중 오류가 발생했습니다: {e}")
