@@ -402,8 +402,8 @@ with st.form("feedback_form"):
     user_name = st.text_input("이름 또는 닉네임 (선택)")
     feedback_text = st.text_area("불편하거나 이상한 점을 알려주세요")
     uploaded_files = st.file_uploader(
-        "스크린샷 업로드 (여러 개 선택 가능)",
-        type=["png", "jpg", "jpeg"],
+        "스크린샷 업로드 (여러 개 선택 가능)", 
+        type=["png", "jpg", "jpeg"], 
         accept_multiple_files=True
     )
     submitted = st.form_submit_button("✉️ 보내기")
@@ -418,22 +418,19 @@ with st.form("feedback_form"):
             f.write(f"[이름] {user_name or '익명'}\n")
             f.write(f"[내용]\n{feedback_text}\n")
 
-        # ✅ 이미지 저장 (파일 경로 리스트 생성)
-        saved_image_paths = []
+        # ✅ 이미지 저장
+        saved_paths = []
         if uploaded_files:
-            if not isinstance(uploaded_files, list):
-                uploaded_files = [uploaded_files]  # 단일 파일도 리스트로 변환
-
             for i, file in enumerate(uploaded_files, 1):
-                safe_filename = f"{timestamp}_img{i}_{file.name.replace(' ', '_')}"
-                image_path = os.path.join("feedback", safe_filename)
-                with open(image_path, "wb") as out_file:
+                filename = f"{timestamp}_{i}_{file.name.replace(' ', '_')}"
+                filepath = os.path.join("feedback", filename)
+                with open(filepath, "wb") as out_file:
                     out_file.write(file.getbuffer())
-                saved_image_paths.append(image_path)  # str 경로만 저장
+                saved_paths.append(filepath)
 
         # ✅ 이메일 전송
         try:
-            send_feedback_email(user_name, feedback_text, saved_image_paths)
+            send_feedback_email(user_name, feedback_text, saved_paths)
             st.success("✅ 피드백이 저장되었고 이메일로도 전송되었습니다. 감사합니다!")
         except Exception as e:
             st.error(f"❌ 이메일 전송 중 오류가 발생했습니다: {e}")
