@@ -94,7 +94,11 @@ def parse_natural_query_with_gpt(query):
             '- 특정 증권사만 있을 경우 product 없이도 전체 product 순회해줘\n'
         )
 
-        response = openai.ChatCompletion.create(
+        from openai import OpenAI
+
+        client = OpenAI()  # ✅ openai.OpenAI 인스턴스 생성
+
+        response = client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {"role": "system", "content": system_prompt},
@@ -104,7 +108,7 @@ def parse_natural_query_with_gpt(query):
             max_tokens=800
         )
 
-        content = response.choices[0].message.content.strip()  # ✅ 여기서 content 추출
+        content = response.choices[0].message.content.strip()
         parsed = json.loads(content)  # ✅ JSON 파싱
         return parsed  # ✅ 파싱 성공 시 반환
 
