@@ -95,24 +95,24 @@ def parse_natural_query_with_gpt(query):
         )
 
         response = openai.ChatCompletion.create(
-                    model="gpt-4",
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": query}
-                    ],
-                    temperature=0.2,
-                    max_tokens=800
-                )
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": query}
+            ],
+            temperature=0.2,
+            max_tokens=800
+        )
 
-                content = response.choices[0].message.content.strip()  # ✅ 여기서 content 추출
-                parsed = json.loads(content)  # ✅ JSON 파싱
-                return parsed  # ✅ 파싱 성공 시 반환
+        content = response.choices[0].message.content.strip()  # ✅ 여기서 content 추출
+        parsed = json.loads(content)  # ✅ JSON 파싱
+        return parsed  # ✅ 파싱 성공 시 반환
 
-            except Exception as e:
-                st.error("❌ GPT 질문 해석에 실패했습니다.")
-                st.info("질문 예시: '2024년 ECM 대표주관 순위 알려줘', 'NH와 KB 2023년 순위 비교'")
-                print(f"[GPT 파서 오류]: {e}")
-                return None
+    except Exception as e:
+        st.error("❌ GPT 질문 해석에 실패했습니다.")
+        st.info("질문 예시: '2024년 ECM 대표주관 순위 알려줘', 'NH와 KB 2023년 순위 비교'")
+        print(f"[GPT 파서 오류]: {e}")
+        return None
     
 # ✅ 비교 함수
 def compare_rank(df, year1, year2, metric_col="순위"):
