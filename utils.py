@@ -19,7 +19,7 @@ company_aliases = {
     "신금투": "신한투자증권"
 }
 
-def send_feedback_email(user_name, feedback_text, image_paths=None):
+def send_feedback_email(user_name, feedback_text, image_paths=None):  # ✅ 복수형으로 변경
     import os
     import smtplib
     from email.message import EmailMessage
@@ -30,24 +30,19 @@ def send_feedback_email(user_name, feedback_text, image_paths=None):
     msg["To"] = "1001juuu@thebell.co.kr"
     msg.set_content(feedback_text)
 
-    # ✅ 이미지 여러 개 첨부
+    # ✅ 이미지 여러 개 첨부 (여기서 image_paths가 list인지 확인)
     if image_paths:
-        for path in image_paths:
-            if os.path.exists(path):
-                with open(path, "rb") as f:
+        for image_path in image_paths:
+            if os.path.exists(image_path):
+                with open(image_path, "rb") as f:
                     file_data = f.read()
-                    filename = os.path.basename(path)
-                    msg.add_attachment(
-                        file_data,
-                        maintype="image",
-                        subtype="jpeg",  # 또는 이미지 확장자 감지 가능
-                        filename=filename,
-                    )
+                    filename = os.path.basename(image_path)
+                    msg.add_attachment(file_data, maintype="image", subtype="png", filename=filename)
 
-    # ✅ 이메일 전송
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
         smtp.login(os.getenv("GMAIL_USER"), os.getenv("GMAIL_PASS"))
         smtp.send_message(msg)
+
 
 
 # ✅ 공통 컬럼 정규화 함수 (모든 함수에서 공통 사용)
