@@ -104,10 +104,9 @@ def parse_natural_query_with_gpt(query):
             max_tokens=800
         )
 
-        parsed_content = response.choices[0].message["content"]
-        parsed = json.loads(parsed_content)
+        content = response.choices[0].message.content.strip()
+        parsed = json.loads(content)
         return parsed
-
     except Exception as e:
         st.error("❌ GPT 질문 해석에 실패했습니다.")
         st.info("질문 예시: '2024년 ECM 대표주관 순위 알려줘', 'NH와 KB 2023년 순위 비교'")
