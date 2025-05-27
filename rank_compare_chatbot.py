@@ -46,8 +46,8 @@ def set_korean_font():
 
 set_korean_font()
 
-# ✅ 환경 설정
-data_dir = os.path.dirname(__file__)
+# ✅ 엑셀 파일들이 들어 있는 data 폴더 기준으로 변경
+data_dir = os.path.join(os.path.dirname(__file__), "data")
 dfs = load_dataframes(data_dir)
 
 # ✅ GPT 파서
