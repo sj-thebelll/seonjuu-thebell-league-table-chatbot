@@ -57,48 +57,34 @@ def normalize_column_name(col):
 def load_dataframes(data_dir):
     dfs = {}
 
-    # ✅ 파일 이름 매핑
-    file_mapping = {
-        "ECM": "ecm.xlsx",
-        "ABS": "abs.xlsx",
-        "FB": "fb.xlsx",
-        "국내채권": "domestic_bond.xlsx"
-    }
+    for filename in os.listdir(data_dir):
+        if filename.endswith(".xlsx"):
+            product = filename.replace(".xlsx", "")  # 파일명 → 상품명
+            file_path = os.path.join(data_dir, filename)
 
-    # ✅ 엑셀 시트 이름 매핑
-    sheet_mapping = {
-        "ECM": "ECM",
-        "ABS": "ABS",
-        "FB": "FB",
-        "국내채권": "국내채권"
-    }
+            try:
+                print(f"🔍 [DEBUG] '{product}' 로딩 중... 파일: {filename}, 시트명: {product}")
+                df = pd.read_excel(file_path, sheet_name=product)
+                df.columns = df.columns.astype(str).str.strip().str.replace('"', '', regex=False)
 
-    for product, filename in file_mapping.items():
-        file_path = os.path.join(data_dir, filename)
-        sheet_name = sheet_mapping[product]
+                if "연도" in df.columns:
+                    df["연도"] = df["연도"].astype(str).str.replace("년", "").astype(int)
 
-        try:
-            print(f"🔍 [DEBUG] {product} 로딩 중... 파일: {filename}, 시트명: {sheet_name}")
-            df = pd.read_excel(file_path, sheet_name=sheet_name)
-            df.columns = df.columns.astype(str).str.strip().str.replace('"', '', regex=False)
-            
-            if "연도" in df.columns:
-                df["연도"] = df["연도"].astype(str).str.replace("년", "").astype(int)
+                if "주관사" not in df.columns and df.shape[1] >= 3:
+                    df["주관사"] = df.iloc[:, 2].astype(str).str.strip()
+                else:
+                    df["주관사"] = df["주관사"].astype(str).str.strip()
 
-            if "주관사" not in df.columns and df.shape[1] >= 3:
-                df["주관사"] = df.iloc[:, 2].astype(str).str.strip()
-            else:
-                df["주관사"] = df["주관사"].astype(str).str.strip()
+                df["주관사"] = df["주관사"].str.replace(" ", "")
+                dfs[product] = df
+                print(f"✅ [DEBUG] '{product}' 데이터 로드 성공. shape: {df.shape}")
 
-            df["주관사"] = df["주관사"].str.replace(" ", "")
-            dfs[product] = df
-            print(f"✅ [DEBUG] {product} 데이터 로드 성공. shape: {df.shape}")
+            except Exception as e:
+                print(f"❌ [ERROR] '{product}' 데이터 로딩 실패:", e)
 
-        except Exception as e:
-            print(f"❌ [ERROR] {product} 데이터 로딩 실패:", e)
-
-    print("📂 [DEBUG] 최종 로드된 데이터 키:", dfs.keys())
+    print("📂 [DEBUG] 최종 로드된 데이터 키:", list(dfs.keys()))
     return dfs
+
 
 
 
