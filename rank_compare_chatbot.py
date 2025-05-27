@@ -217,6 +217,7 @@ if submit and query:
     years = parsed.get("years") or []
 
     for product in products:
+        product = product.lower()  # ✅ 이 줄 추가!
         df = dfs.get(product)
         if df is None or df.empty:
             st.warning(f"⚠️ {product} 데이터가 없습니다.")
