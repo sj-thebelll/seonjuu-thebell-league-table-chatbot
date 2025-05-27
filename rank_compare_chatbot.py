@@ -204,6 +204,9 @@ if submit and query:
     if isinstance(products, str):
         products = [products]
 
+    # ✅ product 키워드를 소문자로 통일
+    products = [p.lower() for p in products]
+
     companies = parsed.get("company") or []
     if isinstance(companies, str):  # 문자열이면 리스트로 변환
        companies = [companies]
