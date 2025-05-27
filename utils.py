@@ -63,8 +63,17 @@ def load_dataframes(data_dir):
             file_path = os.path.join(data_dir, filename)
 
             try:
-                print(f"🔍 [DEBUG] '{product}' 로딩 중... 파일: {filename}, 시트명: {product}")
-                df = pd.read_excel(file_path, sheet_name=product)
+                print(f"🔍 [DEBUG] '{product}' 로딩 중... 파일: {filename}")
+
+                # ✅ 시트명이 정확히 일치하지 않아도 첫 시트를 fallback으로 불러옴
+                try:
+                    df = pd.read_excel(file_path, sheet_name=product)
+                except:
+                    print(f"⚠️ [WARN] '{product}' 시트명이 일치하지 않아 첫 시트로 대체 로딩")
+                    xls = pd.ExcelFile(file_path)
+                    first_sheet = xls.sheet_names[0]
+                    df = pd.read_excel(xls, sheet_name=first_sheet)
+
                 df.columns = df.columns.astype(str).str.strip().str.replace('"', '', regex=False)
 
                 if "연도" in df.columns:
