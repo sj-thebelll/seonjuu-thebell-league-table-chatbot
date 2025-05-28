@@ -53,7 +53,9 @@ product_aliases = {
     "dcm": "domestic_bond",  # ✅ 질문에 dcm이 들어오면 실제로는 이 키를 조회해야 하므로
 }
 
-# 역매핑 추가
+# ✅ product_aliases와 함께 상단에서 import 후 선언
+from utils import product_aliases
+
 product_display_names = {v: k.upper() for k, v in product_aliases.items()}
 
 # ✅ 공통 컬럼 정규화 함수 (모든 함수에서 공통 사용)
