@@ -198,6 +198,9 @@ if submit and query:
         st.warning("⚠️ 어떤 항목이나 증권사에 대한 요청인지 명확하지 않아요. 예: '2024년 ECM 순위', '신영증권 그래프' 등으로 질문해주세요.")
         handled = True
 
+       # ✅ 여기에 추가!
+    already_warned = set()
+
     
     # ✅ 나머지 일반 루틴 처리
     products = parsed.get("product") or []
@@ -365,10 +368,8 @@ if submit and query:
                 products = [p.lower() for p in products]  # ✅ 파일명 키 소문자 통일
 
                 # ✅ 기업명 정규화: 소문자 + 공백 제거
-                companies_normalized = [c.lower().replace(" ", "") for c in companies]
-                
-                already_warned = set()  # ✅ 중복 경고 방지용
-                
+                companies_normalized = [c.lower().replace(" ", "") for c in companies]                
+             
                 for product in products:
                     df = dfs.get(product)
                     if df is None or df.empty:
