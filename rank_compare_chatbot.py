@@ -355,39 +355,46 @@ if submit and query:
             # ✅ 그래프 요청 처리
             if parsed.get("is_chart") and companies and years:
                 for product in products:
-                    product = product.lower()  # ✅ 반드시 이 줄 추가!
+                    product = product.lower()  # ✅ 반드시 소문자로 변환
+
                     df = dfs.get(product)
                     if df is None or df.empty:
                         st.warning(f"⚠️ {product.upper()} 데이터가 없습니다.")
                         continue
 
                     chart_df = df[df["연도"].isin(years) & df["주관사"].isin(companies)].copy()
-                    if not chart_df.empty:
-                        chart_df.columns = chart_df.columns.str.strip()
-                        chart_df = chart_df.sort_values(["주관사", "연도"])
-                        chart_df["연도"] = chart_df["연도"].astype(int)
+                    if chart_df.empty:
+                        st.warning(f"⚠️ {product.upper()} 데이터에서 {', '.join(companies)} 데이터가 없습니다.")
+                        continue
 
-                        if len(companies) == 2:
-                            from utils import plot_multi_metric_line_chart_for_two_companies
-                            plot_multi_metric_line_chart_for_two_companies(
-                                chart_df,
-                                companies=companies,
-                                x_col="연도",
-                                y_cols=columns,
-                                title=f"📊 {product} {' vs '.join(companies)} 꺾은선 그래프",
-                                product_name=product  # ✅ 그대로 유지
-                            )
-                        elif len(companies) == 1:
-                            from utils import plot_multi_metric_line_chart_for_single_company
-                            plot_multi_metric_line_chart_for_single_company(
-                                chart_df,
-                                company_name=companies[0],
-                                x_col="연도",
-                                y_cols=columns,
-                                product_name=product  # ✅ 그대로 유지
-                            )
-                        else:
-                            st.info("⚠️ 그래프 비교는 최대 2개 기업까지만 지원됩니다.")
+                    chart_df.columns = chart_df.columns.str.strip()
+                    chart_df = chart_df.sort_values(["주관사", "연도"])
+                    chart_df["연도"] = chart_df["연도"].astype(int)
+
+                    if len(companies) == 2:
+                        from utils import plot_multi_metric_line_chart_for_two_companies
+                        plot_multi_metric_line_chart_for_two_companies(
+                            chart_df,
+                            companies=companies,
+                            x_col="연도",
+                            y_cols=columns,
+                            title=f"📊 {product.upper()} {' vs '.join(companies)} 꺾은선 그래프",
+                            product_name=product  # ✅ 함수에 전달
+                        )
+
+                    elif len(companies) == 1:
+                        from utils import plot_multi_metric_line_chart_for_single_company
+                        plot_multi_metric_line_chart_for_single_company(
+                            chart_df,
+                            company_name=companies[0],
+                            x_col="연도",
+                            y_cols=columns,
+                            product_name=product  # ✅ 함수에 전달
+                        )
+
+                    else:
+                        st.info("⚠️ 그래프 비교는 최대 2개 기업까지만 지원됩니다.")
+
 
 # ✅ 피드백 폼 UI
 st.markdown("## 🛠️ 피드백 보내기")
