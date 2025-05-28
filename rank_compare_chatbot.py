@@ -344,12 +344,12 @@ if submit and query:
 
                 # ✅ 출력 (중복 없이)
                 if isinstance(product, list):
-                    product_str = ', '.join(product) if product else "(상품군 없음)"
+                    product_str = ', '.join([product_display_names.get(p, p.upper()) for p in product]) if product else "(상품군 없음)"
                 elif isinstance(product, str):
-                    product_str = product
+                    product_str = product_display_names.get(product, product.upper())
                 else:
                     product_str = "(상품군 없음)"
-
+                    
                 if not 상승.empty:
                     상승 = 상승[["주관사", f"{y1}년 {metric_col}", f"{y2}년 {metric_col}", "변화"]]
                     target_str = f" (대상: {', '.join(companies)})" if companies else ""
@@ -368,7 +368,7 @@ if submit and query:
                 if isinstance(products, str):
                     products = [products]
                 from utils import product_aliases  # 파일 상단에서 한 번만 import 되어 있어야 합니다
-                products = [product_aliases.get(p.lower(), p.lower()) for p in products]
+                product_display_names = {v: k.upper() for k, v in product_aliases.items()}
 
                 # ✅ 기업명 정규화: 소문자 + 공백 제거
                 companies_normalized = [c.lower().replace(" ", "") for c in companies]                
