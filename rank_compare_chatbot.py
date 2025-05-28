@@ -180,11 +180,16 @@ if submit and query:
     with st.spinner("GPT가 질문을 해석 중입니다..."):
         try:
             parsed = parse_natural_query_with_gpt(query)
-            if not isinstance(parsed, dict):  # ✅ dict가 아닌 경우 방지
+            if not isinstance(parsed, dict):
                 raise ValueError("GPT 결과가 유효한 JSON 형식이 아님")
+        except Exception as e:
+            st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
+            st.caption(f"[디버그 GPT 파싱 오류: {e}]")
+            handled = True
+            continue  # 또는 return
 
-        # ✅ 여기부터 추가하세요: product/company alias 정리 포함 파싱
-        from utils import product_aliases, company_aliases  # 파일 상단에서 이미 import 되어 있다면 중복 X
+        # ✅ 여기부터 alias 정리 포함 파싱
+        from utils import product_aliases, company_aliases
 
         products = parsed.get("product") or []
         products = [products] if isinstance(products, str) else products
@@ -195,12 +200,7 @@ if submit and query:
         companies = [company_aliases.get(c, c) for c in companies]
 
         years = parsed.get("years") or []
-        
-        except Exception as e:
-            st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
-            st.info("예: 2024년 ECM 대표주관 순위 1~10위 알려줘")
-            st.caption(f"[디버그 정보] GPT 파싱 오류: {e}")
-            handled = True  # ✅ 여기서 바로 종료 (None 처리 끝)
+
 
     # ✅ 여기부터는 parsed가 유효한 dict라는 것이 보장됨
     if parsed.get("company") and not parsed.get("product"):
