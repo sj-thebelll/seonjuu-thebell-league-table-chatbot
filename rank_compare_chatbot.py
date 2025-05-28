@@ -367,7 +367,8 @@ if submit and query:
                 products = parsed.get("product") or []
                 if isinstance(products, str):
                     products = [products]
-                products = [p.lower() for p in products]  # ✅ 파일명 키 소문자 통일
+                from utils import product_aliases  # 파일 상단에서 한 번만 import 되어 있어야 합니다
+                products = [product_aliases.get(p.lower(), p.lower()) for p in products]
 
                 # ✅ 기업명 정규화: 소문자 + 공백 제거
                 companies_normalized = [c.lower().replace(" ", "") for c in companies]                
