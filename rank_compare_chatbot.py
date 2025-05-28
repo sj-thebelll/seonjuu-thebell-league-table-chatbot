@@ -382,6 +382,9 @@ if submit and query:
                         st.warning(f"⚠️ {product.upper()} 데이터가 없습니다.")
                         already_warned.add(product)
                         continue
+                        
+                    # ✅ 여기서 선언!
+                    companies_normalized = [c.lower().replace(" ", "") for c in companies]
 
                     # ✅ 주관사 정규화 컬럼 추가
                     df["주관사_normalized"] = df["주관사"].astype(str).str.lower().str.replace(" ", "")
