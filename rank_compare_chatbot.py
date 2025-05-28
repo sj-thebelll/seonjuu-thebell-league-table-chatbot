@@ -217,10 +217,11 @@ if submit and query:
     years = parsed.get("years") or []
 
     for product in products:
-        product = product.lower()  # ✅ 이 줄 추가!
+        product = product.lower()  # ✅ 반드시 이 한 줄을 가장 먼저 추가!
+
         df = dfs.get(product)
         if df is None or df.empty:
-            st.warning(f"⚠️ {product} 데이터가 없습니다.")
+            st.warning(f"⚠️ {product.upper()} 데이터가 없습니다.")
             continue
 
         df.columns = df.columns.str.strip()
