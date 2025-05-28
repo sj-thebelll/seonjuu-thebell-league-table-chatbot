@@ -52,7 +52,10 @@ product_aliases = {
     "sb": "sb",
     "dcm": "domestic_bond",  # ✅ 질문에 dcm이 들어오면 실제로는 이 키를 조회해야 하므로
 }
-        
+
+# 역매핑 추가
+product_display_names = {v: k.upper() for k, v in product_aliases.items()}
+
 # ✅ 공통 컬럼 정규화 함수 (모든 함수에서 공통 사용)
 def normalize_column_name(col):
     column_map = {
