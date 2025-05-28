@@ -43,6 +43,15 @@ def send_feedback_email(name, text, image_paths=None):
         smtp.login(os.getenv("GMAIL_USER"), os.getenv("GMAIL_PASS"))
         smtp.send_message(msg)
 
+# utils.py 파일 맨 위 또는 적절한 위치에 추가
+product_aliases = {
+    "ecm": "ecm",
+    "abs": "abs",
+    "fb": "fb",
+    "ipo": "ipo",
+    "sb": "sb",
+    "dcm": "domestic_bond",  # ✅ 질문에 dcm이 들어오면 실제로는 이 키를 조회해야 하므로
+}
         
 # ✅ 공통 컬럼 정규화 함수 (모든 함수에서 공통 사용)
 def normalize_column_name(col):
