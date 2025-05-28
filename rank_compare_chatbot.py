@@ -204,8 +204,10 @@ if submit and query:
     if isinstance(products, str):
         products = [products]
 
-    # ✅ product 키워드를 소문자로 통일
-    products = [p.lower() for p in products]
+    # ✅ product 키워드를 소문자로 통일하고 alias 매핑
+    from utils import product_aliases  # 맨 위에서 import 필요
+
+    products = [product_aliases.get(p.lower(), p.lower()) for p in products]
 
     companies = parsed.get("company") or []
     if isinstance(companies, str):  # 문자열이면 리스트로 변환
