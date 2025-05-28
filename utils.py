@@ -232,7 +232,9 @@ def plot_multi_line_chart_plotly(df, x_col, y_cols, color_col, title="📊 비�
         st.plotly_chart(fig, use_container_width=True, key=f"{y_col}_{color_col}_multi")
 
 # ✅ 2개 이하 기업의 순위 비교 꺾은선 그래프 함수
-def plot_rank_comparison_for_up_to_two_companies(df, companies, x_col="연도", y_col="순위"):
+def plot_rank_comparison_for_up_to_two_companies(
+    df, companies, x_col="연도", y_col="순위", product_name=None
+):
     import plotly.express as px
     import streamlit as st
     import uuid
