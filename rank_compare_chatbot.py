@@ -223,7 +223,9 @@ if submit and query:
 
         df = dfs.get(product)
         if df is None or df.empty:
-            st.warning(f"⚠️ {product.upper()} 데이터가 없습니다.")
+            if product not in already_warned:
+                st.warning(f"⚠️ {product.upper()} 데이터가 없습니다.")
+                already_warned.add(product)
             continue
 
         df.columns = df.columns.str.strip()
@@ -364,7 +366,9 @@ if submit and query:
 
                 # ✅ 기업명 정규화: 소문자 + 공백 제거
                 companies_normalized = [c.lower().replace(" ", "") for c in companies]
-
+                
+                already_warned = set()  # ✅ 중복 경고 방지용
+                
                 for product in products:
                     df = dfs.get(product)
                     if df is None or df.empty:
@@ -378,7 +382,9 @@ if submit and query:
                     chart_df = df[df["연도"].isin(years) & df["주관사_normalized"].isin(companies_normalized)].copy()
 
                     if chart_df.empty:
-                        st.warning(f"⚠️ {product.upper()} 데이터에서 {', '.join(companies)} 데이터가 없습니다.")
+                        if product not in already_warned:
+                            st.warning(f"⚠️ {product.upper()} 데이터에서 {', '.join(companies)} 데이터가 없습니다.")
+                            already_warned.add(product)
                         continue
 
                     chart_df.columns = chart_df.columns.str.strip()
