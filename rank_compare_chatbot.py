@@ -431,12 +431,14 @@ if submit and query:
 
                     elif len(companies) == 1:
                         from utils import plot_multi_metric_line_chart_for_single_company
+                        product_title = product_display_names.get(product, product.upper())  # 사람이 읽을 수 있는 이름으로 매핑
+
                         plot_multi_metric_line_chart_for_single_company(
                             chart_df,
                             company_name=companies[0],
                             x_col="연도",
                             y_cols=columns,
-                            product_name=product
+                            product_name=product_title  # 사람이 읽을 수 있는 이름 전달
                         )
                         handled = True  # ✅ 그래프 처리 완료 표시
 
