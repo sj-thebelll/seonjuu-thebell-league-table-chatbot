@@ -178,6 +178,10 @@ with st.form(key="question_form"):
 if submit and query:
     handled = False
     with st.spinner("GPT가 질문을 해석 중입니다..."):
+
+        # ✅ 여기부터 alias 정리 포함 파싱
+        from utils import product_aliases, company_aliases
+        
         try:
             parsed = parse_natural_query_with_gpt(query)
             if not isinstance(parsed, dict):
@@ -186,10 +190,7 @@ if submit and query:
             st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
             st.caption(f"[디버그 GPT 파싱 오류: {e}]")
             handled = True
-            continue  # 또는 return
-
-        # ✅ 여기부터 alias 정리 포함 파싱
-        from utils import product_aliases, company_aliases
+            return
 
         products = parsed.get("product") or []
         products = [products] if isinstance(products, str) else products
