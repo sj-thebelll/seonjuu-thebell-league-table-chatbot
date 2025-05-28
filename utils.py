@@ -199,7 +199,7 @@ def plot_multi_metric_line_chart_for_single_company(df, company_name, x_col="연
         if 항목 == "순위":
             fig.update_yaxes(autorange="reversed")
 
-        st.plotly_chart(fig, use_container_width=True, key=f"{company_name}_{항목}_line_chart")
+        st.plotly_chart(fig, use_container_width=True)
 
 
 # ✅ 여러 기업 비교용 꺾은선 그래프 함수
