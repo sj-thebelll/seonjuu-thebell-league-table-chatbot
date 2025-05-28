@@ -194,13 +194,12 @@ if submit and query:
         handle_company_year_chart_logic(parsed, dfs)
         handled = True
 
+    # ✅ 여기서 선언! 전체 루틴에서 공유됨
+    already_warned = set() 
+
     elif not any([parsed.get("product"), parsed.get("company"), parsed.get("years")]):
         st.warning("⚠️ 어떤 항목이나 증권사에 대한 요청인지 명확하지 않아요. 예: '2024년 ECM 순위', '신영증권 그래프' 등으로 질문해주세요.")
         handled = True
-
-       # ✅ 여기에 추가!
-    already_warned = set()
-
     
     # ✅ 나머지 일반 루틴 처리
     products = parsed.get("product") or []
@@ -222,7 +221,10 @@ if submit and query:
     years = parsed.get("years") or []
 
     for product in products:
-        product = product.lower()  # ✅ 반드시 이 한 줄을 가장 먼저 추가!
+        if product in already_warned:  # ✅ 중복 경고 방지용
+            continue
+
+        product = product.lower()  # ✅ 반드시 먼저 정규화
 
         df = dfs.get(product)
         if df is None or df.empty:
@@ -371,9 +373,13 @@ if submit and query:
                 companies_normalized = [c.lower().replace(" ", "") for c in companies]                
              
                 for product in products:
+                    if product in already_warned:
+                        continue
+
                     df = dfs.get(product)
                     if df is None or df.empty:
                         st.warning(f"⚠️ {product.upper()} 데이터가 없습니다.")
+                        already_warned.add(product)
                         continue
 
                     # ✅ 주관사 정규화 컬럼 추가
