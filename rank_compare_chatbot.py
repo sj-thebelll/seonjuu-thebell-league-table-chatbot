@@ -190,7 +190,6 @@ if submit and query:
             st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
             st.caption(f"[디버그 GPT 파싱 오류: {e}]")
             handled = True
-            return
 
         products = parsed.get("product") or []
         products = [products] if isinstance(products, str) else products
