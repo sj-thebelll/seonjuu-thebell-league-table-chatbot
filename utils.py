@@ -85,7 +85,7 @@ def load_dataframes(data_dir):
                     df["주관사"] = df["주관사"].astype(str).str.strip()
 
                 df["주관사"] = df["주관사"].str.replace(" ", "")
-                dfs[product.lower()] = df
+                dfs[product] = df
                 print(f"✅ [DEBUG] '{product}' 데이터 로드 성공. shape: {df.shape}")
 
             except Exception as e:
