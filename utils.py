@@ -59,7 +59,7 @@ def load_dataframes(data_dir):
 
     for filename in os.listdir(data_dir):
         if filename.endswith(".xlsx"):
-            product = filename.replace(".xlsx", "")  # 파일명 → 상품명
+            product = filename.replace(".xlsx", "").lower()
             file_path = os.path.join(data_dir, filename)
 
             try:
