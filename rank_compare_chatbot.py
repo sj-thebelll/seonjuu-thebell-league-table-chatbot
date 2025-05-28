@@ -358,7 +358,10 @@ if submit and query:
                 products = parsed.get("product") or []
                 if isinstance(products, str):
                     products = [products]
-                products = [p.lower() for p in products]  # ✅ 이 줄 꼭 필요!!!
+                products = [p.lower() for p in products]  # ✅ 파일명 키 소문자 통일
+
+                # ✅ 기업명 정규화: 소문자 + 공백 제거
+                companies_normalized = [c.lower().replace(" ", "") for c in companies]
 
                 for product in products:
                     df = dfs.get(product)
@@ -366,7 +369,12 @@ if submit and query:
                         st.warning(f"⚠️ {product.upper()} 데이터가 없습니다.")
                         continue
 
-                    chart_df = df[df["연도"].isin(years) & df["주관사"].isin(companies)].copy()
+                    # ✅ 주관사 정규화 컬럼 추가
+                    df["주관사_normalized"] = df["주관사"].astype(str).str.lower().str.replace(" ", "")
+
+                    # ✅ 연도 + 주관사_normalized 기준 필터링
+                    chart_df = df[df["연도"].isin(years) & df["주관사_normalized"].isin(companies_normalized)].copy()
+
                     if chart_df.empty:
                         st.warning(f"⚠️ {product.upper()} 데이터에서 {', '.join(companies)} 데이터가 없습니다.")
                         continue
@@ -383,7 +391,7 @@ if submit and query:
                             x_col="연도",
                             y_cols=columns,
                             title=f"📊 {product.upper()} {' vs '.join(companies)} 꺾은선 그래프",
-                            product_name=product
+                            product_name=product  # ✅ 제목에 사용됨
                         )
 
                     elif len(companies) == 1:
@@ -393,7 +401,7 @@ if submit and query:
                             company_name=companies[0],
                             x_col="연도",
                             y_cols=columns,
-                            product_name=product
+                            product_name=product  # ✅ 제목에 사용됨
                         )
 
                     else:
