@@ -354,9 +354,12 @@ if submit and query:
 
             # ✅ 그래프 요청 처리
             if parsed.get("is_chart") and companies and years:
-                for product in products:
-                    product = product.lower()  # ✅ 반드시 소문자로 변환
+                products = parsed.get("product") or []
+                if isinstance(products, str):
+                    products = [products]
+                products = [p.lower() for p in products]  # ✅ 이 줄 꼭 필요!!!
 
+                for product in products:
                     df = dfs.get(product)
                     if df is None or df.empty:
                         st.warning(f"⚠️ {product.upper()} 데이터가 없습니다.")
@@ -379,7 +382,7 @@ if submit and query:
                             x_col="연도",
                             y_cols=columns,
                             title=f"📊 {product.upper()} {' vs '.join(companies)} 꺾은선 그래프",
-                            product_name=product  # ✅ 함수에 전달
+                            product_name=product
                         )
 
                     elif len(companies) == 1:
@@ -389,7 +392,7 @@ if submit and query:
                             company_name=companies[0],
                             x_col="연도",
                             y_cols=columns,
-                            product_name=product  # ✅ 함수에 전달
+                            product_name=product
                         )
 
                     else:
