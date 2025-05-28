@@ -289,7 +289,8 @@ if submit and query:
                 columns.append("순위")
 
         for product in products:
-            df = dfs.get(product)
+            product_lower = product.lower()        # ✅ 추가
+            df = dfs.get(product_lower)    
             if df is None or df.empty:
                 st.warning(f"⚠️ {product} 데이터가 없습니다.")
                 continue
