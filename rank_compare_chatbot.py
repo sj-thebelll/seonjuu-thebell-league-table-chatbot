@@ -363,12 +363,13 @@ if submit and query:
                     if len(companies) == 2:
                         from utils import plot_multi_metric_line_chart_for_two_companies
                         plot_multi_metric_line_chart_for_two_companies(
-                          chart_df,
-                          companies=companies,
-                          x_col="연도",
-                          y_cols=columns,
-                          title=f"📊 {product} {' vs '.join(companies)} 꺾은선 그래프"
-                      )
+                            chart_df,
+                            companies=companies,
+                            x_col="연도",
+                            y_cols=columns,
+                            title=f"📊 {product} {' vs '.join(companies)} 꺾은선 그래프",
+                            product_name=product  # ✅ 추가
+                        )
 
                     elif len(companies) == 1:
                         from utils import plot_multi_metric_line_chart_for_single_company
@@ -376,7 +377,8 @@ if submit and query:
                             chart_df,
                             company_name=companies[0],
                             x_col="연도",
-                            y_cols=columns
+                            y_cols=columns,
+                            product_name=product  # ✅ 추가
                         )
 
                     else:
