@@ -182,6 +182,20 @@ if submit and query:
             parsed = parse_natural_query_with_gpt(query)
             if not isinstance(parsed, dict):  # ✅ dict가 아닌 경우 방지
                 raise ValueError("GPT 결과가 유효한 JSON 형식이 아님")
+
+        # ✅ 여기부터 추가하세요: product/company alias 정리 포함 파싱
+        from utils import product_aliases, company_aliases  # 파일 상단에서 이미 import 되어 있다면 중복 X
+
+        products = parsed.get("product") or []
+        products = [products] if isinstance(products, str) else products
+        products = [product_aliases.get(p.lower(), p.lower()) for p in products]
+
+        companies = parsed.get("company") or []
+        companies = [companies] if isinstance(companies, str) else companies
+        companies = [company_aliases.get(c, c) for c in companies]
+
+        years = parsed.get("years") or []
+        
         except Exception as e:
             st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
             st.info("예: 2024년 ECM 대표주관 순위 1~10위 알려줘")
@@ -324,7 +338,8 @@ if submit and query:
 
                 if not metric_col:
                     st.warning("⚠️ 비교할 수 있는 항목이 없습니다. (순위/건수/점유율 중 하나 필요)")
-                    handled = True  # ✅ 이 return은 반드시 이 블록 안으로 들여쓰기 되어야 함
+                    handled = True   # ✅ 이 줄을 꼭 추가해야 중복 경고 방지됨
+                    continue         # 또는 return
 
                 # ✅ 항목별 비교 함수 호출
                 if metric_col == "점유율(%)":
@@ -410,8 +425,9 @@ if submit and query:
                             x_col="연도",
                             y_cols=columns,
                             title=f"📊 {product.upper()} {' vs '.join(companies)} 꺾은선 그래프",
-                            product_name=product  # ✅ 제목에 사용됨
+                            product_name=product
                         )
+                        handled = True  # ✅ 그래프 처리 완료 표시
 
                     elif len(companies) == 1:
                         from utils import plot_multi_metric_line_chart_for_single_company
@@ -420,8 +436,9 @@ if submit and query:
                             company_name=companies[0],
                             x_col="연도",
                             y_cols=columns,
-                            product_name=product  # ✅ 제목에 사용됨
+                            product_name=product
                         )
+                        handled = True  # ✅ 그래프 처리 완료 표시
 
                     else:
                         st.info("⚠️ 그래프 비교는 최대 2개 기업까지만 지원됩니다.")
