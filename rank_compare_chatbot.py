@@ -435,39 +435,25 @@ if submit and query:
 
                     # 꺾은선 그래프 출력 (회사 1 or 2 기준 분기)
                     if len(companies) == 2:
-                        from utils import product_aliases
-                        product_display_names = {v: k.upper() for k, v in product_aliases.items()}
-
-                        product_str = product_strs[i]  # 사람이 읽을 수 있는 이름 리스트에서 가져오기
-                        product_name = product_display_names.get(product, product.upper())  # 예: 'dcm' -> 'DCM'
-
-                        from utils import plot_multi_metric_line_chart_for_two_companies
                         plot_multi_metric_line_chart_for_two_companies(
                             chart_df,
                             companies=companies,
                             x_col="연도",
                             y_cols=columns,
                             title=f"📊 [{product_str}] {' vs '.join(companies)} 꺾은선 그래프",
-                            product_name=product_str  # or product_name, 둘 중 하나만 선택
+                            product_name=product_str
                         )
                         handled = True
 
                     elif len(companies) == 1:
-                        from utils import product_aliases
-                        product_display_names = {v: k.upper() for k, v in product_aliases.items()}
-
-                        product_title = product_display_names.get(product, product.upper())
-                        product_str = product_strs[i]
-
-                        from utils import plot_multi_metric_line_chart_for_single_company
                         plot_multi_metric_line_chart_for_single_company(
                             chart_df,
                             company_name=companies[0],
                             x_col="연도",
                             y_cols=columns,
-                            product_name=product_str  # or product_title
+                            product_name=product_str
                         )
-                        handled = True
+                       handled = True
 
                     else:
                         st.info("⚠️ 그래프 비교는 최대 2개 기업까지만 지원됩니다.")
