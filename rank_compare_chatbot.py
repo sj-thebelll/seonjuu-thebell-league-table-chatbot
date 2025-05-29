@@ -379,49 +379,51 @@ if submit and query:
 
             # ✅ 그래프 요청 처리
             if parsed.get("is_chart") and companies and years:
+                # 1. product 가져오기
                 products = parsed.get("product") or []
                 if isinstance(products, str):
                     products = [products]
-                from utils import product_aliases  # 파일 상단에서 한 번만 import 되어 있어야 합니다
+
+                # 2. ✅ alias 변환: DCM, IPO 등 정규화
+                from utils import product_aliases  # 상단에 이미 되어 있으면 생략
+                products = [product_aliases.get(p.lower(), p.lower()) for p in products]
+
+                # 3. ✅ 사람이 읽을 수 있는 이름으로 표시용
                 product_display_names = {v: k.upper() for k, v in product_aliases.items()}
 
-                # ✅ 기업명 정규화: 소문자 + 공백 제거
-                companies_normalized = [c.lower().replace(" ", "") for c in companies]                
-             
+                # 4. 기업명 정규화
+                companies_normalized = [c.lower().replace(" ", "") for c in companies]
+
                 for product in products:
-                    product_lower = product.lower()
-                    if product_lower in already_warned:
+                    if product in already_warned:
                         continue
 
-                    df = dfs.get(product_lower)
+                    df = dfs.get(product)
                     if df is None or df.empty:
                         st.warning(f"⚠️ {product.upper()} 데이터가 없습니다.")
                         already_warned.add(product)
                         continue
-                        
-                    # ✅ 여기서 선언!
-                    companies_normalized = [c.lower().replace(" ", "") for c in companies]
 
-                    # ✅ 주관사 정규화 컬럼 추가
+                    df.columns = df.columns.str.strip()
+
+                    # ✅ 주관사 정규화 컬럼 생성
                     df["주관사_normalized"] = df["주관사"].astype(str).str.lower().str.replace(" ", "")
 
-                    # ✅ 연도 + 주관사_normalized 기준 필터링
-                    chart_df = df[df["연도"].isin(years) & df["주관사_normalized"].isin(companies_normalized)].copy()
-
-                    st.write("🔍 필터링 전 DF 샘플", df.head())
-                    st.write("🔍 주관사 정규화 후 비교 대상:", companies_normalized)
-                    st.write("🔍 chart_df 결과:", chart_df)
+                    # ✅ 연도 및 기업 기준 필터링
+                    chart_df = df[
+                        df["연도"].isin(years) & 
+                        df["주관사_normalized"].isin(companies_normalized)
+                    ].copy()
 
                     if chart_df.empty:
-                        if product not in already_warned:
-                            st.warning(f"⚠️ {product.upper()} 데이터에서 {', '.join(companies)} 데이터가 없습니다.")
-                            already_warned.add(product)
+                        st.warning(f"⚠️ {product.upper()} 데이터에서 {', '.join(companies)} 데이터가 없습니다.")
+                        already_warned.add(product)
                         continue
 
-                    chart_df.columns = chart_df.columns.str.strip()
                     chart_df = chart_df.sort_values(["주관사", "연도"])
                     chart_df["연도"] = chart_df["연도"].astype(int)
 
+                    # ✅ 꺾은선 그래프 출력 (회사 1 or 2 기준 분기)
                     if len(companies) == 2:
                         from utils import plot_multi_metric_line_chart_for_two_companies
                         plot_multi_metric_line_chart_for_two_companies(
@@ -429,27 +431,25 @@ if submit and query:
                             companies=companies,
                             x_col="연도",
                             y_cols=columns,
-                            title=f"📊 {product.upper()} {' vs '.join(companies)} 꺾은선 그래프",
+                            title=f"📊 [{product_display_names.get(product, product.upper())}] {' vs '.join(companies)} 꺾은선 그래프",
                             product_name=product
                         )
-                        handled = True  # ✅ 그래프 처리 완료 표시
+                        handled = True
 
                     elif len(companies) == 1:
                         from utils import plot_multi_metric_line_chart_for_single_company
-                        product_title = product_display_names.get(product, product.upper())  # 사람이 읽을 수 있는 이름으로 매핑
-
+                        product_title = product_display_names.get(product, product.upper())
                         plot_multi_metric_line_chart_for_single_company(
                             chart_df,
                             company_name=companies[0],
                             x_col="연도",
                             y_cols=columns,
-                            product_name=product_title  # 사람이 읽을 수 있는 이름 전달
+                            product_name=product_title
                         )
-                        handled = True  # ✅ 그래프 처리 완료 표시
+                        handled = True
 
                     else:
                         st.info("⚠️ 그래프 비교는 최대 2개 기업까지만 지원됩니다.")
-
 
 # ✅ 피드백 폼 UI
 st.markdown("## 🛠️ 피드백 보내기")
