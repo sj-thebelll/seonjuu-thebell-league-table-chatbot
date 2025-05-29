@@ -407,6 +407,10 @@ if submit and query:
                     # ✅ 연도 + 주관사_normalized 기준 필터링
                     chart_df = df[df["연도"].isin(years) & df["주관사_normalized"].isin(companies_normalized)].copy()
 
+                    st.write("🔍 필터링 전 DF 샘플", df.head())
+                    st.write("🔍 주관사 정규화 후 비교 대상:", companies_normalized)
+                    st.write("🔍 chart_df 결과:", chart_df)
+
                     if chart_df.empty:
                         if product not in already_warned:
                             st.warning(f"⚠️ {product.upper()} 데이터에서 {', '.join(companies)} 데이터가 없습니다.")
