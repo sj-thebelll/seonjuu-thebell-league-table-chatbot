@@ -191,9 +191,15 @@ if submit and query:
             st.caption(f"[디버그 GPT 파싱 오류: {e}]")
             handled = True
 
+        from utils import product_aliases
+        product_display_names = {v: k.upper() for k, v in product_aliases.items()}  # ⬅ 표시용 이름 매핑 추가
+
         products = parsed.get("product") or []
         products = [products] if isinstance(products, str) else products
         products = [product_aliases.get(p.lower(), p.lower()) for p in products]
+
+        # 표시용 이름 저장 (예: 'dcm' ➝ 'DOMESTIC_BOND' ➝ 'DCM')
+        product_strs = [product_display_names.get(p, p.upper()) for p in products]
 
         companies = parsed.get("company") or []
         companies = [companies] if isinstance(companies, str) else companies
@@ -357,9 +363,12 @@ if submit and query:
                         product_str = product if isinstance(product, str) else ', '.join(product) if product else "(상품군 없음)"
                         st.warning(f"⚠️ {y1}, {y2}년 {product_str} 데이터에서 {', '.join(missing)} 증권사의 실적을 찾을 수 없습니다.")
 
+                from utils import product_aliases
+                product_display_names = {v: k.upper() for k, v in product_aliases.items()}
+
                 # ✅ 출력 (중복 없이)
                 if isinstance(product, list):
-                    product_str = ', '.join([product_display_names.get(p, p.upper()) for p in product]) if product else "(상품군 없음)"
+    product_str = ', '.join([product_display_names.get(p, p.upper()) for p in product]) if product else "(상품군 없음)"
                 elif isinstance(product, str):
                     product_str = product_display_names.get(product, product.upper())
                 else:
@@ -426,26 +435,32 @@ if submit and query:
                     # ✅ 꺾은선 그래프 출력 (회사 1 or 2 기준 분기)
                     if len(companies) == 2:
                         from utils import plot_multi_metric_line_chart_for_two_companies
+                        
+                        product_str = product_strs[i]  # 사람이 읽을 수 있는 이름
+                        
                         plot_multi_metric_line_chart_for_two_companies(
-                            chart_df,
-                            companies=companies,
-                            x_col="연도",
-                            y_cols=columns,
-                            title=f"📊 [{product_display_names.get(product, product.upper())}] {' vs '.join(companies)} 꺾은선 그래프",
-                            product_name=product
-                        )
+                                chart_df,
+                                companies=companies,
+                                x_col="연도",
+                                y_cols=columns,
+                                title=f"📊 [{product_str}] {' vs '.join(companies)} 꺾은선 그래프",
+                                product_name=product_str  # 표시용 이름 전달
+                            )
                         handled = True
 
                     elif len(companies) == 1:
                         from utils import plot_multi_metric_line_chart_for_single_company
                         product_title = product_display_names.get(product, product.upper())
+
+                        product_str = product_strs[i]
+                        
                         plot_multi_metric_line_chart_for_single_company(
-                            chart_df,
-                            company_name=companies[0],
-                            x_col="연도",
-                            y_cols=columns,
-                            product_name=product_title
-                        )
+                                chart_df,
+                                company_name=companies[0],
+                                x_col="연도",
+                                y_cols=columns,
+                                product_name=product_str
+                            )
                         handled = True
 
                     else:
