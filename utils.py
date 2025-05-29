@@ -50,7 +50,7 @@ product_aliases = {
     "fb": "fb",
     "ipo": "ipo",
     "sb": "sb",
-    "dcm": "domestic_bond",  # ✅ 질문에 dcm이 들어오면 실제로는 이 키를 조회해야 하므로
+    "dcm": "dcm",
 }
 
 # ✅ product_aliases와 함께 상단에서 import 후 선언
