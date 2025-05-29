@@ -389,10 +389,11 @@ if submit and query:
                 companies_normalized = [c.lower().replace(" ", "") for c in companies]                
              
                 for product in products:
-                    if product in already_warned:
+                    product_lower = product.lower()
+                    if product_lower in already_warned:
                         continue
 
-                    df = dfs.get(product)
+                    df = dfs.get(product_lower)
                     if df is None or df.empty:
                         st.warning(f"⚠️ {product.upper()} 데이터가 없습니다.")
                         already_warned.add(product)
