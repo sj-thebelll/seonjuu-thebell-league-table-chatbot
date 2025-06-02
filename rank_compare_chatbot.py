@@ -434,29 +434,29 @@ if submit and query:
                     chart_df["연도"] = chart_df["연도"].astype(int)
 
     # 꺾은선 그래프 출력 (회사 1 or 2 기준 분기)
-     if len(companies) == 2:
+    if len(companies) == 2:
         plot_multi_metric_line_chart_for_two_companies(
-               chart_df,
-               companies=companies,
-               x_col="연도",
-              y_cols=columns,
-              title=f"📊 [{product_str}] {' vs '.join(companies)} 꺾은선 그래프",
-              product_name=product_str
-          )
-           handled = True
-
-     elif len(companies) == 1:
-         plot_multi_metric_line_chart_for_single_company(
             chart_df,
-               company_name=companies[0],
-               x_col="연도",
-               y_cols=columns,
-               product_name=product_str
+            companies=companies,
+            x_col="연도",
+            y_cols=columns,
+            title=f"📊 [{product_str}] {' vs '.join(companies)} 꺾은선 그래프",
+            product_name=product_str
+        )
+        handled = True
+
+    elif len(companies) == 1:
+        plot_multi_metric_line_chart_for_single_company(
+            chart_df,
+            company_name=companies[0],
+            x_col="연도",
+            y_cols=columns,
+            product_name=product_str
          )
         handled = True
 
-                    else:
-                        st.info("⚠️ 그래프 비교는 최대 2개 기업까지만 지원됩니다.")
+    else:
+        st.info("⚠️ 그래프 비교는 최대 2개 기업까지만 지원됩니다.")
 
 # ✅ 피드백 폼 UI
 st.markdown("## 🛠️ 피드백 보내기")
