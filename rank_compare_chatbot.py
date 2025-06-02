@@ -433,6 +433,9 @@ if submit and query:
                     chart_df = chart_df.sort_values(["주관사", "연도"])
                     chart_df["연도"] = chart_df["연도"].astype(int)
 
+    # 루프 밖에서도 사용할 수 있도록 product_str 정의
+    product_str = product_display_names.get(products[0], products[0].upper()) if products else "(상품군 없음)"
+
     # 꺾은선 그래프 출력 (회사 1 or 2 기준 분기)
     if len(companies) == 2:
         plot_multi_metric_line_chart_for_two_companies(
