@@ -214,7 +214,13 @@ if submit and query:
         handle_company_year_chart_logic(parsed, dfs)
         handled = True
 
-    elif parsed.get("company") and parsed.get("years") and not parsed.get("is_chart"):
+    elif (
+        parsed.get("company") and
+        parsed.get("years") and
+        not parsed.get("is_chart") and
+        not parsed.get("top_n") and
+        not parsed.get("rank_range")
+    ):
         st.write("🧾 parsed 결과 확인:", parsed)
         st.write("🔥 최고 순위 블록 실행됨")
         target_company = companies[0]
