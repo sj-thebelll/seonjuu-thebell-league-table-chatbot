@@ -215,6 +215,7 @@ if submit and query:
         handled = True
 
     elif parsed.get("company") and parsed.get("years") and not parsed.get("is_chart"):
+        st.write("🔥 최고 순위 블록 실행됨")
         target_company = companies[0]
         target_year = years[0]
 
