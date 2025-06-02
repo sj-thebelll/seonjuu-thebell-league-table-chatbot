@@ -386,80 +386,78 @@ if submit and query:
                     st.subheader(f"📉 {y1} → {y2} {product_str} 주관 순위 하락{target_str}")
                     st.dataframe(하락.reset_index(drop=True))
 
-            # ✅ 그래프 요청 처리
-            if parsed.get("is_chart") and companies and years:
-                # 1. product 가져오기
-                products = parsed.get("product") or []
-                if isinstance(products, str):
-                    products = [products]
+    # ✅ 그래프 요청이 있을 때만 아래 로직 전체 수행
+    if parsed.get("is_chart") and companies and years:
+        # 1. product 가져오기
+        products = parsed.get("product") or []
+        if isinstance(products, str):
+            products = [products]
 
-                # 2. ✅ alias 변환: DCM, IPO 등 정규화
-                from utils import product_aliases  # 상단에서 이미 했으면 생략 가능
-                product_display_names = {v: k.upper() for k, v in product_aliases.items()}  # 사람이 읽을 수 있는 이름
+        # 2. ✅ alias 변환: DCM, IPO 등 정규화
+        from utils import product_aliases  # 상단에서 이미 했으면 생략 가능
+        product_display_names = {v: k.upper() for k, v in product_aliases.items()}  # 사람이 읽을 수 있는 이름
 
-                products = [product_aliases.get(p.lower(), p.lower()) for p in products]    # 내부용 키 정규화
-                product_strs = [product_display_names.get(p, p.upper()) for p in products]  # 그래프 제목용 표시 이름 리스트
+        products = [product_aliases.get(p.lower(), p.lower()) for p in products]    # 내부용 키 정규화
+        product_strs = [product_display_names.get(p, p.upper()) for p in products]  # 그래프 제목용 표시 이름 리스트
 
+        # 3. 기업명 정규화
+        companies_normalized = [c.lower().replace(" ", "") for c in companies]
 
-                # 4. 기업명 정규화
-                companies_normalized = [c.lower().replace(" ", "") for c in companies]
+        for product, product_str in zip(products, product_strs):
+            if product in already_warned:
+                continue
 
-                for product in products:
-                    if product in already_warned:
-                        continue
+            df = dfs.get(product)
+            if df is None or df.empty:
+                st.warning(f"⚠️ {product.upper()} 데이터가 없습니다.")
+                already_warned.add(product)
+                continue
 
-                    df = dfs.get(product)
-                    if df is None or df.empty:
-                        st.warning(f"⚠️ {product.upper()} 데이터가 없습니다.")
-                        already_warned.add(product)
-                        continue
+            df.columns = df.columns.str.strip()
 
-                    df.columns = df.columns.str.strip()
+            # ✅ 주관사 정규화 컬럼 생성
+            df["주관사_normalized"] = df["주관사"].astype(str).str.lower().str.replace(" ", "")
 
-                    # ✅ 주관사 정규화 컬럼 생성
-                    df["주관사_normalized"] = df["주관사"].astype(str).str.lower().str.replace(" ", "")
+            # ✅ 연도 및 기업 기준 필터링
+            chart_df = df[
+                df["연도"].isin(years) & 
+                df["주관사_normalized"].isin(companies_normalized)
+            ].copy()
 
-                    # ✅ 연도 및 기업 기준 필터링
-                    chart_df = df[
-                        df["연도"].isin(years) & 
-                        df["주관사_normalized"].isin(companies_normalized)
-                    ].copy()
+            if chart_df.empty:
+                st.warning(f"⚠️ {product.upper()} 데이터에서 {', '.join(companies)} 데이터가 없습니다.")
+                already_warned.add(product)
+                continue
 
-                    if chart_df.empty:
-                        st.warning(f"⚠️ {product.upper()} 데이터에서 {', '.join(companies)} 데이터가 없습니다.")
-                        already_warned.add(product)
-                        continue
+            chart_df = chart_df.sort_values(["주관사", "연도"])
+            chart_df["연도"] = chart_df["연도"].astype(int)
 
-                    chart_df = chart_df.sort_values(["주관사", "연도"])
-                    chart_df["연도"] = chart_df["연도"].astype(int)
+            # ✅ product_str은 zip에서 이미 확보됨
 
-    # 루프 밖에서도 사용할 수 있도록 product_str 정의
-    product_str = product_display_names.get(products[0], products[0].upper()) if products else "(상품군 없음)"
+            # ✅ 꺾은선 그래프 출력 (회사 수에 따라 분기)
+            if len(companies) == 2:
+                plot_multi_metric_line_chart_for_two_companies(
+                    chart_df,
+                    companies=companies,
+                    x_col="연도",
+                    y_cols=columns,
+                    title=f"📊 [{product_str}] {' vs '.join(companies)} 꺾은선 그래프",
+                    product_name=product_str
+                )
+                handled = True
 
-    # 꺾은선 그래프 출력 (회사 1 or 2 기준 분기)
-    if len(companies) == 2:
-        plot_multi_metric_line_chart_for_two_companies(
-            chart_df,
-            companies=companies,
-            x_col="연도",
-            y_cols=columns,
-            title=f"📊 [{product_str}] {' vs '.join(companies)} 꺾은선 그래프",
-            product_name=product_str
-        )
-        handled = True
+            elif len(companies) == 1:
+                plot_multi_metric_line_chart_for_single_company(
+                    chart_df,
+                    company_name=companies[0],
+                    x_col="연도",
+                    y_cols=columns,
+                    product_name=product_str
+                )
+                handled = True
 
-    elif len(companies) == 1:
-        plot_multi_metric_line_chart_for_single_company(
-            chart_df,
-            company_name=companies[0],
-            x_col="연도",
-            y_cols=columns,
-            product_name=product_str
-         )
-        handled = True
-
-    else:
-        st.info("⚠️ 그래프 비교는 최대 2개 기업까지만 지원됩니다.")
+            else:
+                st.info("⚠️ 그래프 비교는 최대 2개 기업까지만 지원됩니다.")
 
 # ✅ 피드백 폼 UI
 st.markdown("## 🛠️ 피드백 보내기")
