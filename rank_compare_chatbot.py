@@ -246,7 +246,7 @@ if submit and query:
             handled = True
         else:
             st.warning(f"⚠️ {target_year}년 {target_company}의 순위 데이터가 없습니다.")
-            handled = True
+        handled = True
 
     # ✅ 여전히 회사명만 있고 연도 없음 or 그래프 요청 등은 기존 루틴대로 분기
     elif parsed.get("company") and not parsed.get("product"):
