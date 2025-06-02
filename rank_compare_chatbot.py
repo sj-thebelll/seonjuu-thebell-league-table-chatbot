@@ -214,7 +214,7 @@ if submit and query:
         handle_company_year_chart_logic(parsed, dfs)
         handled = True
 
-    elif parsed.get("company") and parsed.get("years") and not parsed.get("product") and not parsed.get("is_chart"):
+    elif parsed.get("company") and parsed.get("years") and not parsed.get("is_chart"):
         target_company = companies[0]
         target_year = years[0]
 
