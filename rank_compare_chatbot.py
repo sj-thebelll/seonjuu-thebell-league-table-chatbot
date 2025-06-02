@@ -209,7 +209,7 @@ if submit and query:
 
 
     # ✅ 여기부터는 parsed가 유효한 dict라는 것이 보장됨
-    if parsed.get("company") and not parsed.get("product"):
+    if parsed.get("company") and not parsed.get("product") and not parsed.get("years") and not parsed.get("is_chart"):
         from improved_company_year_chart_logic import handle_company_year_chart_logic
         handle_company_year_chart_logic(parsed, dfs)
         handled = True
