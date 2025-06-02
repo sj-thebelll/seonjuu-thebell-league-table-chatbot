@@ -208,26 +208,18 @@ if submit and query:
         years = parsed.get("years") or []
 
 
-    # ✅ 여기부터는 parsed가 유효한 dict라는 것이 보장됨
-    if parsed.get("company") and not parsed.get("product") and not parsed.get("years") and not parsed.get("is_chart"):
-        from improved_company_year_chart_logic import handle_company_year_chart_logic
-        handle_company_year_chart_logic(parsed, dfs)
-        handled = True
+    # ✅ 211~231줄을 아래로 교체하세요
 
-    elif (
+    if (
         parsed.get("company") and
         parsed.get("years") and
         not parsed.get("is_chart") and
         not parsed.get("top_n") and
         not parsed.get("rank_range")
     ):
-        st.write("🧾 parsed 결과 확인:", parsed)
-        st.write("🔥 최고 순위 블록 실행됨")
-        target_company = companies[0]
-        target_year = years[0]
-
-        top_result = None
-        top_product = None
+        from improved_company_year_chart_logic import handle_company_year_chart_logic
+        handle_company_year_chart_logic(parsed, dfs)
+        handled = True
 
         for product, df in dfs.items():
             if df is None or df.empty:
