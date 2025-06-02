@@ -208,8 +208,7 @@ if submit and query:
         years = parsed.get("years") or []
 
 
-    # ✅ 211~231줄을 아래로 교체하세요
-
+    # ✅ 여기부터는 parsed가 유효한 dict라는 것이 보장됨
     if (
         parsed.get("company") and
         parsed.get("years") and
@@ -220,6 +219,13 @@ if submit and query:
         from improved_company_year_chart_logic import handle_company_year_chart_logic
         handle_company_year_chart_logic(parsed, dfs)
         handled = True
+
+        # ✅ 최고 순위 뽑기 추가
+        target_company = companies[0]
+        target_year = years[0]
+
+        top_result = None
+        top_product = None
 
         for product, df in dfs.items():
             if df is None or df.empty:
