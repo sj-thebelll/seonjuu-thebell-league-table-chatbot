@@ -215,35 +215,35 @@ if submit and query:
         handled = True
 
     elif parsed.get("company") and parsed.get("years") and not parsed.get("product") and not parsed.get("is_chart"):
-    target_company = companies[0]
-    target_year = years[0]
+        target_company = companies[0]
+        target_year = years[0]
 
-    top_result = None
-    top_product = None
+        top_result = None
+        top_product = None
 
-    for product, df in dfs.items():
-        if df is None or df.empty:
-            continue
+        for product, df in dfs.items():
+            if df is None or df.empty:
+                continue
 
-        df.columns = df.columns.str.strip()
-        df_year = df[df["연도"] == target_year]
-        df_year = df_year[df_year["주관사"] == target_company]
+            df.columns = df.columns.str.strip()
+            df_year = df[df["연도"] == target_year]
+            df_year = df_year[df_year["주관사"] == target_company]
 
-        if not df_year.empty:
-            row = df_year.sort_values("순위").head(1)
-            if top_result is None or row.iloc[0]["순위"] < top_result.iloc[0]["순위"]:
-                top_result = row.copy()
-                top_product = product
+            if not df_year.empty:
+                row = df_year.sort_values("순위").head(1)
+                if top_result is None or row.iloc[0]["순위"] < top_result.iloc[0]["순위"]:
+                    top_result = row.copy()
+                    top_product = product
 
-    if top_result is not None:
-        best_row = top_result.iloc[0]
-        best_rank = int(best_row["순위"])
-        st.success(f"🏆 {target_year}년 **{target_company}**의 최고 순위는 **{top_product.upper()}**에서 **{best_rank}위**입니다.")
-        st.dataframe(top_result[["연도", "순위", "주관사", "금액(원)", "건수", "점유율(%)"]])
-        handled = True
-    else:
-        st.warning(f"⚠️ {target_year}년 {target_company}의 순위 데이터가 없습니다.")
-        handled = True
+        if top_result is not None:
+            best_row = top_result.iloc[0]
+            best_rank = int(best_row["순위"])
+            st.success(f"🏆 {target_year}년 **{target_company}**의 최고 순위는 **{top_product.upper()}**에서 **{best_rank}위**입니다.")
+            st.dataframe(top_result[["연도", "순위", "주관사", "금액(원)", "건수", "점유율(%)"]])
+            handled = True
+        else:
+            st.warning(f"⚠️ {target_year}년 {target_company}의 순위 데이터가 없습니다.")
+            handled = True
     
     elif not any([parsed.get("product"), parsed.get("company"), parsed.get("years")]):
         st.warning("⚠️ 어떤 항목이나 증권사에 대한 요청인지 명확하지 않아요. 예: '2024년 ECM 순위', '신영증권 그래프' 등으로 질문해주세요.")
