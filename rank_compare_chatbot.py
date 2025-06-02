@@ -248,6 +248,29 @@ if submit and query:
             st.warning(f"⚠️ {target_year}년 {target_company}의 순위 데이터가 없습니다.")
         handled = True
 
+    # ✅ 최고 순위 1건 별도 출력 (중복 방지 + 후속 출력)
+    if parsed.get("company") and parsed.get("years") and not parsed.get("product"):
+        target_company = companies[0]
+        target_year = years[0]
+
+        all_rows = []
+        for product, df in dfs.items():
+            if df is None or df.empty:
+                continue
+            df.columns = df.columns.str.strip()
+            df_year = df[df["연도"] == target_year]
+            df_year = df_year[df_year["주관사"] == target_company]
+            if not df_year.empty:
+                row = df_year.sort_values("순위").head(1).copy()
+                row["상품"] = product
+                all_rows.append(row)
+
+        if all_rows:
+            result_df = pd.concat(all_rows)
+            top_row = result_df.sort_values("순위").iloc[0]
+            st.success(f"🏆 {target_year}년 **{target_company}**의 최고 순위는 **{top_row['상품'].upper()}**에서 **{int(top_row['순위'])}위**입니다.")
+            st.dataframe(top_row[["연도", "순위", "주관사", "금액(원)", "건수", "점유율(%)"]])
+
     # ✅ 여전히 회사명만 있고 연도 없음 or 그래프 요청 등은 기존 루틴대로 분기
     elif parsed.get("company") and not parsed.get("product"):
         from improved_company_year_chart_logic import handle_company_year_chart_logic
