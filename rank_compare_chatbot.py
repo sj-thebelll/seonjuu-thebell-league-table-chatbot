@@ -257,14 +257,11 @@ if submit and query:
             best_rank = int(best_row["순위"])
             st.success(f"🏆 {target_year}년 **{target_company}**의 최고 순위는 **{top_product.upper()}**에서 **{best_rank}위**입니다.")
             st.dataframe(top_result[["연도", "순위", "주관사", "금액(원)", "건수", "점유율(%)"]])
-        else:
-            st.warning(f"⚠️ {target_year}년 {target_company}의 순위 데이터가 없습니다.")
-    
-        handled = True
-        return  # ✅ 일반 출력 루틴 차단
+            handled = True
+            return  # ✅ 여기서 블록이 끝남
 
-                else:
-                    st.warning(f"⚠️ {y}년 데이터에서 {', '.join(companies)} 찾을 수 없습니다.")
+        # else 블록은 제거하고 아래처럼 독립 처리
+        st.warning(f"⚠️ {target_year}년 {target_company}의 순위 데이터가 없습니다.")
                     
             elif not companies and (parsed.get("top_n") or parsed.get("rank_range")):
                 st.subheader(f"📊 {y}년 {product} 상위 주관사")
