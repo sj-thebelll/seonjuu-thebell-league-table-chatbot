@@ -260,9 +260,9 @@ if submit and query:
             handled = True
             return  # ✅ 여기서 블록이 끝남
 
-        # else 블록은 제거하고 아래처럼 독립 처리
-        st.warning(f"⚠️ {target_year}년 {target_company}의 순위 데이터가 없습니다.")
-                    
+        else:
+            st.warning(f"⚠️ {target_year}년 {target_company}의 순위 데이터가 없습니다.")
+
             if not companies and (parsed.get("top_n") or parsed.get("rank_range")):
                 st.subheader(f"📊 {y}년 {product} 상위 주관사")
                 if parsed.get("rank_range"):
