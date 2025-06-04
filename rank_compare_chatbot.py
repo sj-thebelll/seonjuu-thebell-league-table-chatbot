@@ -251,7 +251,7 @@ if submit and query:
 
    
     # ✅ 여전히 회사명만 있고 연도 없음 or 그래프 요청 등은 기존 루틴대로 분기
-    elif parsed.get("company") and not parsed.get("product"):
+    if parsed.get("company") and not parsed.get("product"):
         from improved_company_year_chart_logic import handle_company_year_chart_logic
         handle_company_year_chart_logic(parsed, dfs)
         handled = True
