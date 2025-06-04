@@ -258,10 +258,10 @@ if submit and query:
             st.success(f"🏆 {target_year}년 **{target_company}**의 최고 순위는 **{top_product.upper()}**에서 **{best_rank}위**입니다.")
             st.dataframe(top_result[["연도", "순위", "주관사", "금액(원)", "건수", "점유율(%)"]])
             handled = True
-            return  # ✅ 여기서 블록이 끝남
 
         else:
             st.warning(f"⚠️ {target_year}년 {target_company}의 순위 데이터가 없습니다.")
+            handled = True  # 이 위치에 handled = True 유지
 
             if not companies and (parsed.get("top_n") or parsed.get("rank_range")):
                 st.subheader(f"📊 {y}년 {product} 상위 주관사")
