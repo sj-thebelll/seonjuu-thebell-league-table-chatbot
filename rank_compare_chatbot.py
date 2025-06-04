@@ -191,9 +191,7 @@ if submit and query:
             st.caption(f"[디버그 GPT 파싱 오류: {e}]")
             handled = True
             parsed = {}  # 안전 조치
-            return
-
-        
+       
         # ✅ 최고 순위 1건만 출력 (상품 지정 없이)
         if (
             parsed.get("company") and
