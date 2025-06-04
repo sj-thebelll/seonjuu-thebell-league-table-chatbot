@@ -178,7 +178,22 @@ with st.form(key="question_form"):
 if submit and query:
     handled = False
     with st.spinner("GPT가 질문을 해석 중입니다..."):
+        
+        # ✅ 여기부터 alias 정리 포함 파싱
+        from utils import product_aliases, company_aliases
+        
+        try:
+            parsed = parse_natural_query_with_gpt(query)
+            if not isinstance(parsed, dict):
+                raise ValueError("GPT 결과가 유효한 JSON 형식이 아님")
+        except Exception as e:
+            st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
+            st.caption(f"[디버그 GPT 파싱 오류: {e}]")
+            handled = True
+            parsed = {}  # 안전 조치
+            return
 
+        
         # ✅ 최고 순위 1건만 출력 (상품 지정 없이)
         if (
             parsed.get("company") and
@@ -217,18 +232,6 @@ if submit and query:
             else:
                 st.warning(f"⚠️ {target_year}년 {target_company}의 순위 데이터가 없습니다.")
             
-            handled = True
-
-        # ✅ 여기부터 alias 정리 포함 파싱
-        from utils import product_aliases, company_aliases
-        
-        try:
-            parsed = parse_natural_query_with_gpt(query)
-            if not isinstance(parsed, dict):
-                raise ValueError("GPT 결과가 유효한 JSON 형식이 아님")
-        except Exception as e:
-            st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
-            st.caption(f"[디버그 GPT 파싱 오류: {e}]")
             handled = True
 
         from utils import product_aliases
