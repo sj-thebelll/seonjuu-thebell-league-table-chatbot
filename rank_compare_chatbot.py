@@ -179,6 +179,48 @@ if submit and query:
     handled = False
     with st.spinner("GPT가 질문을 해석 중입니다..."):
 
+        # ✅ 최고 순위 1건만 출력 (상품 지정 없이)
+        if (
+            parsed.get("company") and
+            parsed.get("years") and
+            not parsed.get("product") and
+            not parsed.get("is_chart") and
+            not parsed.get("is_compare") and
+            not parsed.get("top_n") and
+            not parsed.get("rank_range")
+        ):
+            target_company = companies[0]
+            target_year = years[0]
+
+            top_result = None
+            top_product = None
+
+            for product, df in dfs.items():
+                if df is None or df.empty:
+                    continue
+
+                df.columns = df.columns.str.strip()
+                df_year = df[df["연도"] == target_year]
+                df_year = df_year[df_year["주관사"] == target_company]
+
+                if not df_year.empty:
+                    row = df_year.sort_values("순위").head(1)
+                    if top_result is None or row.iloc[0]["순위"] < top_result.iloc[0]["순위"]:
+                        top_result = row.copy()
+                        top_product = product
+
+            if top_result is not None:
+                best_row = top_result.iloc[0]
+                best_rank = int(best_row["순위"])
+                st.success(f"🏆 {target_year}년 **{target_company}**의 최고 순위는 **{top_product.upper()}**에서 **{best_rank}위**입니다.")
+                st.dataframe(top_result[["연도", "순위", "주관사", "금액(원)", "건수", "점유율(%)"]])
+            else:
+                st.warning(f"⚠️ {target_year}년 {target_company}의 순위 데이터가 없습니다.")
+            
+            handled = True
+            return  # ✅ 이후 루틴 차단
+            
+
         # ✅ 여기부터 alias 정리 포함 파싱
         from utils import product_aliases, company_aliases
         
@@ -206,47 +248,6 @@ if submit and query:
         companies = [company_aliases.get(c, c) for c in companies]
 
         years = parsed.get("years") or []
-
-
-    # ✅ 여기부터는 parsed가 유효한 dict라는 것이 보장됨
-    if (
-        parsed.get("company") and
-        parsed.get("years") and
-        not parsed.get("product") and
-        not parsed.get("is_chart") and
-        not parsed.get("is_compare") and
-        not parsed.get("top_n") and
-        not parsed.get("rank_range")
-    ):
-        target_company = companies[0]
-        target_year = years[0]
-
-        top_result = None
-        top_product = None
-
-        for product, df in dfs.items():
-            if df is None or df.empty:
-                continue
-
-            df.columns = df.columns.str.strip()
-            df_year = df[df["연도"] == target_year]
-            df_year = df_year[df_year["주관사"] == target_company]
-
-            if not df_year.empty:
-                row = df_year.sort_values("순위").head(1)
-                if top_result is None or row.iloc[0]["순위"] < top_result.iloc[0]["순위"]:
-                    top_result = row.copy()
-                    top_product = product
-
-        if top_result is not None:
-            best_row = top_result.iloc[0]
-            best_rank = int(best_row["순위"])
-            st.success(f"🏆 {target_year}년 **{target_company}**의 최고 순위는 **{top_product.upper()}**에서 **{best_rank}위**입니다.")
-            st.dataframe(top_result[["연도", "순위", "주관사", "금액(원)", "건수", "점유율(%)"]])
-            handled = True
-        else:
-            st.warning(f"⚠️ {target_year}년 {target_company}의 순위 데이터가 없습니다.")
-        handled = True
 
    
     # ✅ 여전히 회사명만 있고 연도 없음 or 그래프 요청 등은 기존 루틴대로 분기
