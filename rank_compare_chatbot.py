@@ -232,11 +232,11 @@ if submit and query:
         not parsed.get("top_n") and
         not parsed.get("rank_range")
     ):
-    target_company = parsed.get("company")[0] if isinstance(parsed.get("company"), list) else parsed.get("company")
-    target_year = parsed.get("years")[0]
+        target_company = parsed.get("company")[0] if isinstance(parsed.get("company"), list) else parsed.get("company")
+        target_year = parsed.get("years")[0]
 
-    top_result = None
-    top_product = None
+        top_result = None
+        top_product = None
 
         for product, df in dfs.items():
             if df is None or df.empty:
