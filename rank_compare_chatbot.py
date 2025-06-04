@@ -218,8 +218,6 @@ if submit and query:
                 st.warning(f"⚠️ {target_year}년 {target_company}의 순위 데이터가 없습니다.")
             
             handled = True
-            return  # ✅ 이후 루틴 차단
-            
 
         # ✅ 여기부터 alias 정리 포함 파싱
         from utils import product_aliases, company_aliases
