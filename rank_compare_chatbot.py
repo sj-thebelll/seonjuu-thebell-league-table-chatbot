@@ -355,14 +355,16 @@ if submit and query:
                 if not 상승.empty:
                     상승 = 상승[["주관사", f"{y1}년 {metric_col}", f"{y2}년 {metric_col}", "변화"]]
                     target_str = f" (대상: {', '.join(companies)})" if companies else ""
-                    st.subheader(f"📈 {y1} → {y2} {product_str} 주관 순위 상승{target_str}")
+                    metric_label = "점유율" if metric_col == "점유율(%)" else "순위"
+                    st.subheader(f"📈 {y1} → {y2} {product_str} 주관 {metric_label} 상승{target_str}")
                     st.dataframe(상승.reset_index(drop=True))
                     handled = True  # ✅ 여기 추가
 
                 if not 하락.empty:
                     하락 = 하락[["주관사", f"{y1}년 {metric_col}", f"{y2}년 {metric_col}", "변화"]]
                     target_str = f" (대상: {', '.join(companies)})" if companies else ""
-                    st.subheader(f"📉 {y1} → {y2} {product_str} 주관 순위 하락{target_str}")
+                    metric_label = "점유율" if metric_col == "점유율(%)" else "순위"
+                    st.subheader(f"📉 {y1} → {y2} {product_str} 주관 {metric_label} 하락{target_str}")
                     st.dataframe(하락.reset_index(drop=True))
                     handled = True  # ✅ 여기 추가
 
