@@ -60,7 +60,7 @@ def parse_natural_query_with_gpt(query):
             'true/false/null은 반드시 소문자 그대로 사용하고, 문자열은 큰따옴표("")로 감싸줘. '
             '\n\n'
             '- years: [2023, 2024] 형태\n'
-            '- product: ECM, ABS, FB, 국내채권 중 하나 또는 여러 개 (문맥 유추 가능)\n'
+            '- product: ECM, DCM, ABS, FB, IPO 중 하나 또는 여러 개 (문맥 또는 명시된 키워드 기반 추출)\n'
             '- columns: ["금액", "건수", "점유율"] 중 하나 이상\n'
             '- company: 증권사명 (한 개 또는 여러 개 리스트 가능)\n'
             '- top_n: 숫자 (선택적)\n'
@@ -74,9 +74,15 @@ def parse_natural_query_with_gpt(query):
             '3. "그래프", "추이", "변화" 등의 표현이 있으면 "is_chart": true 로 설정할 것\n'
             '4. "비교", "누가 올랐어?", "누가 떨어졌어?" 등의 표현이 있으면 "is_compare": true 로 설정할 것\n'
             '5. 연도가 명시되어 있을 경우 "years" 배열로 정확히 추출할 것\n'
-            '6. ECM, ABS, FB, 국내채권 등의 키워드가 있으면 반드시 "product" 필드에 포함할 것\n'
+            '6. 질문에 다음 키워드가 포함되면 반드시 해당 "product"로 처리할 것:\n'
+            '   - "ABS", "FB" → DCM\n'
+            '   - "IPO" → ECM\n'
+            '   - "DCM", "ECM" → 그대로 사용\n'
+            '   - "국내채권" → DCM\n'
             '\n'
-            '- 특정 증권사만 있을 경우 product 없이도 전체 product 순회해줘\n'
+            '- 단, 질문에 명확히 ABS/FB/IPO가 포함되어 있을 경우 그 하위 상품명을 그대로 "product"에 사용해야 함\n'
+            '  (예: "2024년 FB 순위 알려줘" → product는 "FB")\n'
+            '- 특정 증권사만 주어진 경우, product 없이 전체 데이터에서 해당 증권사의 실적을 조회할 수도 있음\n'
         )
 
         client = OpenAI()
