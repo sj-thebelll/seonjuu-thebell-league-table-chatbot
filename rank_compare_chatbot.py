@@ -232,7 +232,7 @@ if submit and query:
         not parsed.get("top_n") and
         not parsed.get("rank_range")
     ):
-        target_company = parsed.get("company")[0] if isinstance(parsed.get("company"), list) else parsed.get("company")
+        target_company = companies[0] if isinstance(companies, list) else companies
         target_year = parsed.get("years")[0]
 
         top_result = None
