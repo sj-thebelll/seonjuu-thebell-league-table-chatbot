@@ -366,6 +366,40 @@ if submit and query:
                     st.dataframe(하락.reset_index(drop=True))
                     handled = True  # ✅ 여기 추가
 
+            # ✅ Top N 또는 Rank Range 질문 처리 (회사명이 지정되지 않은 경우)
+            if (parsed.get("top_n") or parsed.get("rank_range")) and not companies:
+                top_n = parsed.get("top_n", None)
+                rank_range = parsed.get("rank_range", None)
+
+                for product in products:
+                    product_lower = product.lower()
+                    df = dfs.get(product_lower)
+                    if df is None or df.empty:
+                        st.warning(f"⚠️ {product.upper()} 데이터가 없습니다.")
+                        continue
+
+                    df.columns = df.columns.str.strip()
+                    filtered_df = df[df["연도"].isin(years)] if years else df.copy()
+
+                    if rank_range:
+                        start, end = rank_range
+                        filtered_df = filtered_df[filtered_df["순위"].between(start, end)]
+                    elif top_n:
+                        filtered_df = (
+                            filtered_df.groupby("연도")
+                            .apply(lambda x: x.nsmallest(top_n, "순위"))
+                            .reset_index(drop=True)
+                        )
+
+                    if filtered_df.empty:
+                        st.warning(f"⚠️ {product.upper()} 데이터에서 순위 정보를 찾을 수 없습니다.")
+                        continue
+
+                    st.subheader(f"📌 {product.upper()} 대표주관 순위")
+                    st.dataframe(filtered_df[["연도", "순위", "주관사", "금액(원)", "건수", "점유율(%)"]])
+                    handled = True
+
+
     # ✅ 그래프 요청이 있을 때만 아래 로직 전체 수행
     if parsed.get("is_chart") and companies and years:
         # 1. product 가져오기
