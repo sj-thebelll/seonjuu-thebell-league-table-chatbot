@@ -420,7 +420,27 @@ if submit and query:
                     st.subheader(f"📊 {', '.join(companies)}의 {product.upper()} 실적")
                     st.dataframe(filtered_df[display_cols].sort_values(["연도", "순위"]))
                     handled = True
+                    
+                    # ✅ 회사 없이 product + years + columns만 있는 경우 (Top N 없이 순위 리스트 요청 등)
+                    if not handled and products and years and columns and not companies and not parsed.get("is_chart") and not parsed.get("is_compare"):
+                        for product in products:
+                            product_lower = product.lower()
+                            df = dfs.get(product_lower)
+                            if df is None or df.empty:
+                                st.warning(f"⚠️ {product.upper()} 데이터가 없습니다.")
+                                continue
 
+                            df.columns = df.columns.str.strip()
+                            filtered_df = df[df["연도"].isin(years)].copy()
+
+                            if filtered_df.empty:
+                                st.warning(f"⚠️ {product.upper()} 데이터에서 조건에 맞는 항목을 찾을 수 없습니다.")
+                                continue
+
+                            display_cols = ["연도", "순위", "주관사"] + [c for c in ["금액(원)", "건수", "점유율(%)"] if c in columns]
+                            st.subheader(f"📊 {product.upper()} 대표주관 순위")
+                            st.dataframe(filtered_df[display_cols].sort_values(["연도", "순위"]).reset_index(drop=True))
+                            handled = True
 
     # ✅ 그래프 요청이 있을 때만 아래 로직 전체 수행
     if parsed.get("is_chart") and companies and years:
