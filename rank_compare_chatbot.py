@@ -398,6 +398,9 @@ if submit and query:
                             .apply(lambda x: x.nsmallest(top_n, "순위"))
                             .reset_index(drop=True)
                         )
+                    else:
+                        # ✅ 전체 순위 요청일 때 연도별 순위 기준 정렬
+                        filtered_df = filtered_df.sort_values(["연도", "순위"]).reset_index(drop=True)
 
                     if filtered_df.empty:
                         st.warning(f"⚠️ {product.upper()} 데이터에서 순위 정보를 찾을 수 없습니다.")
