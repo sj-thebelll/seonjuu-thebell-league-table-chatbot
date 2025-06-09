@@ -374,8 +374,8 @@ if submit and query:
                     st.dataframe(하락.reset_index(drop=True))
                     handled = True  # ✅ 여기 추가
 
-            # ✅ Top N 또는 Rank Range 질문 처리 (회사명이 지정되지 않은 경우)
-            if (parsed.get("top_n") or parsed.get("rank_range")) and not companies:
+            # ✅ Top N, Rank Range, 전체 순위 질문 처리 (회사명이 지정되지 않은 경우)
+            if not handled and products and years and not companies and not parsed.get("is_chart") and not parsed.get("is_compare"):
                 top_n = parsed.get("top_n", None)
                 rank_range = parsed.get("rank_range", None)
 
