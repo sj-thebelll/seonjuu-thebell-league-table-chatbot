@@ -407,6 +407,27 @@ if submit and query:
                     st.dataframe(filtered_df[["연도", "순위", "주관사", "금액(원)", "건수", "점유율(%)"]])
                     handled = True
 
+            # ✅ 전체 순위 요청 처리 (회사명 없이 top_n, rank_range 없이 전체 순위)
+            elif not handled and products and years and not companies and not parsed.get("is_chart") and not parsed.get("is_compare"):
+                for product in products:
+                    product_lower = product.lower()
+                    df = dfs.get(product_lower)
+                    if df is None or df.empty:
+                        st.warning(f"⚠️ {product.upper()} 데이터가 없습니다.")
+                        continue
+
+                    df.columns = df.columns.str.strip()
+                    filtered_df = df[df["연도"].isin(years)].copy()
+
+                    if filtered_df.empty:
+                        st.warning(f"⚠️ {product.upper()} 데이터에서 순위 정보를 찾을 수 없습니다.")
+                        continue
+
+                    display_cols = ["연도", "순위", "주관사", "금액(원)", "건수", "점유율(%)"]
+                    st.subheader(f"📌 {product.upper()} 대표주관 순위")
+                    st.dataframe(filtered_df[display_cols].sort_values(["연도", "순위"]).reset_index(drop=True))
+                    handled = True
+
             # ✅ 회사+연도+상품만 있는 경우 기본 실적 테이블 출력
             if products and companies and years and not parsed.get("is_chart") and not parsed.get("is_compare"):
                 for product in products:
