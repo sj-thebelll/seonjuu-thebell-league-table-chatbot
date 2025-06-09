@@ -262,24 +262,13 @@ if submit and query:
         else:
             st.warning(f"⚠️ {target_year}년 {target_company}의 순위 데이터가 없습니다.")
             handled = True  # 이 위치에 handled = True 유지
-
-            if not companies and (parsed.get("top_n") or parsed.get("rank_range")):
-                st.subheader(f"📊 {y}년 {product} 상위 주관사")
-                if parsed.get("rank_range"):
-                    start, end = parsed["rank_range"]
-                    row = df_year[df_year["순위"].between(start, end)]
-                elif parsed.get("top_n"):
-                    row = df_year.nsmallest(parsed["top_n"], "순위")
-                else:
-                    row = pd.DataFrame()
-
-                if not row.empty:
-                    st.dataframe(row[["순위", "주관사", "금액(원)", "건수", "점유율(%)"]].reset_index(drop=True))
-                else:
-                    st.warning(f"⚠️ {y}년 {product} 데이터에서 상위 주관사를 찾을 수 없습니다.")
     
-    if not handled and parsed.get("product"):
-        products = parsed.get("product")
+    if not handled and (
+        parsed.get("product") or
+        parsed.get("top_n") or
+        parsed.get("rank_range")
+    ):
+        products = parsed.get("product") or ["ecm"]  # 기본값 지정
         if isinstance(products, str):
             products = [products]
 
@@ -368,12 +357,14 @@ if submit and query:
                     target_str = f" (대상: {', '.join(companies)})" if companies else ""
                     st.subheader(f"📈 {y1} → {y2} {product_str} 주관 순위 상승{target_str}")
                     st.dataframe(상승.reset_index(drop=True))
+                    handled = True  # ✅ 여기 추가
 
                 if not 하락.empty:
                     하락 = 하락[["주관사", f"{y1}년 {metric_col}", f"{y2}년 {metric_col}", "변화"]]
                     target_str = f" (대상: {', '.join(companies)})" if companies else ""
                     st.subheader(f"📉 {y1} → {y2} {product_str} 주관 순위 하락{target_str}")
                     st.dataframe(하락.reset_index(drop=True))
+                    handled = True  # ✅ 여기 추가
 
     # ✅ 그래프 요청이 있을 때만 아래 로직 전체 수행
     if parsed.get("is_chart") and companies and years:
