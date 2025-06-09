@@ -184,6 +184,7 @@ if submit and query:
         
         try:
             parsed = parse_natural_query_with_gpt(query)
+            st.info(f"🔍 parsed: {parsed}")
             if not isinstance(parsed, dict):
                 raise ValueError("GPT 결과가 유효한 JSON 형식이 아님")
         except Exception as e:
