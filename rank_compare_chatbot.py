@@ -420,6 +420,36 @@ if submit and query:
                     st.subheader(f"📊 {', '.join(companies)}의 {product.upper()} 실적")
                     st.dataframe(filtered_df[display_cols].sort_values(["연도", "순위"]))
                     handled = True
+
+                    # ✅ 회사명 + 연도 + 상품 + rank_range만 있는 경우 전용 처리
+                    if (
+                        not handled and
+                        products and companies and years and rank_range and
+                        not parsed.get("is_chart") and not parsed.get("is_compare")
+                    ):
+                        for product in products:
+                            product_lower = product.lower()
+                            df = dfs.get(product_lower)
+                            if df is None or df.empty:
+                                continue
+
+                            df.columns = df.columns.str.strip()
+                            df_filtered = df[
+                                df["연도"].isin(years) & df["주관사"].isin(companies)
+                            ].copy()
+
+                            start, end = rank_range
+                            df_filtered = df_filtered[df_filtered["순위"].between(start, end)]
+
+                            if df_filtered.empty:
+                                st.warning(f"⚠️ {product.upper()} 데이터에서 {', '.join(companies)} 실적을 찾을 수 없습니다.")
+                                continue
+
+                            display_cols = ["연도", "순위", "주관사", "금액(원)", "건수", "점유율(%)"]
+                            st.subheader(f"📌 {', '.join(companies)}의 {product.upper()} 실적 (순위 {start}~{end})")
+                            st.dataframe(df_filtered[display_cols].sort_values(["연도", "순위"]))
+                            handled = True
+
                     
                     # ✅ 회사 없이 product + years + columns만 있는 경우 (Top N 없이 순위 리스트 요청 등)
                     if not handled and products and years and columns and not companies and not parsed.get("is_chart") and not parsed.get("is_compare"):
