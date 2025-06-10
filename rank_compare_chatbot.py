@@ -238,9 +238,6 @@ if submit and query:
     if "message" in parsed and len(parsed) == 1:
         st.warning(parsed["message"])  # ✅ 파란 info → 노란 warning
         handled = True
-
-        # ⚠️ 이후 조건 블록 실행 방지
-        return
     
     # ✅ 여전히 회사명만 있고 연도 없음 or 그래프 요청 등은 기존 루틴대로 분기
     if parsed.get("company") and not parsed.get("product"):
