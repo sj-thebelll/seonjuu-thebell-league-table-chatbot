@@ -189,28 +189,26 @@ if submit and query:
             parsed = parse_natural_query_with_gpt(query)
             st.info(f"🔍 parsed: {parsed}")  # 개발 중 디버깅용
 
-            # ✅ 메시지 응답이 온 경우: 노란 경고 메시지만 출력 후 종료
-            if isinstance(parsed, dict) and "message" in parsed and len(parsed) == 1:
-                st.warning(f"⚠️ {parsed['message']}")
-                handled = True
-                parsed = {}  # 이후 키 접근 오류 방지
-                st.stop()  # ✅ Streamlit 흐름 중단. 이후 코드 실행 안 됨
+            # 🔧 고친 부분: 메시지 응답일 경우 처리 로직 제거 (여기선 안 함)
 
             # ✅ GPT 응답이 JSON dict가 아닌 경우
             if not isinstance(parsed, dict):
                 raise ValueError("GPT 결과가 유효한 JSON 형식이 아님")
 
         except Exception as e:
-            if not handled:  # 중복 출력 방지
-                st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
-                st.caption(f"[디버그 GPT 파싱 오류: {e}]")
-            parsed = {}
+            st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
+            st.caption(f"[디버그 GPT 파싱 오류: {e}]")
             handled = True
-            # return ❌ 사용 금지 (함수 내 아니라면)
+            st.stop()  # ✅ 예외는 spinner 안에서 바로 종료해도 됨 (에러 표시니까)
 
-        # ✅ handled된 경우 로직 중단
-        if handled:
-            st.stop()
+    # 🔧 고친 부분: spinner 블록 바깥에서 메시지 응답 처리
+    if isinstance(parsed, dict) and "message" in parsed and len(parsed) == 1:
+        st.warning(f"⚠️ {parsed['message']}")  # 노란 경고 출력
+        st.stop()  # 여기서 안전하게 종료. 헛도는 현상 없음
+
+    # ✅ handled 변수는 여전히 예외 상황 제어용으로 유지
+    if handled:
+        st.stop()
 
     # ✅ 정상 파싱 후 전처리
     product_display_names = {v: k.upper() for k, v in product_aliases.items()}
