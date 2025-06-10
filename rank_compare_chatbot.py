@@ -219,7 +219,7 @@ if submit and query:
                 st.caption(f"[디버그 GPT 파싱 오류: {e}]")
             parsed = {}
             handled = True
-            # return ❌ 사용 금지 (함수 내 아니라면)
+            st.stop()  # 여기도 흐름 반드시 멈춤
 
         # ✅ handled된 경우 로직 중단
         if handled:
