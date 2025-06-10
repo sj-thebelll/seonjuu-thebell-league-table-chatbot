@@ -204,8 +204,10 @@ if submit and query:
 
             # ✅ 메시지 응답이 온 경우: 노란 경고 메시지만 출력 후 종료
             if isinstance(parsed, dict) and "message" in parsed and len(parsed) == 1:
+                st.warning(f"⚠️ {parsed['message']}")  # ✅ 빠졌던 줄 추가
                 handled = True
                 parsed = {}
+                st.stop()  # ✅ spinner 안에서 stop()
                 
             # ✅ GPT 응답이 JSON dict가 아닌 경우
             if not isinstance(parsed, dict):
