@@ -173,7 +173,7 @@ st.markdown("""
 - 미래에셋증권과 KB증권의 2021~2024년 유상증자 주관 순위 비교 그래프 보여줘.
 
 ⚠️ 일부 증권사는 특정 연도에 데이터가 없을 수 있습니다.  
-⚠️ M&A, VC, 헤지펀드, 등 항목은 향후 업데이트 될 예정입니다.
+⚠️ M&A, VC, 헤지펀드 등은 향후 업데이트 될 예정입니다.
 """)
 
 with st.form(key="question_form"):
@@ -182,16 +182,16 @@ with st.form(key="question_form"):
 
 if submit and query:
     handled = False
+    parsed = None  # ✅ parsed를 먼저 선언 (바깥에서도 접근 가능하도록)
+
     with st.spinner("GPT가 질문을 해석 중입니다..."):
         from utils import product_aliases, company_aliases
-        
+
         try:
             parsed = parse_natural_query_with_gpt(query)
             st.info(f"🔍 parsed: {parsed}")  # 개발 중 디버깅용
 
-            # 🔧 고친 부분: 메시지 응답일 경우 처리 로직 제거 (여기선 안 함)
-
-            # ✅ GPT 응답이 JSON dict가 아닌 경우
+            # ✅ dict가 아닌 경우는 예외 처리
             if not isinstance(parsed, dict):
                 raise ValueError("GPT 결과가 유효한 JSON 형식이 아님")
 
@@ -199,18 +199,18 @@ if submit and query:
             st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
             st.caption(f"[디버그 GPT 파싱 오류: {e}]")
             handled = True
-            st.stop()  # ✅ 예외는 spinner 안에서 바로 종료해도 됨 (에러 표시니까)
+            st.stop()  # ✅ spinner 안에서는 예외 시 종료 허용
 
-    # 🔧 고친 부분: spinner 블록 바깥에서 메시지 응답 처리
+    # ✅ spinner 바깥에서 메시지 응답 안전하게 처리
     if isinstance(parsed, dict) and "message" in parsed and len(parsed) == 1:
-        st.warning(f"⚠️ {parsed['message']}")  # 노란 경고 출력
-        st.stop()  # 여기서 안전하게 종료. 헛도는 현상 없음
+        st.warning(f"⚠️ {parsed['message']}")  # ⚠️ 포함 메시지 출력
+        st.stop()  # ✅ 반드시 여기서 종료해야 이후 로직 실행 방지됨
 
-    # ✅ handled 변수는 여전히 예외 상황 제어용으로 유지
+    # ✅ handled 예외 여부 체크로 중단
     if handled:
         st.stop()
 
-    # ✅ 정상 파싱 후 전처리
+    # ✅ 정상 파싱 이후 전처리
     product_display_names = {v: k.upper() for k, v in product_aliases.items()}
     products = parsed.get("product") or []
     products = [products] if isinstance(products, str) else products
@@ -223,7 +223,7 @@ if submit and query:
 
     years = parsed.get("years") or []
 
-    # ✅ 여전히 회사명만 있고 연도 없음 or 그래프 요청 등은 기존 루틴대로 분기
+    # ✅ 기존 분기 로직 그대로 유지
     if parsed.get("company") and not parsed.get("product"):
         from improved_company_year_chart_logic import handle_company_year_chart_logic
         handle_company_year_chart_logic(parsed, dfs)
@@ -233,8 +233,8 @@ if submit and query:
         st.warning("⚠️ 어떤 항목이나 증권사에 대한 요청인지 명확하지 않아요. 예: '2024년 ECM 순위', '신영증권 그래프' 등으로 질문해주세요.")
         st.stop()
 
-    # ✅ 중복 경고 방지용
-    already_warned = set()
+    already_warned = set()  # 중복 경고 방지용
+
 
     # ✅ 최고 순위 1건만 출력 (상품 지정 없이)
     if (
