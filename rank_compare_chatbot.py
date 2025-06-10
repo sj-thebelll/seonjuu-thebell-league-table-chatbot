@@ -206,9 +206,9 @@ if submit and query:
             if isinstance(parsed, dict) and "message" in parsed and len(parsed) == 1:
                 st.warning(f"⚠️ {parsed['message']}")
                 handled = True
-                parsed = {}  # 이후 키 접근 오류 방지
-                st.stop()  # ✅ 여기서 정확히 마무리. return 절대 쓰지 마세요
-
+                parsed = {}
+                st.stop()  # ✅ 정확한 위치에서 흐름 완전 종료
+                
             # ✅ GPT 응답이 JSON dict가 아닌 경우
             if not isinstance(parsed, dict):
                 raise ValueError("GPT 결과가 유효한 JSON 형식이 아님")
