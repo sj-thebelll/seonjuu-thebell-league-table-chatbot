@@ -204,10 +204,8 @@ if submit and query:
 
             # ✅ 메시지 응답이 온 경우: 노란 경고 메시지만 출력 후 종료
             if isinstance(parsed, dict) and "message" in parsed and len(parsed) == 1:
-                st.warning(f"⚠️ {parsed['message']}")
                 handled = True
                 parsed = {}
-                st.stop()  # ✅ 정확한 위치에서 흐름 완전 종료
                 
             # ✅ GPT 응답이 JSON dict가 아닌 경우
             if not isinstance(parsed, dict):
@@ -237,6 +235,11 @@ if submit and query:
         companies = [company_aliases.get(c, c) for c in companies]
 
         years = parsed.get("years") or []
+
+    # ✅ spinner 블록 종료 후, 여기에 위치해야 정상 작동합니다!
+    if handled and isinstance(parsed, dict) and "message" in parsed:
+        st.warning(f"⚠️ {parsed['message']}")
+        st.stop()
 
     # ✅ 지원하지 않는 항목 처리 (예: "질문 주신 내용은 추후 업데이트 될 예정입니다.")
     if isinstance(parsed, dict) and "message" in parsed and len(parsed) == 1:
