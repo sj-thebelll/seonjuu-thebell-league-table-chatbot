@@ -188,29 +188,36 @@ with st.form(key="question_form"):
     submit = st.form_submit_button("🔍 질문하기")
 
 if submit and query:
-    from utils import product_aliases, company_aliases
-
-    # GPT 파싱은 spinner 블록 내부에서만 수행
+    handled = False
     with st.spinner("GPT가 질문을 해석 중입니다..."):
+        from utils import product_aliases, company_aliases
+        
         try:
             parsed = parse_natural_query_with_gpt(query)
+            st.info(f"🔍 parsed: {parsed}")  # 개발 중 디버깅용
+
+            # ✅ 메시지 응답이 온 경우: 노란 경고 메시지만 출력 후 종료
+            if isinstance(parsed, dict) and "message" in parsed and len(parsed) == 1:
+                st.warning(f"⚠️ {parsed['message']}")
+                handled = True
+                parsed = {}  # 이후 키 접근 오류 방지
+                return  # ❗ 함수 내부라면 사용, 아니면 아래 조건문 추가로 차단
+
+            # ✅ GPT 응답이 JSON dict가 아닌 경우
+            if not isinstance(parsed, dict):
+                raise ValueError("GPT 결과가 유효한 JSON 형식이 아님")
+
         except Exception as e:
-            st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
-            st.caption(f"[디버그 GPT 파싱 오류: {e}]")
+            if not handled:  # 중복 출력 방지
+                st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
+                st.caption(f"[디버그 GPT 파싱 오류: {e}]")
+            parsed = {}
+            handled = True
+            # return ❌ 사용 금지 (함수 내 아니라면)
+
+        # ✅ handled된 경우 로직 중단
+        if handled:
             st.stop()
-
-    st.info(f"🔍 parsed: {parsed}")  # 디버깅용 출력
-
-    # ✅ 지원하지 않는 항목 안내 메시지 처리 (예: 수수료, 헤지펀드 등)
-    if isinstance(parsed, dict) and "message" in parsed and len(parsed) == 1:
-        st.warning(f"⚠️ {parsed['message']}")
-        st.stop()
-
-    # ✅ 유효하지 않은 JSON 형식 (GPT 응답 파싱 실패)
-    if not isinstance(parsed, dict):
-        st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
-        st.caption("⚠️ [GPT 파싱 오류] JSON 형식이 아닙니다.")
-        st.stop()
 
     # ✅ 정상 파싱 후 전처리
     product_display_names = {v: k.upper() for k, v in product_aliases.items()}
