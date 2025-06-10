@@ -204,7 +204,7 @@ if submit and query:
     # ✅ spinner 바깥에서 메시지 응답 안전하게 처리
     if isinstance(parsed, dict) and "message" in parsed and len(parsed) == 1:
         st.warning(f"⚠️ {parsed['message']}")  # ⚠️ 포함 메시지 출력
-        st.stop()  # ✅ 반드시 여기서 종료해야 이후 로직 실행 방지됨
+        handled = True  # 이후 파싱 로직, 테이블 출력 등 건너뜀
 
     # ✅ handled 예외 여부 체크로 중단
     if handled:
