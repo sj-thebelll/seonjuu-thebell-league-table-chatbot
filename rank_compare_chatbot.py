@@ -208,7 +208,6 @@ if submit and query:
             if isinstance(parsed, dict) and "message" in parsed and len(parsed) == 1:
                 st.warning(f"⚠️ {parsed['message']}")  # ⚠️ 포함한 메시지를 그대로 출력
                 handled = True
-                return  # ⛔ 여기서 이후 코드 실행 막기
 
             # ✅ GPT 응답이 dict가 아니거나 잘못된 경우
             if not isinstance(parsed, dict):
