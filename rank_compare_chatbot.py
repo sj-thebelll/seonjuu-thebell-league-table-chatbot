@@ -196,37 +196,40 @@ with st.form(key="question_form"):
 if submit and query:
     handled = False
     with st.spinner("GPT가 질문을 해석 중입니다..."):
-        
-        # ✅ 여기부터 alias 정리 포함 파싱
         from utils import product_aliases, company_aliases
         
         try:
             parsed = parse_natural_query_with_gpt(query)
-            st.info(f"🔍 parsed: {parsed}")  # 이건 개발 중 디버깅용. 나중에 삭제 가능
+            st.info(f"🔍 parsed: {parsed}")  # 개발 중 디버깅용
 
-            # ✅ message만 있는 경우 (예: "질문 주신 내용은 추후 업데이트 될 예정입니다.")
+            # ✅ 메시지 응답이 온 경우: 노란 경고 메시지만 출력 후 종료
             if isinstance(parsed, dict) and "message" in parsed and len(parsed) == 1:
-                st.warning(f"⚠️ {parsed['message']}")  # ⚠️ 포함한 메시지를 그대로 출력
+                st.warning(f"⚠️ {parsed['message']}")
                 handled = True
+                parsed = {}  # 이후 키 접근 오류 방지
+                st.stop()  # ✅ 여기서 정확히 마무리. return 절대 쓰지 마세요
 
-            # ✅ GPT 응답이 dict가 아니거나 잘못된 경우
+            # ✅ GPT 응답이 JSON dict가 아닌 경우
             if not isinstance(parsed, dict):
                 raise ValueError("GPT 결과가 유효한 JSON 형식이 아님")
 
         except Exception as e:
-            st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
-            st.caption(f"[디버그 GPT 파싱 오류: {e}]")
-            handled = True
+            if not handled:  # 중복 출력 방지
+                st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
+                st.caption(f"[디버그 GPT 파싱 오류: {e}]")
             parsed = {}
-          
-        from utils import product_aliases
-        product_display_names = {v: k.upper() for k, v in product_aliases.items()}  # ⬅ 표시용 이름 매핑 추가
+            handled = True
+            # return ❌ 사용 금지 (함수 내 아니라면)
 
+        # ✅ handled된 경우 로직 중단
+        if handled:
+            st.stop()
+
+        # ✅ 정상 파싱 이후 전처리
+        product_display_names = {v: k.upper() for k, v in product_aliases.items()}
         products = parsed.get("product") or []
         products = [products] if isinstance(products, str) else products
         products = [product_aliases.get(p.lower(), p.lower()) for p in products]
-
-        # 표시용 이름 저장 (예: 'dcm' ➝ 'DOMESTIC_BOND' ➝ 'DCM')
         product_strs = [product_display_names.get(p, p.upper()) for p in products]
 
         companies = parsed.get("company") or []
