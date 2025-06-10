@@ -236,10 +236,10 @@ if submit and query:
 
         years = parsed.get("years") or []
 
-    # ✅ 지원하지 않는 항목 처리
-    if "message" in parsed and len(parsed) == 1:
-        st.warning(parsed["message"])  # ✅ 파란 info → 노란 warning
-        handled = True
+    # ✅ 지원하지 않는 항목 처리 (예: "질문 주신 내용은 추후 업데이트 될 예정입니다.")
+    if isinstance(parsed, dict) and "message" in parsed and len(parsed) == 1:
+        st.warning(f"⚠️ {parsed['message']}")  # ⚠️ 포함한 메시지를 그대로 출력
+        handled = True  # 이후 코드 실행 방지
     
     # ✅ 여전히 회사명만 있고 연도 없음 or 그래프 요청 등은 기존 루틴대로 분기
     if parsed.get("company") and not parsed.get("product"):
