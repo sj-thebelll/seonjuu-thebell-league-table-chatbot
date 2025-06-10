@@ -189,17 +189,23 @@ if submit and query:
 
         try:
             parsed = parse_natural_query_with_gpt(query)
-            st.info(f"🔍 parsed: {parsed}")  # 개발 중 디버깅용
+            st.info(f"🔍 parsed: {parsed}")
 
-            # ✅ dict가 아닌 경우는 예외 처리
-            if not isinstance(parsed, dict):
+            # ✅ 먼저 dict 여부 확인 후 message 처리
+            if isinstance(parsed, dict):
+                if "message" in parsed and len(parsed) == 1:
+                    st.warning(f"⚠️ {parsed['message']}")
+                    handled = True
+                    st.stop()
+            else:
                 raise ValueError("GPT 결과가 유효한 JSON 형식이 아님")
 
-        except Exception as e:
-            st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
-            st.caption(f"[디버그 GPT 파싱 오류: {e}]")
-            handled = True
-            st.stop()  # ✅ spinner 안에서는 예외 시 종료 허용
+       except Exception as e:
+            if not handled:  # ✅ 이미 message 처리된 경우는 무시
+                st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
+                st.caption(f"[디버그 GPT 파싱 오류: {e}]")
+                handled = True
+            st.stop()
 
     # ✅ spinner 바깥에서 메시지 응답 안전하게 처리
     if isinstance(parsed, dict) and "message" in parsed and len(parsed) == 1:
