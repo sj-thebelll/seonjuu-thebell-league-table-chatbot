@@ -201,7 +201,7 @@ if submit and query:
                 st.warning(f"⚠️ {parsed['message']}")
                 handled = True
                 parsed = {}  # 이후 키 접근 오류 방지
-                return  # ❗ 함수 내부라면 사용, 아니면 아래 조건문 추가로 차단
+                st.stop()  # ✅ Streamlit 흐름 중단. 이후 코드 실행 안 됨
 
             # ✅ GPT 응답이 JSON dict가 아닌 경우
             if not isinstance(parsed, dict):
