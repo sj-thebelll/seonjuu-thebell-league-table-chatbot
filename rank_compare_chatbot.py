@@ -213,11 +213,11 @@ if submit and query:
             if not isinstance(parsed, dict):
                 raise ValueError("GPT 결과가 유효한 JSON 형식이 아님")
 
-                except Exception as e:
-                    st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
-                    st.caption(f"[디버그 GPT 파싱 오류: {e}]")
-                    handled = True
-                    parsed = {}  # 안전 조치
+        except Exception as e:
+            st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
+            st.caption(f"[디버그 GPT 파싱 오류: {e}]")
+            handled = True
+            parsed = {}  # 안전 조치
           
         from utils import product_aliases
         product_display_names = {v: k.upper() for k, v in product_aliases.items()}  # ⬅ 표시용 이름 매핑 추가
