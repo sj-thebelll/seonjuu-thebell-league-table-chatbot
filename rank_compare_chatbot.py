@@ -116,12 +116,6 @@ def parse_natural_query_with_gpt(query):
         st.info("질문 예시: '2024년 ECM 대표주관 순위 알려줘', 'NH와 KB 2023년 순위 비교'")
         st.caption(f"[디버그 정보] GPT 파싱 오류: {e}")
         return None  # ✅ 반드시 함수는 None을 반환해야 흐름에서 처리 가능
-
-    except Exception as e:
-        st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
-        st.info("예: 2024년 ECM 대표주관 순위 1~10위 알려줘")
-        st.caption(f"[디버그 정보] GPT 파싱 오류: {e}")
-        handled = True  # ✅ 함수가 아니므로 return 대신 플래그로 흐름 제어
     
 # ✅ 비교 함수
 def compare_rank(df, year1, year2, metric_col="순위"):
