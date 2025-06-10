@@ -227,6 +227,10 @@ if submit and query:
 
         years = parsed.get("years") or []
 
+    # ✅ 지원하지 않는 항목 처리
+    if "message" in parsed and len(parsed) == 1:
+        st.warning(parsed["message"])  # ✅ 파란 info → 노란 warning
+        handled = True
    
     # ✅ 여전히 회사명만 있고 연도 없음 or 그래프 요청 등은 기존 루틴대로 분기
     if parsed.get("company") and not parsed.get("product"):
