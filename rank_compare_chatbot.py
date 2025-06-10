@@ -208,10 +208,9 @@ if submit and query:
             if isinstance(parsed, dict) and "message" in parsed and len(parsed) == 1:
                 st.warning(f"⚠️ {parsed['message']}")
                 handled = True
-                return  # 이후 로직 차단
-
-            if not isinstance(parsed, dict):
-                raise ValueError("GPT 결과가 유효한 JSON 형식이 아님")
+            else:
+                if not isinstance(parsed, dict):
+                    raise ValueError("GPT 결과가 유효한 JSON 형식이 아님")
 
         except Exception as e:
             st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
