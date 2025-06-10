@@ -202,21 +202,23 @@ if submit and query:
         
         try:
             parsed = parse_natural_query_with_gpt(query)
-            st.info(f"🔍 parsed: {parsed}")
+            st.info(f"🔍 parsed: {parsed}")  # 이건 개발 중 디버깅용. 나중에 삭제 가능
 
             # ✅ message만 있는 경우 (예: "질문 주신 내용은 추후 업데이트 될 예정입니다.")
             if isinstance(parsed, dict) and "message" in parsed and len(parsed) == 1:
-                st.warning(f"⚠️ {parsed['message']}")
+                st.warning(f"⚠️ {parsed['message']}")  # ⚠️ 포함한 메시지를 그대로 출력
                 handled = True
-            else:
-                if not isinstance(parsed, dict):
-                    raise ValueError("GPT 결과가 유효한 JSON 형식이 아님")
+                return  # ⛔ 여기서 이후 코드 실행 막기
+
+            # ✅ GPT 응답이 dict가 아니거나 잘못된 경우
+            if not isinstance(parsed, dict):
+                raise ValueError("GPT 결과가 유효한 JSON 형식이 아님")
 
         except Exception as e:
             st.error("❌ 질문을 이해하지 못했어요. 다시 시도해 주세요.")
             st.caption(f"[디버그 GPT 파싱 오류: {e}]")
             handled = True
-            parsed = {}  # 안전 조치
+            parsed = {}
           
         from utils import product_aliases
         product_display_names = {v: k.upper() for k, v in product_aliases.items()}  # ⬅ 표시용 이름 매핑 추가
