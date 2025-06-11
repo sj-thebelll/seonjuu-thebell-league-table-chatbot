@@ -32,6 +32,10 @@ def send_feedback_email(name, text, image_paths=None):
     print("✅ GMAIL_USER:", os.getenv("1001juuu@gmail.com"))
     print("✅ GMAIL_PASS:", os.getenv("bdrs ywmv mdjk lsuy"))
 
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+    smtp.login(smtp_user, smtp_pass)
+    print("✅ 로그인 성공!")
+
     msg = EmailMessage()
     msg["Subject"] = f"[챗봇 피드백] {name or '익명'}"
     msg["From"] = os.getenv("GMAIL_USER")
