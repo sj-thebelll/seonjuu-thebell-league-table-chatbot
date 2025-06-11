@@ -650,18 +650,10 @@ with st.form("feedback_form"):
                     out_file.write(file.getbuffer())
                 saved_image_paths.append(filepath)
 
-        # ✅ 이메일 전송 + 디버그
+        # ✅ 이메일 전송
         try:
             send_feedback_email(user_name, feedback_text, saved_image_paths)
             st.success("✅ 피드백이 전송되었습니다.")
-
-            st.info(f"📤 feedback debug:\n\n"
-                    f"- 이름: `{user_name or '익명'}`\n"
-                    f"- 텍스트 저장 위치: `{feedback_file}`\n"
-                    f"- 이미지 업로드 수: `{len(saved_image_paths)}`\n"
-                    f"- 이메일 수신자: `1001juu@thebell.co.kr`")
-
         except Exception as e:
             st.error(f"❌ 이메일 전송 중 오류가 발생했습니다: {e}")
             st.warning("⚠️ 피드백은 로컬에 저장되었지만 이메일은 발송되지 않았을 수 있습니다.")
-
