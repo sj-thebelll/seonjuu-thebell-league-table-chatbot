@@ -29,13 +29,6 @@ def send_feedback_email(name, text, image_paths=None):
     from dotenv import load_dotenv  # ✅ 환경변수 로드용 추가
     load_dotenv()  # ✅ .env 파일에서 GMAIL_USER, GMAIL_PASS 로딩
 
-    print("✅ GMAIL_USER:", os.getenv("1001juuu@gmail.com"))
-    print("✅ GMAIL_PASS:", os.getenv("bdrs ywmv mdjk lsuy"))
-
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-    smtp.login(smtp_user, smtp_pass)
-    print("✅ 로그인 성공!")
-
     msg = EmailMessage()
     msg["Subject"] = f"[챗봇 피드백] {name or '익명'}"
     msg["From"] = os.getenv("GMAIL_USER")
