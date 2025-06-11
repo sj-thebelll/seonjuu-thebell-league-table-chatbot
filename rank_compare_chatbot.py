@@ -173,7 +173,6 @@ st.markdown("""
 - 2023년 현대차증권이 랭크된 순위 전부 알려줘.
 - 미래에셋증권과 KB증권의 2021~2024년 유상증자 주관 순위 비교 그래프 보여줘.
 
-⚠️ 일부 증권사는 특정 연도에 데이터가 없을 수 있습니다.  
 ⚠️ M&A, VC, 헤지펀드 등은 향후 업데이트 될 예정입니다.
 """)
 
@@ -237,7 +236,7 @@ if submit and query:
         st.stop()
 
     elif not any([parsed.get("product"), parsed.get("company"), parsed.get("years")]):
-        st.warning("⚠️ 어떤 항목이나 증권사에 대한 요청인지 명확하지 않아요. 예: '2024년 ECM 순위', '신영증권 그래프' 등으로 질문해주세요.")
+        st.warning("⚠️ 어떤 항목이나 증권사에 대한 요청인지 명확하지 않아요.")
         st.stop()
 
     already_warned = set()  # 중복 경고 방지용
