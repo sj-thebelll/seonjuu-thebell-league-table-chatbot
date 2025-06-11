@@ -659,7 +659,7 @@ with st.form("feedback_form"):
                     f"- 이름: `{user_name or '익명'}`\n"
                     f"- 텍스트 저장 위치: `{feedback_file}`\n"
                     f"- 이미지 업로드 수: `{len(saved_image_paths)}`\n"
-                    f"- 이메일 수신자: `1001juuu@thebell.co.kr`")
+                    f"- 이메일 수신자: `1001juu@thebell.co.kr`")
 
         except Exception as e:
             st.error(f"❌ 이메일 전송 중 오류가 발생했습니다: {e}")
