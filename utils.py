@@ -32,7 +32,7 @@ def send_feedback_email(name, text, image_paths=None):
     msg = EmailMessage()
     msg["Subject"] = f"[챗봇 피드백] {name or '익명'}"
     msg["From"] = os.getenv("GMAIL_USER")
-    msg["To"] = "1001juu@thebell.co.kr"  # ✅ 실제 수신자 주소
+    msg["To"] = "1001juuu@gmail.com"  # ✅ 실제 수신자 주소
     msg.set_content(text)
 
     # ✅ 이미지 첨부
