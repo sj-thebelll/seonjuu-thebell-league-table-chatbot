@@ -23,6 +23,7 @@ def send_feedback_email(name, text, image_paths=None):
     import os
     import smtplib
     from email.message import EmailMessage
+    import streamlit as st  # 디버깅 출력용
 
     msg = EmailMessage()
     msg["Subject"] = f"[챗봇 피드백] {name or '익명'}"
@@ -39,9 +40,24 @@ def send_feedback_email(name, text, image_paths=None):
                     filename = os.path.basename(path)
                     msg.add_attachment(file_data, maintype="image", subtype="jpeg", filename=filename)
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-        smtp.login(os.getenv("GMAIL_USER"), os.getenv("GMAIL_PASS"))
-        smtp.send_message(msg)
+    try:
+        smtp_user = os.getenv("GMAIL_USER")
+        smtp_pass = os.getenv("GMAIL_PASS")
+
+        st.info(f"📡 [DEBUG] SMTP 연결 시도 - 사용자: `{smtp_user}`")
+
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+            st.info("🔐 [DEBUG] Gmail SMTP 로그인 시도 중...")
+            smtp.login(smtp_user, smtp_pass)
+            st.success("✅ SMTP 로그인 성공!")
+
+            st.info("📨 [DEBUG] 이메일 전송 시도 중...")
+            smtp.send_message(msg)
+            st.success("✅ 이메일 전송 완료!")
+
+    except Exception as e:
+        st.error(f"❌ 이메일 전송 실패: {e}")
+        raise
 
 # utils.py 파일 맨 위 또는 적절한 위치에 추가
 product_aliases = {
