@@ -653,7 +653,7 @@ with st.form("feedback_form"):
         # ✅ 이메일 전송 + 디버그
         try:
             send_feedback_email(user_name, feedback_text, saved_image_paths)
-            st.success("✅ 피드백이 저장되었고 이메일로도 전송되었습니다. 감사합니다!")
+            st.success("✅ 피드백이 전송되었습니다.")
 
             st.info(f"📤 feedback debug:\n\n"
                     f"- 이름: `{user_name or '익명'}`\n"
