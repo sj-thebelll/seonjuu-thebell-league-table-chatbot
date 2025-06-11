@@ -640,7 +640,7 @@ with st.form("feedback_form"):
             f.write(f"[이름] {user_name or '익명'}\n")
             f.write(f"[내용]\n{feedback_text}\n")
 
-        # ✅ 이미지 저장 (다중 파일)
+        # ✅ 이미지 저장
         saved_image_paths = []
         if uploaded_files:
             for i, file in enumerate(uploaded_files, 1):
@@ -650,12 +650,11 @@ with st.form("feedback_form"):
                     out_file.write(file.getbuffer())
                 saved_image_paths.append(filepath)
 
-        # ✅ 이메일 전송
+        # ✅ 이메일 전송 + 디버그
         try:
-            send_feedback_email(user_name, feedback_text, saved_image_paths)  # 리스트 그대로 전달
+            send_feedback_email(user_name, feedback_text, saved_image_paths)
             st.success("✅ 피드백이 저장되었고 이메일로도 전송되었습니다. 감사합니다!")
 
-            # ✅ 디버그 로그 출력 (parsed 스타일)
             st.info(f"📤 feedback debug:\n\n"
                     f"- 이름: `{user_name or '익명'}`\n"
                     f"- 텍스트 저장 위치: `{feedback_file}`\n"
@@ -665,3 +664,4 @@ with st.form("feedback_form"):
         except Exception as e:
             st.error(f"❌ 이메일 전송 중 오류가 발생했습니다: {e}")
             st.warning("⚠️ 피드백은 로컬에 저장되었지만 이메일은 발송되지 않았을 수 있습니다.")
+
