@@ -30,8 +30,7 @@ def send_feedback_email(name, text, image_paths=None):
     load_dotenv()  # ✅ .env 파일에서 GMAIL_USER, GMAIL_PASS 로딩
 
     print("✅ GMAIL_USER:", os.getenv("1001juuu@gmail.com"))
-    print("✅ GMAIL_PASS:", os.getenv("bdrs ywmv mdjk lsuy
-"))
+    print("✅ GMAIL_PASS:", os.getenv("bdrs ywmv mdjk lsuy"))
 
     msg = EmailMessage()
     msg["Subject"] = f"[챗봇 피드백] {name or '익명'}"
