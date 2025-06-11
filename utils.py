@@ -16,18 +16,23 @@ company_aliases = {
     "DB": "DB금융투자", "유안타": "유안타증권", "유진": "유진투자증권", "케이프": "케이프투자증권",
     "SK": "SK증권", "현대차": "현대차증권", "KTB": "KTB투자증권", "BNK": "BNK투자증권",
     "IBK": "IBK투자증권", "토스": "토스증권", "다올": "다올투자증권", "산은": "한국산업은행",
-    "신금투": "신한투자증권"
+    "신금투": "신한투자증권", "JP모건": "JP모간", "IM증권": "아이엠증권", "한화증권": "한화투자증권", 
+    "코리아에셋증권": "코리아에셋투자증권", "크레디아크리꼴": "크레디아그리콜", "크레디트아그리콜": "크레디아그리콜" ,
+    "웰스파고": "Wells Fargo", "BofA메릴린치": "BOA메릴린치", "소시에떼제네랄": "소시에테제네랄", "노무라증권": "노무라",
+    "코메르츠방크": "코메르츠", "코메르츠크": "코메르츠", "메릴린치증권": "메릴린치증권 서울지점", "메릴린치": "메릴린치증권 서울지점",
 }
 
 def send_feedback_email(name, text, image_paths=None):
     import os
     import smtplib
     from email.message import EmailMessage
+    from dotenv import load_dotenv  # ✅ 환경변수 로드용 추가
+    load_dotenv()  # ✅ .env 파일에서 GMAIL_USER, GMAIL_PASS 로딩
 
     msg = EmailMessage()
     msg["Subject"] = f"[챗봇 피드백] {name or '익명'}"
     msg["From"] = os.getenv("GMAIL_USER")
-    msg["To"] = "1001juu@thebell.co.kr"  # ✅ 실제 수신자 주소로 변경
+    msg["To"] = "1001juu@thebell.co.kr"  # ✅ 실제 수신자 주소
     msg.set_content(text)
 
     # ✅ 이미지 첨부
