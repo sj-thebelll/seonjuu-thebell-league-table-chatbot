@@ -28,7 +28,7 @@ def send_feedback_email(name, text, image_paths=None):
     msg = EmailMessage()
     msg["Subject"] = f"[챗봇 피드백] {name or '익명'}"
     msg["From"] = os.getenv("GMAIL_USER")
-    msg["To"] = "1001juuu@thebell.co.kr"
+    msg["To"] = "1001juu@thebell.co.kr"
     msg.set_content(text)
 
     # ✅ 여러 이미지 첨부
