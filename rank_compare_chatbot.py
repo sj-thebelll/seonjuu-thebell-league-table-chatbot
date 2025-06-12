@@ -618,7 +618,7 @@ with st.expander("📘 더벨 리그테이블 집계기준", expanded=False):
 
 # ✅ 피드백 폼 UI
 st.markdown("## 🛠️ 피드백 보내기")
-st.markdown("❗ 챗봇이 제대로 작동하지 않거나, 좋은 아이디어가 있을 경우 자유롭게 의견을 보내주세요.")
+st.markdown("❗ 챗봇에 문제가 있거나, 좋은 아이디어가 있을 경우 자유롭게 의견을 보내주세요.")
 
 with st.form("feedback_form"):
     user_name = st.text_input("이름 또는 닉네임 (선택)")
@@ -640,7 +640,7 @@ with st.form("feedback_form"):
             f.write(f"[이름] {user_name or '익명'}\n")
             f.write(f"[내용]\n{feedback_text}\n")
 
-        # ✅ 이미지 저장
+        # ✅ 이미지 저장 (다중 파일)
         saved_image_paths = []
         if uploaded_files:
             for i, file in enumerate(uploaded_files, 1):
@@ -652,8 +652,7 @@ with st.form("feedback_form"):
 
         # ✅ 이메일 전송
         try:
-            send_feedback_email(user_name, feedback_text, saved_image_paths)
-            st.success("✅ 피드백이 전송되었습니다.")
+            send_feedback_email(user_name, feedback_text, saved_image_paths)  # 리스트 그대로 전달
+            st.success("✅ 피드백이 이메일로 전송되었습니다. 감사합니다!")
         except Exception as e:
             st.error(f"❌ 이메일 전송 중 오류가 발생했습니다: {e}")
-            st.warning("⚠️ 피드백은 로컬에 저장되었지만 이메일은 발송되지 않았을 수 있습니다.")
