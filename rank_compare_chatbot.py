@@ -590,7 +590,7 @@ if submit and query:
             else:
                 st.info("⚠️ 그래프 비교는 최대 2개 기업까지만 지원됩니다.")
 
-with st.expander("📘 리그테이블 집계기준", expanded=False):
+with st.expander("📘 더벨 리그테이블 집계기준", expanded=False):
     st.markdown("### 🏦 DCM 리그테이블 작성 기준")
     st.markdown("""
 - 대표주관실적과 인수실적을 대상으로 리그테이블을 산정한다. 공동주관 실적은 집계하지 않는다.  
