@@ -56,6 +56,7 @@ product_aliases = {
     "ipo": "ipo",
     "sb": "sb",
     "dcm": "dcm",
+    "ro": "ro",  # ✅ 기존 fo → ro 로 변경
 }
 
 # ✅ product_aliases와 함께 상단에서 import 후 선언
