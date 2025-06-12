@@ -79,7 +79,7 @@ def parse_natural_query_with_gpt(query):
             '   - "FB", "여전채", "여신전문금융회사채권" → "FB"\n'
             '   - "SB", "일반회사채", "회사채" → "SB"\n'
             '   - "IPO", "기업공개" → "IPO"\n'
-            '   - "RO", "유상증자", "유증" → "RO", "Rights Offering", "RO",\n'
+            '   - "유상증자", "유증" → "FO", "Rights Offering", "FO"\n
             '   - "ECM" → "ECM"\n'
             '   - "DCM", "국내채권" → "DCM"\n'
             '\n'
