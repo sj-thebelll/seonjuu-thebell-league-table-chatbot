@@ -13,10 +13,13 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 
 def answer_query(query, dfs):
     # ✅ 연도와 상품군 추출
-    match = re.search(r"(\d{4})년\s*(ECM|ABS|FB|국내채권)", query)
+    from utils import product_aliases  # 상단에 반드시 import
+
+    match = re.search(r"(\d{4})년\s*(ECM|ABS|FB|SB|IPO|RO|DCM|국내채권|여전채|자산유동화증권|일반회사채|기업공개|유상증자)", query, re.IGNORECASE)
     if match:
         year = int(match.group(1))
-        product = match.group(2)
+        raw_product = match.group(2).lower()
+        product = product_aliases.get(raw_product)
 
         df = dfs.get(product)
         if df is None:
