@@ -50,6 +50,25 @@ set_korean_font()
 data_dir = os.path.join(os.path.dirname(__file__), "data")
 dfs = load_dataframes(data_dir)
 
+# ✅ 데이터 로딩 테스트 결과 브라우저 출력용
+st.subheader("✅ 데이터 로딩 테스트 결과")
+
+# 기존 방식
+if "ecm" in dfs:
+    st.success("✅ 기존 방식: dfs['ecm'] OK")
+else:
+    st.error("❌ 기존 방식 실패: dfs['ecm'] 없음")
+
+# 새로운 방식
+test_keys = [("ecm", "lead"), ("abs", "underwrite"), ("dcm", "lead", "nofbabs")]
+
+for key in test_keys:
+    if key in dfs:
+        st.success(f"✅ 새로운 방식: dfs{key} OK, shape: {dfs[key].shape}")
+    else:
+        st.error(f"❌ 새로운 방식 실패: dfs{key} 없음")
+
+
 # ✅ GPT 파서
 from openai import OpenAI  # openai>=1.0.0 기준
 
