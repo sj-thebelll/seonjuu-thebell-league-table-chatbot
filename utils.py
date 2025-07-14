@@ -99,8 +99,12 @@ def load_dataframes(data_dir):
 
             for token in tokens[1:]:
                 token_lower = token.lower()
+    
+                # 역할 설정 (lead, underwrite 등)
                 if token_lower in role_aliases:
                     role = role_aliases[token_lower]
+
+                # 필터 조건 설정 (noabs, nofbabs, corp 등)
                 elif token_lower in ["noabs", "nofbabs", "corp"]:
                     filter_cond = token_lower
 
