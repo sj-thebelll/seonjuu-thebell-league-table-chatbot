@@ -98,16 +98,18 @@ def load_dataframes(data_dir):
             role = None
             filter_cond = None
 
+            # ✅ 수정된 코드
             for token in tokens[1:]:
                 token_lower = token.lower()
-    
-                # 역할 설정 (lead, underwrite 등)
-                if token_lower in role_aliases:
+
+                # 역할 설정
+                if token_lower in role_aliases and role is None:
                     role = role_aliases[token_lower]
 
-                # 필터 조건 설정 (noabs, nofbabs, corp 등)
-                elif token_lower in ["noabs", "nofbabs", "corp"]:
+                # 필터 조건 설정 (복수 가능성 고려)
+                elif token_lower in ["noabs", "nofbabs", "corp"] and filter_cond is None:
                     filter_cond = token_lower
+
                     
             print(f"[DEBUG] 🔍 상품: {product}, 역할: {role}, 필터조건: {filter_cond}")
 
