@@ -1,30 +1,3 @@
-# ✅ utils.py에서 load_dataframes 불러오기
-from utils import load_dataframes
-
-# ✅ 데이터 폴더 경로 설정 (이미 사용 중인 경로와 동일하게)
-import os
-data_dir = os.path.join(os.path.dirname(__file__), "data")
-
-# ✅ dfs 로딩
-dfs = load_dataframes(data_dir)
-
-# ✅ 테스트 1: 기존 방식 (기존과 동일해야 함)
-if "ecm" in dfs:
-    print("✅ 기존 방식: dfs['ecm'] OK")
-else:
-    print("❌ 기존 방식 실패: dfs['ecm'] 없음")
-
-# ✅ 테스트 2: 새로운 방식 (상품 + 역할)
-key1 = ("ecm", "lead")
-key2 = ("abs", "underwrite")
-key3 = ("dcm", "lead", "nofbabs")
-
-for key in [key1, key2, key3]:
-    if key in dfs:
-        print(f"✅ 새로운 방식: dfs{key} OK, shape: {dfs[key].shape}")
-    else:
-        print(f"❌ 새로운 방식 실패: dfs{key} 없음")
-
 import streamlit as st
 
 st.set_page_config(page_title="더벨 리그테이블 챗봇", page_icon="🔔")
