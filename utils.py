@@ -5,6 +5,7 @@ import json
 import matplotlib.pyplot as plt
 import matplotlib.font_manager as fm
 from dotenv import load_dotenv
+from collections import defaultdict
 
 
 # ✅ 보정 딕셔너리는 함수 밖, 파일 상단이나 중단에 위치해야 함
@@ -48,7 +49,7 @@ def send_feedback_email(name, text, image_paths=None):
         smtp.login(os.getenv("GMAIL_USER"), os.getenv("GMAIL_PASS"))
         smtp.send_message(msg)
 
-# utils.py 파일 맨 위 또는 적절한 위치에 추가
+# utils.py 내 적절한 위치에 추가
 product_aliases = {
     "ecm": "ecm",
     "abs": "abs",
@@ -56,14 +57,13 @@ product_aliases = {
     "ipo": "ipo",
     "sb": "sb",
     "dcm": "dcm",
-    "ro": "ro",  # ✅ 기존 fo → ro 로 변경
+    "ro": "ro",
 }
 
-# ✅ 역할 이름 매핑 (lead, underwrite 등 역할 구분용)
 role_aliases = {
     "lead": "lead",
     "underwrite": "underwrite",
-    "arrange": "arrange",
+    "arrange": "arrange"
 }
 
 # ✅ product_aliases와 함께 상단에서 import 후 선언
@@ -82,7 +82,7 @@ def normalize_column_name(col):
     return column_map.get(col.strip(), col.strip())
 
 def load_dataframes(data_dir):
-    dfs = {}
+    dfs = defaultdict(dict)
     structured_dfs = {}  # 새롭게 추가되는 구조화된 딕셔너리
 
     for filename in os.listdir(data_dir):
@@ -92,7 +92,8 @@ def load_dataframes(data_dir):
 
             # 파일명 예: ecm_lead_rank → 상품: ecm, 역할: lead
             tokens = base.split("_")
-            product = tokens[0]  # 항상 첫 단어가 상품명
+            print(f"[DEBUG] 📂 파일명: {base}, tokens: {tokens}")  # ✅ 디버깅 추가
+            product = tokens[0]
 
             role = None
             filter_cond = None
@@ -107,6 +108,8 @@ def load_dataframes(data_dir):
                 # 필터 조건 설정 (noabs, nofbabs, corp 등)
                 elif token_lower in ["noabs", "nofbabs", "corp"]:
                     filter_cond = token_lower
+                    
+            print(f"[DEBUG] 🔍 상품: {product}, 역할: {role}, 필터조건: {filter_cond}")
 
             try:
                 # 엑셀 파일 첫 시트를 로딩 (시트명이 정확하지 않아도 동작)
