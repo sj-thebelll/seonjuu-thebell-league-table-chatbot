@@ -76,24 +76,35 @@ def normalize_column_name(col):
 
 def load_dataframes(data_dir):
     dfs = {}
+    structured_dfs = {}  # 새롭게 추가되는 구조화된 딕셔너리
 
     for filename in os.listdir(data_dir):
         if filename.endswith(".xlsx"):
-            product = filename.replace(".xlsx", "").lower()
+            base = filename.replace(".xlsx", "").lower()
             file_path = os.path.join(data_dir, filename)
 
+            # 파일명 예: ecm_lead_rank → 상품: ecm, 역할: lead
+            tokens = base.split("_")
+            product = tokens[0]  # 항상 첫 단어가 상품명
+
+            role = None
+            filter_cond = None
+
+            for token in tokens[1:]:
+                if token in ["lead", "underwrite", "arrange"]:
+                    role = token
+                elif token in ["noabs", "nofbabs", "corp"]:
+                    filter_cond = token  # 필터 조건도 구조화 가능
+
             try:
-                print(f"🔍 [DEBUG] '{product}' 로딩 중... 파일: {filename}")
-
-                # ✅ 시트명이 정확히 일치하지 않아도 첫 시트를 fallback으로 불러옴
+                # 엑셀 파일 첫 시트를 로딩 (시트명이 정확하지 않아도 동작)
                 try:
-                    df = pd.read_excel(file_path, sheet_name=product)
+                    df = pd.read_excel(file_path, sheet_name=base)
                 except:
-                    print(f"⚠️ [WARN] '{product}' 시트명이 일치하지 않아 첫 시트로 대체 로딩")
                     xls = pd.ExcelFile(file_path)
-                    first_sheet = xls.sheet_names[0]
-                    df = pd.read_excel(xls, sheet_name=first_sheet)
+                    df = pd.read_excel(xls, sheet_name=xls.sheet_names[0])
 
+                # 공통 컬럼 정리
                 df.columns = df.columns.astype(str).str.strip().str.replace('"', '', regex=False)
 
                 if "연도" in df.columns:
@@ -105,16 +116,23 @@ def load_dataframes(data_dir):
                     df["주관사"] = df["주관사"].astype(str).str.strip()
 
                 df["주관사"] = df["주관사"].str.replace(" ", "")
+
+                # 기존 방식 저장 (기존 코드 호환)
                 dfs[product] = df
-                print(f"✅ [DEBUG] '{product}' 데이터 로드 성공. shape: {df.shape}")
+
+                # 구조화 방식 저장
+                key = (product, role, filter_cond) if filter_cond else (product, role)
+                structured_dfs[key] = df
+
+                print(f"✅ [DEBUG] '{filename}' → key: {key} / shape: {df.shape}")
 
             except Exception as e:
-                print(f"❌ [ERROR] '{product}' 데이터 로딩 실패:", e)
+                print(f"❌ [ERROR] '{filename}' 로딩 실패:", e)
 
+    # 기존 dfs에 구조화된 항목 추가
+    dfs.update(structured_dfs)
     print("📂 [DEBUG] 최종 로드된 데이터 키:", list(dfs.keys()))
     return dfs
-
-
 
 
 # ✅ (옵션) matplotlib 그래프에서 사용할 한글 폰트 설정
