@@ -59,6 +59,13 @@ product_aliases = {
     "ro": "ro",  # ✅ 기존 fo → ro 로 변경
 }
 
+# ✅ 역할 이름 매핑 (lead, underwrite 등 역할 구분용)
+role_aliases = {
+    "lead": "lead",
+    "underwrite": "underwrite",
+    "arrange": "arrange",
+}
+
 # ✅ product_aliases와 함께 상단에서 import 후 선언
 from utils import product_aliases
 
@@ -91,10 +98,11 @@ def load_dataframes(data_dir):
             filter_cond = None
 
             for token in tokens[1:]:
-                if token in ["lead", "underwrite", "arrange"]:
-                    role = token
-                elif token in ["noabs", "nofbabs", "corp"]:
-                    filter_cond = token  # 필터 조건도 구조화 가능
+                token_lower = token.lower()
+                if token_lower in role_aliases:
+                    role = role_aliases[token_lower]
+                elif token_lower in ["noabs", "nofbabs", "corp"]:
+                    filter_cond = token_lower
 
             try:
                 # 엑셀 파일 첫 시트를 로딩 (시트명이 정확하지 않아도 동작)
