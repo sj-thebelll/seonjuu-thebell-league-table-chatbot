@@ -135,6 +135,7 @@ def load_dataframes(data_dir):
                 # 구조화 방식 저장
                 key = (product, role, filter_cond) if filter_cond else (product, role)
                 structured_dfs[key] = df
+                dfs[key] = df  # ✅ 이 줄 추가
 
                 print(f"✅ [DEBUG] '{filename}' → key: {key} / shape: {df.shape}")
 
