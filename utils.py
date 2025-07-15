@@ -7,7 +7,6 @@ import matplotlib.font_manager as fm
 from dotenv import load_dotenv
 from collections import defaultdict
 
-
 # ✅ 보정 딕셔너리는 함수 밖, 파일 상단이나 중단에 위치해야 함
 company_aliases = {
     "미래에셋": "미래에셋증권", "삼성": "삼성증권", "KB": "KB증권", "NH": "NH투자증권",
@@ -133,6 +132,7 @@ def load_dataframes(data_dir):
                     df["주관사"] = df["주관사"].astype(str).str.strip()
 
                 df["주관사"] = df["주관사"].str.replace(" ", "")
+                structured_dfs[(product, role, filter_cond)] = df  # ✅ 이 줄 추가
 
                 # 기존 방식 저장 (기존 코드 호환)
                 dfs[product] = df
