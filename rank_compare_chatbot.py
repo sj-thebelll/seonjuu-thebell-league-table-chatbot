@@ -46,9 +46,17 @@ def set_korean_font():
 
 set_korean_font()
 
-# ✅ 엑셀 파일들이 들어 있는 data 폴더 기준으로 변경
-data_dir = os.path.join(os.path.dirname(__file__), "data")
-dfs, structured_dfs = load_dataframes(data_dir)
+# 📁 DCM/ECM 폴더 각각에서 Excel 파일 로딩
+base_dir = os.path.dirname(__file__)
+dcm_dir = os.path.join(base_dir, "DCM")
+ecm_dir = os.path.join(base_dir, "ECM")
+
+dfs_dcm, structured_dcm = load_dataframes(dcm_dir)
+dfs_ecm, structured_ecm = load_dataframes(ecm_dir)
+
+# 딕셔너리 병합
+dfs = {**dfs_dcm, **dfs_ecm}
+structured_dfs = {**structured_dcm, **structured_ecm}
 
 # ✅ GPT 파서
 from openai import OpenAI  # openai>=1.0.0 기준
