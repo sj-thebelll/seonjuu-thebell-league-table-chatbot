@@ -149,8 +149,15 @@ def load_dataframes(data_dir):
 
     # 기존 dfs에 구조화된 항목 추가
     dfs.update(structured_dfs)
-    print("📂 [DEBUG] 최종 로드된 데이터 키:", list(dfs.keys()))
+    print("🟡 [DEBUG] 최종 로드된 데이터 키:", list(dfs.keys()))
+
+    # [DEBUG] structured_dfs 내부 키 목록 확인용 (임시 확인 코드)
+    print("[DEBUG] structured_dfs keys:")
+    for key in structured_dfs:
+        print("  →", key)
+
     return dfs, structured_dfs
+
 
 
 # ✅ (옵션) matplotlib 그래프에서 사용할 한글 폰트 설정
