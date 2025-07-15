@@ -48,7 +48,7 @@ set_korean_font()
 
 # ✅ 엑셀 파일들이 들어 있는 data 폴더 기준으로 변경
 data_dir = os.path.join(os.path.dirname(__file__), "data")
-dfs = load_dataframes(data_dir)
+dfs, structured_dfs = load_dataframes(data_dir)
 
 # ✅ GPT 파서
 from openai import OpenAI  # openai>=1.0.0 기준
